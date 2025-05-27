@@ -1,0 +1,434 @@
+---
+title: "AOC Tier 1 and 2"
+output: 
+  html_notebook:
+
+
+params:
+  AOC: "45087425"
+  reference_sites: ["44007727", 
+                    "43557712",
+                    "43497905",
+                                     "43117922",
+                                     "43397900",
+                                     "43517847",
+                                     "43527851",
+                                     "44397535",
+                                     "43557717",
+                                     "43527856"]
+  restrict_threshold: 8
+---
+
+## Testing testing
+
+```{r Setup, echo = FALSE}
+# Base setup
+source("Scripts/setup.R")
+
+aoc = params$AOC
+ref_sites = params$reference_sites
+
+get_waterbody_names <- function(cons_data, site_id) {
+  cons_data %>%
+    filter(waterbody_group %in% site_id) %>%
+    distinct(waterbody_group, guide_locname_eng) %>%
+    arrange(waterbody_group) %>%
+    pull(guide_locname_eng)
+}
+
+
+aoc_name = get_waterbody_names(cons_data, aoc)
+ref_names = get_waterbody_names(cons_data, site_id = ref_sites)
+
+
+knitr::opts_chunk$set(echo = FALSE)
+
+
+
+
+```
+
+## Tier 1 for `r aoc_name`
+
+```{r Tier 1 Table Setup, echo = FALSE}
+### USING REACTABLE FOR INTERACTIVE TABLE
+cons_data_aoc = cons_data %>%
+  filter(waterbody_group == aoc)
+
+dat_aoc = cons_data_aoc %>%
+  select(c(spec = specname,
+           pop_id = population_type_id,
+           pop_name = population_type_desc,
+           length_id = length_category_id,
+           length_name = length_category_label,
+           adv_level = adv_level,
+           adv_cause = adv_cause_multiple_name
+  ))
+
+restrict_aoc = dat_aoc %>%
+  mutate(restrictive = adv_level <= restrict_threshold)
+
+
+restrict_aoc$length_name = factor(restrict_aoc$length_name, levels = length_levels, ordered = T)
+
+
+# Pivot table 
+
+restrict_aoc_long = restrict_aoc %>%
+  mutate(adv_level = as.character(adv_level)) %>%
+  arrange(length_name, factor(length_name, levels = c())) %>%
+  pivot_longer(
+  cols = c(adv_level, adv_cause),
+  names_to = "Variable", values_to = "Value") %>%
+  mutate(VarPop = paste(pop_name, Variable, sep = "_"))
+
+restrict_aoc_wide = restrict_aoc_long %>%
+  select(spec, length_name, VarPop, Value) %>%
+  pivot_wider(names_from = length_name, values_from = Value) %>%
+  arrange()
+
+restrict_aoc_final <- restrict_aoc_wide %>%
+  arrange(spec, factor(VarPop, levels = c(
+    "General_adv_level", "General_adv_cause",
+    "Sensitive_adv_level", "Sensitive_adv_cause"
+  ))) %>%
+  mutate(Row_Label = case_when(
+    VarPop == "General_adv_level" ~ "General",
+    VarPop == "General_adv_cause" ~ "Adv cause",
+    VarPop == "Sensitive_adv_level" ~ "Sensitive",
+    VarPop == "Sensitive_adv_cause" ~ "Adv cause"
+  )) %>%
+  select(spec, Row_Label, everything(), -VarPop) %>%
+  rename(Species = spec)
+
+```
+
+```{r Tier 1 Reactable Table, echo = FALSE}
+# Get size bin columns
+size_cols <- setdiff(names(restrict_aoc_final), c("Species", "Row_Label"))
+
+# Create column definitions
+columns_list <- list()
+
+for (col_name in size_cols) {
+  columns_list[[col_name]] <- colDef(
+    name = col_name,
+    html = TRUE,
+    cell = function(value, index) {
+      row <- restrict_aoc_final[index, ]
+      row_type <- row$Row_Label
+      
+      if (row_type == "Adv cause" && !is.na(value) && nzchar(value)) {
+        causes <- trimws(unlist(strsplit(value, ",")))
+        icons <- lapply(causes, function(cause) {
+          icon_class <- contaminant_icons[[cause]]
+          color <- contaminant_colors[[cause]]
+          if (!is.null(icon_class) && !is.null(color)) {
+            paste0("<i class='fas ", icon_class, "' style='color:", color, "; margin-right: 6px;'></i>")
+          } else {
+            ""
+          }
+        })
+        return(HTML(paste(icons, collapse = " ")))
+      }
+      
+      if (row_type != "Adv cause" && !is.na(value)) return(value)
+      return("")
+    },
+    style = function(value, index) {
+      row <- restrict_aoc_final[index, ]
+      row_type <- row$Row_Label
+      styles <- list(padding = "0", margin = "0", fontWeight = "bold")
+      
+      if (row_type == "Adv cause") {
+        styles$paddingTop <- "0"
+        styles$paddingBottom <- "10px"
+      } else if (!is.na(value)) {
+        val <- as.numeric(value)
+        styles$background <- if (val < 8) "#ff4d4d" else "#66cc66"
+      } else if ((is.na(value) || value == "") && row_type %in% c("General", "Sensitive")) {
+        styles$background <- "#eef2f7"
+      }
+      
+      return(styles)
+    }
+  )
+}
+
+# Row_Label column
+columns_list$Row_Label <- colDef(
+  name = "Population",
+  sticky = "left",
+  minWidth = 120,
+  style = function(value) {
+    if (value == "Adv cause") list(fontSize = "10px", fontStyle = "italic")
+    else list(fontSize = "13px", fontWeight = "bold")
+  },
+  headerStyle = list(whiteSpace = "nowrap")
+)
+
+# Species column with hidden duplicates
+columns_list$Species <- colDef(
+  name = "Species",
+  sticky = "left",
+  minWidth = 140,
+  style = JS("function(rowInfo, column, state) {
+    const prev = state.pageRows[rowInfo.viewIndex - 1];
+    if (prev && rowInfo.values['Species'] === prev['Species']) {
+      return { visibility: 'hidden' };
+    }
+    return {};
+  }")
+)
+
+# Row styling
+rowStyle_fn <- function(index) {
+  row <- restrict_aoc_final[index, ]
+  prev_row <- if (index > 1) restrict_aoc_final[index - 1, ] else NULL
+  next_row <- if (index < nrow(restrict_aoc_final)) restrict_aoc_final[index + 1, ] else NULL
+  
+  style <- list(height = "32px")
+  if (is.null(prev_row) || prev_row$Species != row$Species) style$borderTop <- "2px solid #666"
+  if (is.null(next_row) || next_row$Species != row$Species) style$borderBottom <- "2px solid #666"
+  return(style)
+}
+
+# Legend
+legend_html <- HTML(paste(
+  "<div style='margin-bottom: 10px; font-family: sans-serif; font-size: 13px; color: black;'>",
+  "<strong>Advisory Cause Legend:</strong><br>",
+  "<i class='fas fa-square' style='color:magenta;'></i> PFAS &nbsp;&nbsp;",
+  "<i class='fas fa-circle' style='color:goldenrod;'></i> Mercury &nbsp;&nbsp;",
+  "<i class='fas fa-diamond' style='color:skyblue;'></i> PCB",
+  "</div>",
+  sep = ""
+))
+
+# Render with Font Awesome and legend
+div(
+browsable(tagList(
+  fa_css,
+  legend_html,
+  reactable(
+    restrict_aoc_final,
+    columns = columns_list,
+    defaultPageSize = 10,
+    showPageSizeOptions = TRUE,
+    pagination = FALSE,
+    height = "1500px",
+    defaultColDef = colDef(
+      sortable = TRUE,
+      align = "center",
+      minWidth = 80,
+      style = list(padding = "0", margin = "0", border = "none")
+    ),
+    rowStyle = rowStyle_fn,
+    bordered = FALSE,
+    striped = FALSE,
+    highlight = TRUE,
+    style = list(
+      fontFamily = "sans-serif",
+      fontSize = "13px",
+      borderCollapse = "collapse",
+      borderSpacing = "0",
+      margin = "0 auto",
+      width = "auto"
+    )
+  )
+)),
+style = "max-width: 100%; overflow-x: auto;"
+)
+
+```
+
+```{r Tier 2 Reactable Table, echo = FALSE}
+make_comparison_table <- function(cons_data, reference_groups, aoc_groups) {
+  aoc_combinations <- cons_data %>%
+    filter(waterbody_group %in% aoc_groups,
+           population_type_desc %in% c("General", "Sensitive")) %>%
+    distinct(Species = specname, Size = length_category_label, Population = population_type_desc) %>%
+    mutate(Size = factor(Size, levels = length_levels, ordered = TRUE))
+  
+  filtered_data <- cons_data %>%
+    filter(waterbody_group %in% c(reference_groups, aoc_groups),
+           population_type_desc %in% c("General", "Sensitive")) %>%
+    mutate(Species = specname,
+           Size = factor(length_category_label, levels = length_levels, ordered = TRUE),
+           Population = population_type_desc,
+           site_type = if_else(waterbody_group %in% aoc_groups, "AOC", "Reference")) %>%
+    semi_join(aoc_combinations, by = c("Species", "Size", "Population"))
+  
+  base_data <- filtered_data %>%
+    group_by(Species, Site = guide_locname_eng, site_type, Population, Size) %>%
+    summarise(advisory = max(adv_level, na.rm = TRUE), .groups = "drop")
+  
+  aoc_data <- base_data %>%
+    filter(site_type == "AOC") %>%
+    pivot_wider(names_from = Size, values_from = advisory) %>%
+    mutate(site_order = 1)
+  
+  ref_long <- base_data %>%
+    filter(site_type == "Reference")
+  
+  ref_medians <- ref_long %>%
+    group_by(Species, Population, Size) %>%
+    summarise(Median = median(advisory, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(names_from = Size, values_from = Median) %>%
+    mutate(Site = "Reference Median", site_type = "Reference", site_order = 2)
+  
+  ref_n <- ref_long %>%
+    group_by(Species, Population, Size) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    pivot_wider(names_from = Size, values_from = n) %>%
+    mutate(Site = "n", site_type = "Reference", site_order = 3)
+  
+  ref_data <- ref_long %>%
+    pivot_wider(names_from = Size, values_from = advisory)
+  
+  aoc_median_combo <- bind_rows(aoc_data, ref_medians, ref_n)
+  
+  display_data <- aoc_median_combo %>%
+    arrange(Species, Population, site_order) %>%
+    mutate(
+      id = row_number(),
+      Species_display = ifelse(duplicated(Species), "", Species),
+      Population_display = ifelse(duplicated(paste(Species, Population)), "", Population)
+    ) %>%
+    select(Species_display, Population_display, Site, site_type, id,
+           Species, Population, site_order, all_of(length_levels))
+  
+  size_cols <- length_levels[length_levels %in% names(display_data)]
+  
+  comparison_lookup <- ref_medians %>%
+    select(Species, Population, all_of(size_cols)) %>%
+    pivot_longer(cols = all_of(size_cols), names_to = "Size", values_to = "Median") %>%
+    mutate(id = paste(Species, Population, Size, sep = "||"))
+  
+  n_lookup <- ref_n %>%
+    select(Species, Population, all_of(size_cols)) %>%
+    pivot_longer(cols = all_of(size_cols), names_to = "Size", values_to = "n") %>%
+    mutate(id = paste(Species, Population, Size, sep = "||"))
+  
+  comparison_medians <- setNames(as.list(comparison_lookup$Median), comparison_lookup$id)
+  sample_ns <- setNames(as.list(n_lookup$n), n_lookup$id)
+  
+  columns_list <- list(
+    Species_display = colDef(
+      name = "Species", minWidth = 150, sortable = FALSE, sticky = "left",
+      style = JS("function(rowInfo) { return { fontWeight: 'bold', fontSize: '15px' }; }")
+    ),
+    Population_display = colDef(
+      name = "Population", minWidth = 100, sortable = FALSE, sticky = "left",
+      style = JS("function(rowInfo) { return { fontWeight: 'bold', fontSize: '15px' }; }")
+    ),
+    Site = colDef(
+      minWidth = 150, sortable = FALSE, sticky = "left", align = "center",
+      style = JS(
+        "function(rowInfo) {
+          const site = rowInfo.row.Site;
+          if (site === 'n') {
+            return { fontSize: '13px', fontStyle: 'italic' };
+          }
+          if (site === 'Reference Median') {
+            return { fontSize: '13px' };
+          }
+          if (rowInfo.row.site_type === 'AOC') {
+            return { fontWeight: 'bold', fontSize: '15px' };
+          }
+          return {};
+        }"
+      )
+    ),
+    site_type = colDef(show = FALSE),
+    id = colDef(show = FALSE),
+    Species = colDef(show = FALSE),
+    Population = colDef(show = FALSE),
+    site_order = colDef(show = FALSE)
+  )
+  
+  for (col in size_cols) {
+    columns_list[[col]] <- colDef(
+      name = col,
+      align = "center",
+      sortable = FALSE,
+      style = JS(sprintf(
+        "function(rowInfo, colInfo, state) {
+          const row = rowInfo.row;
+          const val = row[colInfo.id];
+          const id = row.Species + '||' + row.Population + '||' + '%s';
+          const ref = state.meta.medians[id];
+          const n = state.meta.ns[id];
+
+          if (row.Site === 'n') {
+            return { fontSize: '11px', color: '#666', fontStyle: 'italic' };
+          }
+
+          if (row.site_type === 'AOC') {
+            if (val === null) {
+              return { background: '#eeeeee', color: '#000000', fontWeight: 'bold', fontSize: '15px' };
+            } else if (n === undefined || n <= 3 || ref === undefined || ref === null) {
+              return { background: '#999999', color: '#ffffff', fontWeight: 'bold', fontSize: '15px' };
+            } else if (val < ref) {
+              return { background: '#d80032', color: '#ffffff', fontWeight: 'bold', fontSize: '15px' };
+            } else {
+              return { background: '#4CAF50', color: '#ffffff', fontWeight: 'bold', fontSize: '15px' };
+            }
+          }
+
+          return { fontWeight: 'normal', fontSize: '13px' };
+        }",
+        col
+      ))
+    )
+  }
+  
+  reactable(
+    display_data,
+    columns = columns_list,
+    defaultExpanded = FALSE,
+    bordered = TRUE,
+    striped = TRUE,
+    highlight = TRUE,
+    pagination = FALSE,
+    style = list(
+      fontFamily = "system-ui, sans-serif",
+        height = "1500px",
+      width = "100%",
+      overflowY = "auto",
+      overflowX = "auto",
+      margin = "0 auto"
+    ),
+    details = function(index) {
+      row <- display_data[index, ]
+      if (row$Site == "Reference Median") {
+        ref_rows <- ref_data %>%
+          filter(Species == row$Species, Population == row$Population) %>%
+          select(Site, all_of(size_cols))
+        reactable(ref_rows, compact = TRUE, bordered = TRUE, pagination = FALSE)
+      } else {
+        NULL
+      }
+    },
+    meta = list(medians = comparison_medians, ns = sample_ns)
+  )
+}
+
+
+
+slr_t2_table = make_comparison_table(cons_data, reference_waterbody_groups, aoc_waterbody_groups)
+
+
+
+# Making display table for RStudio Viewer
+slr_t2_display <-
+  tagList(
+    h3(paste(aoc_name, "Tier 2 Consumption Analysis"), style = "margin-bottom: 0.5em; font-family: system-ui, sans-serif;"),
+    slr_t2_table,
+    div(
+      "Rows indicate MECP consumption advisory levels in the AOC, compared to the reference median. Advisory levels are reported by species, size class, and population type (general or sensitive). Reference sites include all non-AOC fishing zones in Lake Ontario. Red: AOC < reference median; Green: AOC ≥ reference median; Dark grey = low sample size (n ≤ 3). Drop down tables show species advisory levels in reference sites with available data.",
+      style = "margin-top: 0.5em; font-size: 13px; font-family: system-ui, sans-serif; color: #222;"
+    )
+  )
+
+slr_t2_display
+```

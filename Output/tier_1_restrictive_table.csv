@@ -1,0 +1,57 @@
+"","spec","VarPop","15-20cm","20-25cm","25-30cm","30-35cm","35-40cm","40-45cm","45-50cm","50-55cm","55-60cm","60-65cm","65-70cm","70-75cm",">75cm"
+"1","White Sucker","General_adv_level","4","4","4","4","4","4","4","4","4","4",NA,NA,NA
+"2","White Sucker","General_adv_cause","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","Mercury, PFAS","Mercury, PFAS",NA,NA,NA
+"3","White Sucker","Sensitive_adv_level","4","4","4","4","4","4","4","4","0","0",NA,NA,NA
+"4","White Sucker","Sensitive_adv_cause","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","Mercury","Mercury",NA,NA,NA
+"5","Brown Bullhead","General_adv_level","8","8","8","8","8",NA,NA,NA,NA,NA,NA,NA,NA
+"6","Brown Bullhead","General_adv_cause","PFAS","PFAS","PFAS","PFAS","PFAS",NA,NA,NA,NA,NA,NA,NA,NA
+"7","Brown Bullhead","Sensitive_adv_level","8","8","8","8","8",NA,NA,NA,NA,NA,NA,NA,NA
+"8","Brown Bullhead","Sensitive_adv_cause","PFAS","PFAS","PFAS","PFAS","PFAS",NA,NA,NA,NA,NA,NA,NA,NA
+"9","White Perch","General_adv_level","8","4",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"10","White Perch","General_adv_cause","Mercury","Mercury",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"11","White Perch","Sensitive_adv_level","4","0",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"12","White Perch","Sensitive_adv_cause","Mercury","Mercury",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"13","Rock Bass","General_adv_level","4","4",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"14","Rock Bass","General_adv_cause","PFAS","PFAS",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"15","Rock Bass","Sensitive_adv_level","4","4",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"16","Rock Bass","Sensitive_adv_cause","Mercury, PFAS","Mercury, PFAS",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"17","Bluegill","General_adv_level","4",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"18","Bluegill","General_adv_cause","PFAS",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"19","Bluegill","Sensitive_adv_level","4",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"20","Bluegill","Sensitive_adv_cause","PFAS",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"21","Smallmouth Bass","General_adv_level","4","4","4","4","4","4","4","4",NA,NA,NA,NA,NA
+"22","Smallmouth Bass","General_adv_cause","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","Mercury","PFAS",NA,NA,NA,NA,NA
+"23","Smallmouth Bass","Sensitive_adv_level","4","4","4","4","4","0","0","0",NA,NA,NA,NA,NA
+"24","Smallmouth Bass","Sensitive_adv_cause","PFAS","PFAS","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury",NA,NA,NA,NA,NA
+"25","Largemouth Bass","General_adv_level","8","8","8","8","8","4","4",NA,NA,NA,NA,NA,NA
+"26","Largemouth Bass","General_adv_cause","PFAS","PFAS","PFAS","PFAS","Mercury, PFAS","Mercury, PFAS","Mercury, PFAS",NA,NA,NA,NA,NA,NA
+"27","Largemouth Bass","Sensitive_adv_level","8","8","8","4","0","0","0",NA,NA,NA,NA,NA,NA
+"28","Largemouth Bass","Sensitive_adv_cause","PFAS","PFAS","Mercury, PFAS","Mercury","Mercury","Mercury","Mercury",NA,NA,NA,NA,NA,NA
+"29","Yellow Perch","General_adv_level","4","4","4","4",NA,NA,NA,NA,NA,NA,NA,NA,NA
+"30","Yellow Perch","General_adv_cause","PFAS","PFAS","PFAS","Mercury, PFAS",NA,NA,NA,NA,NA,NA,NA,NA,NA
+"31","Yellow Perch","Sensitive_adv_level","4","4","4","0",NA,NA,NA,NA,NA,NA,NA,NA,NA
+"32","Yellow Perch","Sensitive_adv_cause","PFAS","PFAS","PFAS","Mercury",NA,NA,NA,NA,NA,NA,NA,NA,NA
+"33","Walleye","General_adv_level","4","4","4","4","4","4","4","4","4","4","4","4","0"
+"34","Walleye","General_adv_cause","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","PFAS","Mercury, PFAS","Mercury, PFAS","Mercury, PFAS","Mercury"
+"35","Walleye","Sensitive_adv_level","4","4","4","4","4","4","4","4","0","0","0","0","0"
+"36","Walleye","Sensitive_adv_cause","PFAS","PFAS","PFAS","PFAS","Mercury, PFAS","Mercury, PFAS","Mercury, PFAS","Mercury, PFAS","Mercury","Mercury","Mercury","Mercury","Mercury"
+"37","Northern Pike","General_adv_level",NA,"32","32","16","16","16","16","16","16","12","8","4","4"
+"38","Northern Pike","General_adv_cause",NA,"","","PCB","Mercury, PCB","Mercury, PCB","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury, PFAS"
+"39","Northern Pike","Sensitive_adv_level",NA,"16","16","16","16","12","8","8","8","4","4","0","0"
+"40","Northern Pike","Sensitive_adv_cause",NA,"Mercury","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury","Mercury"
+"41","Fallfish","General_adv_level",NA,NA,"16","8","4",NA,NA,NA,NA,NA,NA,NA,NA
+"42","Fallfish","General_adv_cause",NA,NA,"Mercury, PCB","PCB","PCB",NA,NA,NA,NA,NA,NA,NA,NA
+"43","Fallfish","Sensitive_adv_level",NA,NA,"8","4","0",NA,NA,NA,NA,NA,NA,NA,NA
+"44","Fallfish","Sensitive_adv_cause",NA,NA,"Mercury","Mercury","Mercury",NA,NA,NA,NA,NA,NA,NA,NA
+"45","Channel Catfish","General_adv_level",NA,NA,NA,NA,"4","2","1","0","0","0","0",NA,NA
+"46","Channel Catfish","General_adv_cause",NA,NA,NA,NA,"PCB","PCB","PCB","PCB","PCB","PCB","Mercury",NA,NA
+"47","Channel Catfish","Sensitive_adv_level",NA,NA,NA,NA,"4","0","0","0","0","0","0",NA,NA
+"48","Channel Catfish","Sensitive_adv_cause",NA,NA,NA,NA,"Mercury","PCB","PCB","PCB","PCB","Mercury, PCB","Mercury, PCB",NA,NA
+"49","Tench","General_adv_level",NA,NA,NA,NA,NA,NA,"8",NA,NA,NA,NA,NA,NA
+"50","Tench","General_adv_cause",NA,NA,NA,NA,NA,NA,"PFAS",NA,NA,NA,NA,NA,NA
+"51","Tench","Sensitive_adv_level",NA,NA,NA,NA,NA,NA,"0",NA,NA,NA,NA,NA,NA
+"52","Tench","Sensitive_adv_cause",NA,NA,NA,NA,NA,NA,"Mercury, PFAS",NA,NA,NA,NA,NA,NA
+"53","Freshwater Drum","General_adv_level",NA,NA,NA,NA,NA,NA,NA,NA,NA,"2","2","1",NA
+"54","Freshwater Drum","General_adv_cause",NA,NA,NA,NA,NA,NA,NA,NA,NA,"PCB","PCB","PCB",NA
+"55","Freshwater Drum","Sensitive_adv_level",NA,NA,NA,NA,NA,NA,NA,NA,NA,"0","0","0",NA
+"56","Freshwater Drum","Sensitive_adv_cause",NA,NA,NA,NA,NA,NA,NA,NA,NA,"Mercury, PCB","Mercury, PCB","Mercury, PCB",NA
