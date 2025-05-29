@@ -1,7 +1,7 @@
 ---
 title: "AOC Tier 1 and 2"
 output: 
-  html_notebook:
+  html_notebook
 
 
 params:
@@ -21,9 +21,11 @@ params:
 
 ## Testing testing
 
-```{r Setup, echo = FALSE}
+```{r Setup, echo = FALSE, include = FALSE}
 # Base setup
 source("Scripts/setup.R")
+source("R/contaminant_icons.R")
+source("R/make_restrict_table.R")
 
 aoc = params$AOC
 ref_sites = params$reference_sites
@@ -47,6 +49,80 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ```
+
+```{r Defining Colours and Shapes}
+# Contaminant-to-color mapping
+generate_shape <- function(shape, color = "gray", size = 12) {
+  common_style <- paste0(
+    "width:", size, "px;",
+    " height:", size, "px;",
+    " background-color:", color, ";",
+    " display: inline-block;",
+    " margin-right: 5px;",
+    " vertical-align: middle;"
+  )
+  
+  shape_style <- switch(shape,
+    "circle" = "border-radius: 50%;",
+    "square" = "",
+    "diamond" = paste0(
+      "transform: rotate(45deg);",
+      " width:", size * 0.7, "px;",
+      " height:", size * 0.7, "px;"
+    ),
+    "triangle" = paste0(
+      "width: 0; height: 0;",
+      " border-left:", size / 2, "px solid transparent;",
+      " border-right:", size / 2, "px solid transparent;",
+      " border-bottom:", size, "px solid ", color, ";",
+      " background: none;"
+    ),
+    ""  # fallback
+  )
+  
+  if (shape == "triangle") {
+    htmltools::tags$div(style = shape_style)
+  } else {
+    htmltools::tags$div(style = paste(common_style, shape_style))
+  }
+}
+
+available_shapes <- c("circle", "square", "diamond", "triangle", "hexagon", "ring")
+available_colors <- c("goldenrod", "magenta", "skyblue", "purple", "darkorange", "seagreen")
+
+
+extract_unique_contaminants <- function(df, col = "AdvisoryCause") {
+  contaminants <- df[[col]]
+  contaminants <- unique(unlist(strsplit(contaminants, ",")))
+  trimws(contaminants[nzchar(contaminants)])
+}
+
+assign_contaminant_mappings <- function(contaminants,
+                                        user_shapes = NULL,
+                                        user_colors = NULL,
+                                        shape_options = available_shapes,
+                                        color_options = available_colors) {
+  n <- length(contaminants)
+  shape_cycle <- rep(shape_options, length.out = n)
+  color_cycle <- rep(color_options, length.out = n)
+  
+  shape_map <- setNames(shape_cycle, contaminants)
+  color_map <- setNames(color_cycle, contaminants)
+
+  # Override if user supplied values
+  if (!is.null(user_shapes)) shape_map[names(user_shapes)] <- user_shapes
+  if (!is.null(user_colors)) color_map[names(user_colors)] <- user_colors
+
+  list(shapes = shape_map, colors = color_map)
+}
+
+
+
+
+
+
+```
+
 
 ## Tier 1 for `r aoc_name`
 
@@ -101,11 +177,30 @@ restrict_aoc_final <- restrict_aoc_wide %>%
   select(spec, Row_Label, everything(), -VarPop) %>%
   rename(Species = spec)
 
+
+
+# Get size-bin columns (i.e., exclude identifier columns)
+size_cols <- setdiff(names(restrict_aoc_final), c("Species", "Row_Label"))
+
+# Extract cause strings from 'Adv cause' rows
+cause_strings <- restrict_aoc_final %>%
+  filter(Row_Label == "Adv cause") %>%
+  select(all_of(size_cols)) %>%
+  unlist(use.names = FALSE) %>%
+  as.character()
+
+# Handle NAs and split by commas
+unique_contaminants <- unique(trimws(unlist(strsplit(cause_strings[!is.na(cause_strings)], ","))))
+
+contaminant_mappings <- assign_contaminant_mappings(unique_contaminants)
+contaminant_shapes <- contaminant_mappings$shapes
+contaminant_colors <- contaminant_mappings$colors
+
+
+
 ```
 
 ```{r Tier 1 Reactable Table, echo = FALSE}
-# Get size bin columns
-size_cols <- setdiff(names(restrict_aoc_final), c("Species", "Row_Label"))
 
 # Create column definitions
 columns_list <- list()
@@ -115,26 +210,25 @@ for (col_name in size_cols) {
     name = col_name,
     html = TRUE,
     cell = function(value, index) {
-      row <- restrict_aoc_final[index, ]
-      row_type <- row$Row_Label
-      
-      if (row_type == "Adv cause" && !is.na(value) && nzchar(value)) {
-        causes <- trimws(unlist(strsplit(value, ",")))
-        icons <- lapply(causes, function(cause) {
-          icon_class <- contaminant_icons[[cause]]
-          color <- contaminant_colors[[cause]]
-          if (!is.null(icon_class) && !is.null(color)) {
-            paste0("<i class='fas ", icon_class, "' style='color:", color, "; margin-right: 6px;'></i>")
-          } else {
-            ""
-          }
-        })
-        return(HTML(paste(icons, collapse = " ")))
-      }
-      
-      if (row_type != "Adv cause" && !is.na(value)) return(value)
-      return("")
-    },
+  row <- restrict_aoc_final[index, ]
+  row_type <- row$Row_Label
+
+  if (row_type == "Adv cause" && !is.na(value) && nzchar(value)) {
+  causes <- trimws(unlist(strsplit(value, ",")))
+  icons <- lapply(causes, function(cause) {
+    shape <- contaminant_shapes[[cause]]
+    color <- contaminant_colors[[cause]]
+    if (is.null(shape)) shape <- "circle"
+    if (is.null(color)) color <- "gray"
+    generate_shape(shape, color, size = 12)
+  })
+  return(htmltools::span(icons))
+}
+
+
+  if (row_type != "Adv cause" && !is.na(value)) return(value)
+  return("")
+},
     style = function(value, index) {
       row <- restrict_aoc_final[index, ]
       row_type <- row$Row_Label
@@ -186,23 +280,49 @@ rowStyle_fn <- function(index) {
   row <- restrict_aoc_final[index, ]
   prev_row <- if (index > 1) restrict_aoc_final[index - 1, ] else NULL
   next_row <- if (index < nrow(restrict_aoc_final)) restrict_aoc_final[index + 1, ] else NULL
-  
-  style <- list(height = "32px")
+
+  style <- list()
+
+  # Set fixed height for general/sensitive rows only
+  if (row$Row_Label %in% c("General", "Sensitive")) {
+    style$height <- "32px"
+  }
+
+  # Add species grouping lines
   if (is.null(prev_row) || prev_row$Species != row$Species) style$borderTop <- "2px solid #666"
   if (is.null(next_row) || next_row$Species != row$Species) style$borderBottom <- "2px solid #666"
+
   return(style)
 }
 
+
 # Legend
+legend_items <- lapply(names(contaminant_shapes), function(name) {
+  shape <- contaminant_shapes[[name]]
+  color <- contaminant_colors[[name]]
+  div(
+    style = "display: inline-block; margin-right: 12px; font-family: sans-serif; font-size: 13px;",
+    generate_shape(shape, color, 12),
+    name
+  )
+})
+
+legend_html <- htmltools::div(
+  style = "margin-bottom: 10px;",
+  strong("Advisory Cause Legend:"),
+  htmltools::div(legend_items)
+)
+
+
 legend_html <- HTML(paste(
   "<div style='margin-bottom: 10px; font-family: sans-serif; font-size: 13px; color: black;'>",
   "<strong>Advisory Cause Legend:</strong><br>",
-  "<i class='fas fa-square' style='color:magenta;'></i> PFAS &nbsp;&nbsp;",
-  "<i class='fas fa-circle' style='color:goldenrod;'></i> Mercury &nbsp;&nbsp;",
-  "<i class='fas fa-diamond' style='color:skyblue;'></i> PCB",
-  "</div>",
-  sep = ""
+  paste(sapply(seq_along(legend_items), function(i) {
+    paste0(legend_items[[i]], names(contaminant_colors)[[i]])
+  }), collapse = "&nbsp;&nbsp;&nbsp;"),
+  "</div>"
 ))
+
 
 # Render with Font Awesome and legend
 div(
@@ -220,7 +340,7 @@ browsable(tagList(
       sortable = TRUE,
       align = "center",
       minWidth = 80,
-      style = list(padding = "0", margin = "0", border = "none")
+      style = list(padding = "0", margin = "0", border = "none", verticalAlign = "middle")
     ),
     rowStyle = rowStyle_fn,
     bordered = FALSE,

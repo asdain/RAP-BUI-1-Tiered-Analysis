@@ -1585,7 +1585,7 @@ make_comparison_table <- function(cons_data, reference_groups, aoc_groups) {
     pagination = FALSE,
     style = list(
       fontFamily = "system-ui, sans-serif",
-      height = "90%",
+      height = "1000px",
       width = "100%",
       overflowY = "auto",
       overflowX = "auto",
@@ -1675,3 +1675,8 @@ export_reactable(slr_t2_table,
                  file = "Output/Figures/SLR_T2_Table.html",
                  title = "St. Lawrence River Tier 2 Consumption Analysis",
                  caption = "Rows indicate MECP consumption advisory levels in the AOC, compared to the reference median. Advisory levels are reported by species, size class, and population type (general or sensitive). Reference sites include all non-AOC fishing zones in Lake Ontario. Red: AOC < reference median; Green: AOC ≥ reference median; Dark grey = low sample size (n ≤ 3). Drop down tables show species advisory levels in reference sites with available data.")
+
+contams = cons_data %>%
+  distinct(adv_cause_multiple_name) %>%
+  pull(adv_cause_multiple_name)
+contams
