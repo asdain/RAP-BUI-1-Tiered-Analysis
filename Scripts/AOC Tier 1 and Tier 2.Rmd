@@ -297,13 +297,13 @@ rowStyle_fn <- function(index) {
 
 
 # Legend
-legend_items <- lapply(names(contaminant_shapes), function(name) {
-  shape <- contaminant_shapes[[name]]
-  color <- contaminant_colors[[name]]
-  div(
+legend_items <- lapply(unique_contaminants, function(contaminant) {
+  shape <- contaminant_shapes[[contaminant]]
+  color <- contaminant_colors[[contaminant]]
+  htmltools::div(
     style = "display: inline-block; margin-right: 12px; font-family: sans-serif; font-size: 13px;",
     generate_shape(shape, color, 12),
-    name
+    contaminant
   )
 })
 
@@ -312,6 +312,7 @@ legend_html <- htmltools::div(
   strong("Advisory Cause Legend:"),
   htmltools::div(legend_items)
 )
+
 
 
 legend_html <- HTML(paste(
