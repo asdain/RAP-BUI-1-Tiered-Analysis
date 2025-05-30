@@ -21,6 +21,7 @@ library(stringr)
 library(reactablefmtr)
 library(htmlwidgets)
 
+
 # Input data --------------------------
 # Loading the MNR fish consumption advisory data csv 
 cons_data = read.csv("Data/mnr_fish_consumption_advisory_data_2024.csv") %>%
@@ -47,32 +48,6 @@ theme_aaron = function(){
     )
 }
 
-# Color palette
-coul = brewer.pal(7,"BuPu")[2:7]
-coul = colorRampPalette(coul)(13)
 
 
-# Reactable elements
-# Load Font Awesome
-fa_css <- tags$head(
-  tags$link(
-    rel = "stylesheet",
-    href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  )
-)
-
-# Contaminant colors
-contaminant_colors <- c(
-  PFAS = "magenta",
-  Mercury = "goldenrod",
-  PCB = "skyblue"
-)
-
-
-# Font Awesome icons
-contaminant_icons <- c(
-  PFAS = "fa-square",
-  Mercury = "fa-circle",
-  PCB = "fa-diamond"
-)
 
