@@ -1,4 +1,4 @@
-render_t2_table <- function(cons_data, aoc_id, reference_sites, length_levels, interest_species = NULL) {
+render_t2_table <- function(cons_data, aoc_id, reference_sites, length_levels, interest_species = NULL, exclude_t1_passed = TRUE) {
   aoc_combinations <- prep_aoc_combinations(cons_data, aoc_id, length_levels)
   
   filtered_data <- cons_data %>%
@@ -13,6 +13,15 @@ render_t2_table <- function(cons_data, aoc_id, reference_sites, length_levels, i
   
   base_data <- summarise_max_advisory(filtered_data)
   
+  if (exclude_t1_passed) {
+    flags <- get_species_pass_flags(cons_data, aoc_id, reference_sites, length_levels)
+    passed_species <- flags %>% filter(t1_pass) %>% pull(Species)
+    filtered_data <- filtered_data %>% filter(!Species %in% passed_species)
+    base_data <- base_data %>% filter(!Species %in% passed_species)
+  }
+  
+  
+  
   aoc_data <- base_data %>%
     filter(site_type == "AOC") %>%
     pivot_wider(names_from = Size, values_from = advisory) %>%
@@ -20,7 +29,6 @@ render_t2_table <- function(cons_data, aoc_id, reference_sites, length_levels, i
   
   ref_long <- base_data %>% filter(site_type == "Reference")
   
-  # Safe ref_medians
   ref_medians_raw <- ref_long %>%
     group_by(Species, Population, Size) %>%
     summarise(Median = median(advisory, na.rm = TRUE), .groups = "drop") %>%
@@ -30,7 +38,6 @@ render_t2_table <- function(cons_data, aoc_id, reference_sites, length_levels, i
     mutate(Site = "Reference Median", site_type = "Reference", site_order = 2) %>%
     select(Species, Population, all_of(size_cols_medians), Site, site_type, site_order)
   
-  # Safe ref_n
   ref_n_raw <- ref_long %>%
     group_by(Species, Population, Size) %>%
     summarise(n = n(), .groups = "drop") %>%

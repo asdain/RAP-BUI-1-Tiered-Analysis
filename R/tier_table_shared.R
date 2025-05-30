@@ -73,3 +73,5 @@ make_common_column_defs <- function() {
     site_order = colDef(show = FALSE)
   )
 }
+
+

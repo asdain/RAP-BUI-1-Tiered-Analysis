@@ -18,7 +18,6 @@ render_t1_table <- function(df,
                             contaminant_shapes,
                             contaminant_colours,
                             generate_shape_fn = generate_shape,
-                            restrict_threshold = 8,
                             table_height = "1500px",
                             show_legend = TRUE) {
   
@@ -61,7 +60,7 @@ render_t1_table <- function(df,
           styles$paddingBottom <- "10px"
         } else if (!is.na(value)) {
           val <- as.numeric(value)
-          styles$background <- if (val < restrict_threshold) "#d80032" else "#4CAF50"
+          styles$background <- if (val < params$restrict_threshold) "#d80032" else "#4CAF50"
           styles$color <- "#ffffff"
         } else if ((is.na(value) || value == "") && row_type %in% c("General", "Sensitive")) {
           styles$background <- "#eeeeee"

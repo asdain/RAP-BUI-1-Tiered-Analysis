@@ -3,8 +3,7 @@
 #==============================
 make_restrict_table <- function(cons_data,
                                 aoc_id,
-                                length_levels,
-                                restrict_threshold = 8) {
+                                length_levels) {
   # Filter to just the AOC
   cons_data <- cons_data %>%
     filter(waterbody_group == aoc_id)
@@ -27,7 +26,7 @@ make_restrict_table <- function(cons_data,
     )
   
   restrict_aoc <- dat_aoc %>%
-    mutate(restrictive = adv_level <= restrict_threshold)
+    mutate(restrictive = adv_level <= params$restrict_threshold)
   
   restrict_aoc_long <- restrict_aoc %>%
     mutate(adv_level = as.character(adv_level)) %>%
