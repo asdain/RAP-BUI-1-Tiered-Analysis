@@ -48,6 +48,7 @@ theme_aaron = function(){
     )
 }
 
-
-
+# Loading all custom script
+tool_files = list.files(path = "R", pattern = "\\.R$", full.names = TRUE)
+invisible(lapply(tool_files, source))
 
