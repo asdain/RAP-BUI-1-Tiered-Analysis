@@ -20,7 +20,8 @@ make_waterbody_selector <- function(choices) {
 }
 
 #' Render this input only in interactive mode (e.g., in dev or inside Shiny)
-if (interactive() && requireNamespace("shiny", quietly = TRUE)) {
+run_advisory_app = function(){
+  if (interactive() && requireNamespace("shiny", quietly = TRUE)) {
   library(shiny)
   
   shinyApp(
@@ -32,4 +33,5 @@ if (interactive() && requireNamespace("shiny", quietly = TRUE)) {
       output$selected <- renderText({ paste("You selected:", input$waterbody) })
     }
   )
+  }
 }

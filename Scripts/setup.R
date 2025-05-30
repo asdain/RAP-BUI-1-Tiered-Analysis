@@ -48,6 +48,14 @@ theme_aaron = function(){
     )
 }
 
-
-
+# Loading all custom script
+tool_files = list.files(path = "R", pattern = "\\.R$", full.names = TRUE)
+invisible(lapply(tool_files, source))
+source("R/contaminant_icons.R")
+source("R/make_restrict_table.R")
+source("R/render_t1_table.R")
+source("R/render_t2_table.R")
+source("R/tier_table_shared.R")
+source("R/tier_pass_assessment.R")
+source()
 
