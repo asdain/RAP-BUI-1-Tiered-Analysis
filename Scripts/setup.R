@@ -21,6 +21,7 @@ library(stringr)
 library(reactablefmtr)
 library(htmlwidgets)
 
+
 # Input data --------------------------
 # Loading the MNR fish consumption advisory data csv 
 cons_data = read.csv("Data/mnr_fish_consumption_advisory_data_2024.csv") %>%
