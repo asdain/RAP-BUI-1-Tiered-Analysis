@@ -26,7 +26,7 @@ run_advisory_app = function(){
   
   shinyApp(
     ui = fluidPage(
-      make_waterbody_selector(c("Lake St. Francis", "Lake Erie", "Ottawa River")),
+      make_waterbody_selector(c("Lake St. Francis", "Belleville Nearshore", "Trenton Nearshore")),
       textOutput("selected")
     ),
     server = function(input, output, session) {
