@@ -99,6 +99,21 @@ This function is necessary to create the Tier 1 and Tier 2 tables for display. E
 
 All three of these values are set by default to the objects defined in `setup.R` and by your report parameters. Therefore, calling `make_restrict_table()` in the report on its own should work. If you renamed any of those variables, you will have to specify them manually.
 
+
+### extract_unique_adv_causes() and mappings()
+These two functions create icons to represent the contaminant drivers of consumption advisories in the AOC. These are necessary to call in the current version to properly render the t1 table using `render_t1_table()`. They will extract the listed drivers of contaminants, give them shape and colour icons, and pass them along to your T1 table. At the current time, the function can only support up to 6 contaminant drivers, which should be fine for most fishing zones. They can be used as follows:
+
+```
+# Set contaminant mappings
+unique_contaminants <- extract_unique_adv_causes(df) # Where "df" is your output from make_restrict_table()
+mappings <- assign_contaminant_mappings(unique_contaminants)
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+```
+
+These objects will be passed to the next function, `render_t1_table()`.
+
+
 ### render_t1_table()
 This function generates the Tier 1 table using Reactable. It will automatically detect the drivers of contaminants for any particular advisory and match them with a shape and colour for visualization. This function relies on an input table created from `make_restrict_table()`. It uses these arguments:
 
@@ -114,8 +129,24 @@ This function generates the Tier 1 table using Reactable. It will automatically 
 
 `show_legend` <- `TRUE`/`FALSE` to show a legend for the contaminant drivers. `TRUE` by default.
 
-Since the only argument without default is `df`, you can generally call this function simply with `render_t1_table(df)`
+`contaminant_shapes` <- contaminant shape mappinsg from the `assign_contaminant_mappings()` function
 
+`contaminant_colours` <- contaminant colour mappings from the `assign_contaminant_mappings()` function
+
+As of 2025-06-03, I have not figured out a way to cleanly integrate the contaminant mappings directly into the function to allow the user to skip the step of defining them manually. Hopefully in a future update. Therefore, in the Master Report, the Tier 1 table is called as follows:
+
+```
+render_t1_table(
+  df = t1_df,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  table_height = "1500px",
+  show_legend = TRUE,
+  interest_species = params$interest_species,
+)
+```
+
+Where `contaminant_shapes` and `contaminant_colours` were defined as explained above, and `t1_df` being the output of `make_restrict_table()`.
 
 ### render_t2_table()
 This function generates the Tier 2 table using Reactable. It will calculate the median value of your reference sites and compare them to your AOC advisory level. If a species/size class has 3 or fewer reference sites, the value will be coloured grey instead of red/green. This table also includes a dropdown to display the individual reference site values for each species, size class, and population type.
@@ -133,3 +164,32 @@ This function generates the Tier 2 table using Reactable. It will calculate the 
 `table_height` <- You can define the default height of your table, defaulted to 1500px
 
 `exclude_t1_passed` <- `TRUE`/`FALSE` This argument allows you to exclude species that passed Tier 1. `TRUE` by default.
+
+Since this function's arguments all have reliable defaults, it can be called very simply with `render_t2_table()`. That's it!
+
+### report_pass_fail_species()
+This function will return a handy inline table to show whether each of your species of interest pass or fail one or both tiers.
+
+`flag_df` <- A dataframe of pass/fail flags. I am actually not sure where this came from anymore, but setting this to `flags` somehow works.
+
+`tier` <- Can be set to "t1", "t2", or "both". Will output species that pass respective tier
+
+`output` <- Can be "list" or "table". Changes the output format.
+
+In the master report:
+
+```
+report_pass_fail_species(flags, tier = "t1", output = "table")
+```
+
+```
+report_pass_fail_species(flags, tier = "t2", output = "table")
+```
+
+
+
+# Index
+
+## AOC ID values
+### Below are the AOCs with their waterbody_group values and guide_locname_eng values in the MECP table.
+(coming soon)
