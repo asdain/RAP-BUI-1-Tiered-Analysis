@@ -1,13 +1,18 @@
 # Shared utilities for Tier 1 and Tier 2 fish advisory reactables
 
 #' Prepare species × size × population combinations for the AOC
-prep_aoc_combinations <- function(cons_data, aoc_id, length_levels) {
+prep_aoc_combinations <- function(cons_data, aoc_id, length_levels = length_levels) {
   cons_data %>%
     filter(waterbody_group %in% aoc_id,
            population_type_desc %in% c("General", "Sensitive")) %>%
     distinct(Species = specname, Size = length_category_label, Population = population_type_desc) %>%
     mutate(Size = factor(Size, levels = length_levels, ordered = TRUE))
 }
+
+if (is.null(length_levels)) {
+  length_levels <- get("length_levels", envir = .GlobalEnv)
+}
+
 
 #' Filter and tag AOC/Reference data
 filter_advisory_data <- function(cons_data, site_ids, aoc_id, length_levels) {

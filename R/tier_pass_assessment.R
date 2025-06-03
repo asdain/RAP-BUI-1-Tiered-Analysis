@@ -45,7 +45,7 @@ get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_le
 }
 
 #' Generate a markdown list or table of species by pass/fail group
-report_pass_fail_species <- function(flag_df, tier = c("both", "t1", "t2"), output = c("list", "table")) {
+report_pass_fail_species <- function(flag_df = flags, tier = c("both", "t1", "t2"), output = c("list", "table")) {
   tier <- match.arg(tier)
   output <- match.arg(output)
   
