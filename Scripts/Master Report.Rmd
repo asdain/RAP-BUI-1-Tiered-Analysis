@@ -1,0 +1,89 @@
+---
+title: "Master BUI 1 Report"
+output:
+  html_notebook
+params:
+  AOC: '45087425'
+  reference_sites: ['44007727',
+  '43557712',
+  '43497905',
+  '43117922',
+  '43397900',
+  '43517847',
+  '43527851',
+  '44397535',
+  '43557717',
+  '43527856']
+  restrict_threshold: 8
+  interest_species: NULL
+---
+
+```{r Setup, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(inline_output = TRUE)
+
+# Base setup
+source("Scripts/setup.R")
+
+
+
+aoc_name = get_waterbody_names(cons_data, site_id = params$AOC)
+ref_names = get_waterbody_names(cons_data, site_id = ref_sites)
+
+# Make table
+t1_df = make_restrict_table(cons_data,
+                                params$AOC,
+                                length_levels)
+# Set contaminant mappings
+unique_contaminants <- extract_unique_adv_causes(t1_df)
+mappings <- assign_contaminant_mappings(unique_contaminants)
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+
+
+
+```
+
+
+
+
+# Tier 1 Assessment for `r aoc_name`
+```{r}
+render_t1_table(
+  df = t1_df,
+  length_levels = length_levels,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  table_height = "1400px",
+  show_legend = TRUE,
+  interest_species = params$interest_species
+)
+```
+
+
+## The following species pass/fail Tier 1:
+```{r}
+report_pass_fail_species(flags, tier = "t1", output = "table")
+```
+
+### The following reference sites will be used for the Tier 2 analysis of `r aoc_name`:
+
+`r ref_names`
+
+
+# Tier 2 Assessment for `r aoc_name`
+```{r Tier 2}
+t2_table <- render_t2_table(cons_data = cons_data,
+                            aoc_id = params$AOC,
+                            reference_sites = params$reference_sites,
+                            length_levels = length_levels,
+                            interest_species = params$interest_species
+)
+
+t2_table
+
+```
+## The following species pass/fail Tier 2:
+```{r}
+report_pass_fail_species(flags, tier = "t2", output = "table")
+```
