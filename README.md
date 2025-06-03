@@ -72,12 +72,13 @@ params:
 
 Once you change these variables to your liking, you can Run All code in the Markdown file, then knit to HTML or PDF. If you are using html_notebook as the output, you can also Preview the file as you work.
 
-### `setup.R`
+## `setup.R`
 This file is a convenient and important tool to setup the project to use all of the included data and tools. By running `source(setup.R)`, the project will load all of the required packages, the MECP advisory dataset (which will be named `cons_data`), all of the custom functions, and other utilities. 
 
 ## Functions and helper tools
-This repository uses a number of custom functions to generate the Tiered analysis outputs, so that they are portable, reusable, and configurable. At this time I have not created a convenient R package to bundle them all together, but the `setup.R` file will load them all automatically. All of the utility scripts can be found in the `R` folder. By running `source(setup.R)`, all of the necessary functions will be loaded for you to use. The first chunk in the Master Report runs `setup.R`. 
+This repository uses a number of custom functions to generate the Tiered analysis outputs, so that they are portable, reusable, and configurable. At this time I have not created a convenient R package to bundle them all together, but the `setup.R` file will load them all automatically. All of the utility scripts can be found in the `R` folder. By running `source(setup.R)`, all of the necessary functions will be loaded for you to use. The first chunk in the Master Report runs `setup.R`. Below are some of the main functions you will be interfacing with to generate the table outputs. Detailed documentation for the "behind-the-scenes" functions is yet to come.
 
+### get_waterbody_ids() and get_waterbody_names()
 If you are not sure of your AOC or reference sites' ID values, you can use the included function `get_waterbody_ids()`. You can pass this function first the dataset (which in this project is by default named cons_data), then a waterbody name or list of waterbody names (in vector format,  `c("Name 1", "Name 2", etc...)`). Here is an example to find the St. Lawrence River AOC ID:
 
 ```
@@ -85,4 +86,50 @@ If you are not sure of your AOC or reference sites' ID values, you can use the i
 [1] 45087425
 ```
 
-There is also a reverse function to look up the site name from a given ID (`get_waterbody_names()`), which is used in the Master report Rmd file to correctly populate table fields.
+There is also a reverse function to look up the site name from a given ID (`get_waterbody_names()`), which is used in the Master report Rmd file to populate table fields.
+
+### make_restrict_table()
+This function is necessary to create the Tier 1 and Tier 2 tables for display. Essentially, it creates a wide-format table ready to be passed to Reactable for display using the data from the MECP advisory table and the species from your AOC. It has three arguments:
+
+`cons_data` <- Refers to the MECP dataset
+
+`aoc_id` <- The `waterbody_group` value for your AOC/area of interest
+
+`length_levels` <- A character vector containing the length levels. The reason this exists is that by default the table will sort the size categories alphabetically which messes up the table.
+
+All three of these values are set by default to the objects defined in `setup.R` and by your report parameters. Therefore, calling `make_restrict_table()` in the report on its own should work. If you renamed any of those variables, you will have to specify them manually.
+
+### render_t1_table()
+This function generates the Tier 1 table using Reactable. It will automatically detect the drivers of contaminants for any particular advisory and match them with a shape and colour for visualization. This function relies on an input table created from `make_restrict_table()`. It uses these arguments:
+
+`df` <- Your `make_restrict_table()` output
+
+`length_levels` <- As above, defined by default from `setup.R`
+
+`interest_species` <- A character string of your species of interest, defaulted to your report parameters
+
+`generate_shape_fn` <- The function used to generate contaminant driver shapes, defaulted to `generate_shape`, from the `contaminant_icons.R`
+
+`table_height` <- You can define the default height of your table, defaulted to 1500px
+
+`show_legend` <- `TRUE`/`FALSE` to show a legend for the contaminant drivers. `TRUE` by default.
+
+Since the only argument without default is `df`, you can generally call this function simply with `render_t1_table(df)`
+
+
+### render_t2_table()
+This function generates the Tier 2 table using Reactable. It will calculate the median value of your reference sites and compare them to your AOC advisory level. If a species/size class has 3 or fewer reference sites, the value will be coloured grey instead of red/green. This table also includes a dropdown to display the individual reference site values for each species, size class, and population type.
+
+`cons__data` <- Defaults to the MECP advisory table
+
+`aoc_id` <- Defaults to waterbody_group for AOC defined in parameters.
+
+`length_levels` <- As above, defined by default from `setup.R`
+
+`interest_species` <- A character string of your species of interest, defaulted to your report parameters
+
+`reference_sites` <- A character vector of your reference site IDs, defaulted to the ones defined in parameters.
+
+`table_height` <- You can define the default height of your table, defaulted to 1500px
+
+`exclude_t1_passed` <- `TRUE`/`FALSE` This argument allows you to exclude species that passed Tier 1. `TRUE` by default.
