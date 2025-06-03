@@ -1,4 +1,20 @@
-render_t2_table <- function(cons_data, aoc_id, reference_sites, length_levels, interest_species = NULL, exclude_t1_passed = TRUE) {
+render_t2_table <- function(cons_data = NULL, 
+                            aoc_id = params$AOC, 
+                            reference_sites = params$reference_sites, 
+                            length_levels = NULL, 
+                            interest_species = params$interest_species, 
+                            exclude_t1_passed = TRUE) {
+  
+  if (is.null(cons_data)) {
+    cons_data <- get("cons_data", envir = .GlobalEnv)
+  }
+  
+  if (is.null(length_levels)) {
+    length_levels <- get("length_levels", envir = .GlobalEnv)
+  }
+  
+
+  
   aoc_combinations <- prep_aoc_combinations(cons_data, aoc_id, length_levels)
   
   filtered_data <- cons_data %>%

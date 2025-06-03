@@ -13,13 +13,18 @@
 #' @param show_legend Logical, whether to include contaminant legend
 #' @return A reactable object with legend and formatted table
 render_t1_table <- function(df,
-                            length_levels,
+                            length_levels = NULL,
                             interest_species = NULL,
                             contaminant_shapes,
                             contaminant_colours,
                             generate_shape_fn = generate_shape,
                             table_height = "1500px",
                             show_legend = TRUE) {
+  
+  if (is.null(length_levels)) {
+    length_levels <- get("length_levels", envir = .GlobalEnv)
+  }
+  
   
   size_cols <- length_levels[length_levels %in% names(df)]
   
