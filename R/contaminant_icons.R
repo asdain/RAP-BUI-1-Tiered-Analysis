@@ -3,44 +3,56 @@
 #==============================
 
 # Function to render inline shapes in reactable
-generate_shape <- function(shape, colour = "gray", size = 12) {
-  # Ensure safe defaults
+generate_shape <- function(shape, colour = "gray", size = 12, border_width = 2) {
   if (is.null(colour) || is.na(colour) || nchar(colour) == 0) colour <- "gray"
   if (is.null(shape) || is.na(shape) || nchar(shape) == 0) shape <- "circle"
   
   common_style <- paste0(
     "width:", size, "px;",
     " height:", size, "px;",
-    " background-color:", colour, ";",  # NOTE: fixed spelling to "color"
     " display: inline-block;",
     " margin-right: 5px;",
     " vertical-align: middle;"
   )
   
   shape_style <- switch(shape,
-                        "circle" = "border-radius: 50%;",
-                        "square" = "",
+                        "circle" = paste0("background-color:", colour, "; border-radius: 50%;"),
+                        "square" = paste0("background-color:", colour, ";"),
                         "diamond" = paste0(
-                          "transform: rotate(45deg);",
+                          "background-color:", colour, ";",
+                          " transform: rotate(45deg);",
                           " width:", size * 0.7, "px;",
                           " height:", size * 0.7, "px;"
                         ),
-                        "triangle" = paste0(
-                          "width: 0; height: 0;",
-                          " border-left:", size / 2, "px solid transparent;",
-                          " border-right:", size / 2, "px solid transparent;",
-                          " border-bottom:", size, "px solid ", colour, ";",
-                          " background: none;"
+                        "cross" = paste0(
+                          "background: linear-gradient(to right, ", colour, " 40%, ", colour, " 60%),",
+                          "            linear-gradient(to bottom, ", colour, " 40%, ", colour, " 60%);",
+                          " background-repeat: no-repeat;",
+                          " background-position: center;",
+                          " background-size: 100% 2px, 2px 100%;"
                         ),
-                        ""  # fallback
+                        "ring" = paste0(
+                          "background-color: transparent;",
+                          " border: ", border_width, "px solid ", colour, ";",
+                          " border-radius: 50%;"
+                        ),
+                        "outline-square" = paste0(
+                          "background-color: transparent;",
+                          " border: ", border_width, "px solid ", colour, ";"
+                        ),
+                        "outline-diamond" = paste0(
+                          "background-color: transparent;",
+                          " border: ", border_width, "px solid ", colour, ";",
+                          " transform: rotate(45deg);",
+                          " width:", size * 0.7, "px;",
+                          " height:", size * 0.7, "px;"
+                        ),
+                        ""
   )
   
-  if (shape == "triangle") {
-    htmltools::tags$div(style = shape_style)
-  } else {
-    htmltools::tags$div(style = paste(common_style, shape_style))
-  }
+  htmltools::tags$div(style = paste(common_style, shape_style))
 }
+
 
 # Function to extract all unique advisory causes from the wide-format reactable input
 extract_unique_adv_causes <- function(t1_df) {
@@ -59,8 +71,8 @@ extract_unique_adv_causes <- function(t1_df) {
 assign_contaminant_mappings <- function(contaminants,
                                         user_shapes = NULL,
                                         user_colours = NULL,
-                                        shape_options = c("circle", "square", "diamond", "triangle", "hexagon", "ring"),
-                                        colour_options = c("goldenrod", "magenta", "skyblue", "purple", "darkorange", "seagreen")) {
+                                        shape_options = c("circle", "square", "diamond", "ring", "outline-square", "outline-diamond", "cross"),
+                                        colour_options = c("goldenrod", "magenta", "skyblue", "purple", "darkorange", "seagreen", "maroon")) {
   n <- length(contaminants)
   shape_cycle <- rep(shape_options, length.out = n)
   colour_cycle <- rep(colour_options, length.out = n)

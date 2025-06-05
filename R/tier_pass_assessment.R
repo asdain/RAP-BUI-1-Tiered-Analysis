@@ -1,7 +1,8 @@
 #' Compute Tier 1 and Tier 2 pass/fail flags per species
+#' Optionally excludes Tier 1 passing species from Tier 2 analysis
 #' Returns a table with Species, t1_pass, t2_pass
 get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_levels) {
-  # T1 pass: all AOC advisories >= restrict_threshold
+  # Tier 1
   t1_flags <- cons_data %>%
     filter(waterbody_group == aoc_id,
            population_type_desc %in% c("General", "Sensitive")) %>%
@@ -9,7 +10,7 @@ get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_le
     summarise(t1_pass = all(adv_level >= params$restrict_threshold), .groups = "drop") %>%
     rename(Species = specname)
   
-  # T2 pass: all AOC advisories >= reference median
+  # Tier 2
   base_data <- cons_data %>%
     filter_advisory_data(site_ids = c(aoc_id, reference_sites), aoc_id, length_levels) %>%
     summarise_max_advisory()
@@ -33,23 +34,31 @@ get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_le
     ) %>%
     select(Species, t2_pass)
   
-  # Join both
+  # Join
   full_flags <- t1_flags %>%
-    full_join(t2_flags, by = "Species") %>%
+    left_join(t2_flags, by = "Species") %>%
     mutate(
-      t1_pass = ifelse(is.na(t1_pass), FALSE, t1_pass),
       t2_pass = ifelse(t1_pass, TRUE, ifelse(is.na(t2_pass), FALSE, t2_pass))
     )
   
   return(full_flags)
 }
 
+
+
+
 #' Generate a markdown list or table of species by pass/fail group
-report_pass_fail_species <- function(flag_df = flags, tier = c("both", "t1", "t2"), output = c("list", "table")) {
+#' Generate a markdown list or table of species by pass/fail group
+#' Optionally filters Tier 2 report to exclude Tier 1 passers
+report_pass_fail_species <- function(flag_df = flags,
+                                     tier = c("both", "t1", "t2"),
+                                     output = c("list", "table"),
+                                     filter_t1_pass = FALSE) {
   tier <- match.arg(tier)
   output <- match.arg(output)
   
   format_type <- if (knitr::is_html_output()) "html" else "markdown"
+  
   if (output == "table") {
     summary_df <- flag_df %>%
       mutate(
@@ -59,12 +68,15 @@ report_pass_fail_species <- function(flag_df = flags, tier = c("both", "t1", "t2
       select(Species, `Tier 1`, `Tier 2`)
     
     if (tier == "t1") {
-      print(knitr::kable(summary_df %>% select(Species, `Tier 1`), format = format_type))
+      print(knitr::kable(summary_df %>% select(Species, `Tier 1`), format = "markdown"))
     } else if (tier == "t2") {
+      filtered <- if (filter_t1_pass) flag_df %>% filter(!t1_pass) else flag_df
+      summary_df <- summary_df %>% filter(Species %in% filtered$Species)
       print(knitr::kable(summary_df %>% select(Species, `Tier 2`), format = "markdown"))
     } else {
-      print(knitr::kable(summary_df, format = "markdown"))
+      print(knitr::kable(summary_df, format = format_type))
     }
+    
   } else if (tier == "t1") {
     passed <- flag_df %>% filter(t1_pass) %>% pull(Species)
     failed <- flag_df %>% filter(!t1_pass) %>% pull(Species)
@@ -76,18 +88,17 @@ report_pass_fail_species <- function(flag_df = flags, tier = c("both", "t1", "t2
       "**Fail Tier 1:**",
       if (length(failed) > 0) paste0("- ", failed) else "_None_"
     )
+    
     if (isTRUE(getOption("inline_output"))) {
-      return(knitr::asis_output(paste(out, collapse = "
-
-")))
+      return(knitr::asis_output(paste(out, collapse = "\n")))
     } else {
-      cat(paste(out, collapse = "
-"), "
-")
+      cat(paste(out, collapse = "\n"), "\n")
     }
+    
   } else if (tier == "t2") {
-    passed <- flag_df %>% filter(t2_pass) %>% pull(Species)
-    failed <- flag_df %>% filter(!t2_pass) %>% pull(Species)
+    filtered <- if (filter_t1_pass) flag_df %>% filter(!t1_pass) else flag_df
+    passed <- filtered %>% filter(t2_pass) %>% pull(Species)
+    failed <- filtered %>% filter(!t2_pass) %>% pull(Species)
     
     out <- c(
       "**Pass Tier 2:**",
@@ -96,14 +107,13 @@ report_pass_fail_species <- function(flag_df = flags, tier = c("both", "t1", "t2
       "**Fail Tier 2:**",
       if (length(failed) > 0) paste0("- ", failed) else "_None_"
     )
+    
     if (isTRUE(getOption("inline_output"))) {
-      return(knitr::asis_output(paste(out, collapse = "
-")))
+      return(knitr::asis_output(paste(out, collapse = "\n")))
     } else {
-      cat(paste(out, collapse = "
-"), "
-")
+      cat(paste(out, collapse = "\n"), "\n")
     }
+    
   } else {
     summary_df <- flag_df %>%
       mutate(
@@ -112,9 +122,10 @@ report_pass_fail_species <- function(flag_df = flags, tier = c("both", "t1", "t2
       ) %>%
       select(Species, `Tier 1`, `Tier 2`)
     
-    print(knitr::kable(summary_df, format = "markdown"))
+    print(knitr::kable(summary_df, format = format_type))
   }
 }
+
 
 
 
