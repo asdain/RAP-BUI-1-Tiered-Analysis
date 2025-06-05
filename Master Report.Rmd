@@ -1,21 +1,25 @@
 ---
 title: "Master BUI 1 Report"
 output:
-  html_notebook
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
 params:
   AOC: '45087425'
-  reference_sites: ['44007727',
-  '43557712',
-  '43497905',
-  '43117922',
-  '43397900',
-  '43517847',
-  '43527851',
-  '44397535',
-  '43557717',
-  '43527856']
+  reference_sites:
+  - '44007727'
+  - '43557712'
+  - '43497905'
+  - '43117922'
+  - '43397900'
+  - '43517847'
+  - '43527851'
+  - '44397535'
+  - '43557717'
+  - '43527856'
   restrict_threshold: 8
-  interest_species: NULL
+  interest_species: null
 ---
 
 ```{r Setup, echo=FALSE}
@@ -75,7 +79,7 @@ report_pass_fail_species(flags, tier = "t1", output = "table")
 
 ### The following reference sites will be used for the Tier 2 analysis of `r aoc_name`:
 
-`r ref_names`
+`r knitr::asis_output(paste0("- ", ref_names, collapse = "\n"))`
 
 
 # Tier 2 Assessment for `r aoc_name`
@@ -91,5 +95,5 @@ Numbers in cells indicate advisory levels for a species, size class, and populat
 
 ## The following species pass/fail Tier 2:
 ```{r Tier 2 Pass/Fail}
-report_pass_fail_species(flags, tier = "t2", output = "table")
+report_pass_fail_species(flags, tier = "t2", output = "table", filter_t1_pass = TRUE)
 ```

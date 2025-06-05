@@ -1,3 +1,18 @@
+
+# Replaces median with custom function to take lower of two middle values in even-numbered lists
+median_floor <- function(x) {
+  x <- sort(x[!is.na(x)])
+  n <- length(x)
+  if (n == 0) return(NA)
+  if (n %% 2 == 1) {
+    x[(n + 1) / 2]
+  } else {
+    x[n / 2]  # lower of the two middles
+  }
+}
+
+
+
 render_t2_table <- function(cons_data = NULL, 
                             aoc_id = params$AOC, 
                             reference_sites = params$reference_sites, 
@@ -47,7 +62,7 @@ render_t2_table <- function(cons_data = NULL,
   
   ref_medians_raw <- ref_long %>%
     group_by(Species, Population, Size) %>%
-    summarise(Median = median(advisory, na.rm = TRUE), .groups = "drop") %>%
+    summarise(Median = median_floor(advisory), .groups = "drop") %>%
     pivot_wider(names_from = Size, values_from = Median)
   size_cols_medians <- intersect(length_levels, names(ref_medians_raw))
   ref_medians <- ref_medians_raw %>%
