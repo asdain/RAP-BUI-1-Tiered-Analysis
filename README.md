@@ -23,9 +23,11 @@ Analysis workflow and data visualizations for Remedial Action Plan Beneficial Us
 # Planned updates
 
 * Full UI for configuration options
-* Support for AOCs with multiple fishing zones (currently have to generate reports separately)
+* Support for AOCs with multiple fishing zones (currently have to generate reports separately) with options for median, max, or lowest advisory values
 * Custom functions to be packaged into a... package
 * Ongoing bug fixes and efficiency upgrades
+* Ongoing improvements to presentation
+* Support for Shiny widget integration
 
 
 # Usage
@@ -192,4 +194,18 @@ report_pass_fail_species(flags, tier = "t2", output = "table")
 
 ## AOC ID values
 ### Below are the AOCs with their waterbody_group values and guide_locname_eng values in the MECP table.
-(coming soon)
+| AOC | ID |
+|-----|----|
+|St. Lawrence River (Lake St. Francis) | 45087425|
+|Belleville Nearshore (Lake Ontario)| 44087724 |
+|Trenton Nearshore (Lake Ontario)| 44087724|
+|Lake Ontario (Eastern Basin) | 43457711 |
+|Hamilton Harbour (Lake Ontario) | 43177950|
+|Toronto Waterfront Area (Lake Ontario)|43397919|
+|Niagara River (Upper reach)|42577857|
+|Niagara River (Lower reach)|43077903|
+|Detroit River (Upper reach)|42158307|
+|Detroit River (Lower reach)|42048308|
+|Thunder Bay (Lake Superior)|48228901|
+|Nipigon Bay (Lake Superior)|48578814|
+|Peninsula Harbour (Lake Superior)|48448625|
