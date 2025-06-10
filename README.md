@@ -7,7 +7,7 @@ Analysis workflow and data visualizations for Remedial Action Plan Beneficial Us
 
 # Features
 
-=======
+
 * Automatic generation of Tier 1 and Tier 2 analysis reports for the BUI 1 Assessment using parameterized R markdown report
 * Render tables for Tier 1 (AOC advisory levels compared to restrictive threshold) and Tier 2 (AOC advisory levels compared to medians of suitable reference sites)
 * Tables sorted by Species, Population (General/Sensitive), and size class
@@ -196,11 +196,11 @@ report_pass_fail_species(flags, tier = "t2", output = "table")
 ### Below are the AOCs with their waterbody_group values and guide_locname_eng values in the MECP table.
 | AOC | ID |
 |-----|----|
-|St. Lawrence River (Lake St. Francis) | 45087425|
-|Belleville Nearshore (Lake Ontario)| 44087724 |
-|Trenton Nearshore (Lake Ontario)| 44087724|
-|Lake Ontario (Eastern Basin) | 43457711 |
-|Hamilton Harbour (Lake Ontario) | 43177950|
+|St. Lawrence River (Lake St. Francis)|45087425|
+|Belleville Nearshore (Lake Ontario)|44087724|
+|Trenton Nearshore (Lake Ontario)|44087724|
+|Lake Ontario (Eastern Basin)|43457711|
+|Hamilton Harbour (Lake Ontario)|43177950|
 |Toronto Waterfront Area (Lake Ontario)|43397919|
 |Niagara River (Upper reach)|42577857|
 |Niagara River (Lower reach)|43077903|
@@ -209,3 +209,5 @@ report_pass_fail_species(flags, tier = "t2", output = "table")
 |Thunder Bay (Lake Superior)|48228901|
 |Nipigon Bay (Lake Superior)|48578814|
 |Peninsula Harbour (Lake Superior)|48448625|
+|St. Clair River|42498228|
+|St. Marys River|46328421|
