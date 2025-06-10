@@ -44,19 +44,20 @@ output:
   html_notebook
   
 params:
-  AOC: '45087425' 
-  reference_sites: ['44007727',
-  '43557712',
-  '43497905',
-  '43117922',
-  '43397900',
-  '43517847',
-  '43527851',
-  '44397535',
-  '43557717',
-  '43527856'] 
-  restrict_threshold: 8 
-  interest_species: NULL 
+  AOC: '45087425'
+  reference_sites:
+  - '44007727'
+  - '43557712'
+  - '43497905'
+  - '43117922'
+  - '43397900'
+  - '43517847'
+  - '43527851'
+  - '44397535'
+  - '43557717'
+  - '43527856'
+  restrict_threshold: 8
+  interest_species: null
 ```
 
 `Title` <- Change the title as you wish
@@ -65,11 +66,11 @@ params:
 
 `AOC` <- This is where you put your AOC's waterbody ID. Crucially, this is from the waterbody_group column in the MECP dataset (some waterbodies have the same guide name, but always different IDs). By default this is the SLR AOC. There is a helpful lookup tool included to find a waterbody_group value given its guide name, more on that below.
 
-`reference_sites` <- This is where you can add a list of Tier 2 reference sites. The format is [ID1, ID2, ...]. By default, this is all Lake Ontario non-AOC sites.
+`reference_sites` <- This is where you can add a list of Tier 2 reference sites. The format is `[ID1, ID2, ...]` or hyphenated list as shown above. By default, this is all Lake Ontario non-AOC sites.
 
 `restrict_threshold` <- Here you can modify your "restrictive" advisory threshold, which by default is set to 8 meals per month.
 
-`interest_species` <- This is where you can specify a list of species of interest (format [Spec1, Spec2, ....]). By default this is set to NULL, which will return tables for all species with advisories in the AOC.
+`interest_species` <- This is where you can specify a list of species of interest (format `[Spec1, Spec2, ....]`). By default this is set to NULL, which will return tables for all species with advisories in the AOC.
 
 
 Once you change these variables to your liking, you can Run All code in the Markdown file, then knit to HTML or PDF. If you are using html_notebook as the output, you can also Preview the file as you work.
@@ -172,11 +173,24 @@ Since this function's arguments all have reliable defaults, it can be called ver
 ### report_pass_fail_species()
 This function will return a handy inline table to show whether each of your species of interest pass or fail one or both tiers.
 
-`flag_df` <- A dataframe of pass/fail flags. I am actually not sure where this came from anymore, but setting this to `flags` somehow works.
+`flag_df` <- A dataframe of pass/fail flags. You have to create this yourself with the function `get_species_pass_flags()` (below)
 
 `tier` <- Can be set to "t1", "t2", or "both". Will output species that pass respective tier
 
 `output` <- Can be "list" or "table". Changes the output format.
+
+`filter_t1_pass` <- This argument species whether to filter species that passed tier 1 from the tier 2 pass/fail table. Set to `TRUE` or `FALSE`
+
+#### get_species_pass_flags()
+This function returns a dataframe of species pass/fail flags to feed into report_pass_fail_species()
+
+`cons_data` <- The MECP advisory table
+
+`aoc_ID` <- Your AOC waterbody_group ID
+
+`reference_sites` <- Reference site IDs
+
+`length_levels` <- length level vector (defined in `Setup.R`)
 
 In the master report:
 
