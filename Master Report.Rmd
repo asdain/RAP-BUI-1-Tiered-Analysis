@@ -1,12 +1,12 @@
 ---
 title: "Master BUI 1 Report"
 output:
-  pdf_document: default
   html_notebook: default
+  pdf_document: default
   html_document:
     df_print: paged
 params:
-  AOC: '45087425'
+  AOC: '43457711'
   reference_sites:
   - '44007727'
   - '43557712'
@@ -22,7 +22,7 @@ params:
   interest_species: null
 ---
 
-```{r Setup, echo=FALSE}
+```{r Setup, echo=FALSE, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 options(inline_output = TRUE)
 
@@ -51,7 +51,7 @@ contaminant_colours <- mappings$colours
 ```{r, Waterbody Lookup, include=FALSE, echo=FALSE}
 # As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
 
-get_waterbody_ids(cons_data, site_name = "St. Lawrence River (Lake St. Francis)")
+get_waterbody_ids(cons_data, site_name = "Lake Ontario (Eastern Basin)")
 
 ```
 
@@ -74,6 +74,9 @@ Numbers in cells indicate advisory levels for a species, size class, and populat
 
 ## The following species pass/fail Tier 1:
 ```{r Tier 1 Pass/Fail}
+flags = get_species_pass_flags(cons_data, params$AOC, params$reference_sites, length_levels)
+  
+  
 report_pass_fail_species(flags, tier = "t1", output = "table")
 ```
 

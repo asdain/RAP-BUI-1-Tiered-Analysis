@@ -151,6 +151,7 @@ render_t2_table <- function(cons_data = NULL,
       striped = FALSE,
       highlight = TRUE,
       pagination = FALSE,
+      sortable = FALSE,
       rowStyle = rowStyle_fn,
       style = list(
         fontFamily = "system-ui, sans-serif",

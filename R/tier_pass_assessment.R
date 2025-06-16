@@ -68,11 +68,11 @@ report_pass_fail_species <- function(flag_df = flags,
       select(Species, `Tier 1`, `Tier 2`)
     
     if (tier == "t1") {
-      print(knitr::kable(summary_df %>% select(Species, `Tier 1`), format = "markdown"))
+      print(knitr::kable(summary_df %>% select(Species, `Tier 1`), format = format_type))
     } else if (tier == "t2") {
       filtered <- if (filter_t1_pass) flag_df %>% filter(!t1_pass) else flag_df
       summary_df <- summary_df %>% filter(Species %in% filtered$Species)
-      print(knitr::kable(summary_df %>% select(Species, `Tier 2`), format = "markdown"))
+      print(knitr::kable(summary_df %>% select(Species, `Tier 2`), format = format_type))
     } else {
       print(knitr::kable(summary_df, format = format_type))
     }
