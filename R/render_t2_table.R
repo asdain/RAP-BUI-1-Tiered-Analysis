@@ -18,7 +18,8 @@ render_t2_table <- function(cons_data = NULL,
                             reference_sites = params$reference_sites, 
                             length_levels = NULL, 
                             interest_species = params$interest_species, 
-                            exclude_t1_passed = TRUE) {
+                            exclude_t1_passed = TRUE,
+                            table_height = "1500px") {
   
   if (is.null(cons_data)) {
     cons_data <- get("cons_data", envir = .GlobalEnv)
@@ -132,7 +133,7 @@ render_t2_table <- function(cons_data = NULL,
           if (row.Site === 'n') { return { fontSize: '11px', color: '#666', fontStyle: 'italic', fontFamily: 'system-ui, sans-serif' }; }
           if (row.site_type === 'AOC') {
             if (val === null) { return { background: '#eeeeee', color: '#000000', fontWeight: 'bold', fontSize: '15px', fontFamily: 'system-ui, sans-serif' }; }
-            if (n === undefined || n <= 3 || ref === undefined || ref === null) {
+            if (n === undefined || n < 3 || ref === undefined || ref === null) {
               return { background: '#999999', color: '#ffffff', fontWeight: 'bold', fontSize: '15px', fontFamily: 'system-ui, sans-serif' }; }
             if (val < ref) {
               return { background: '#d80032', color: '#ffffff', fontWeight: 'bold', fontSize: '15px', fontFamily: 'system-ui, sans-serif' }; }
@@ -152,6 +153,7 @@ render_t2_table <- function(cons_data = NULL,
       highlight = TRUE,
       pagination = FALSE,
       sortable = FALSE,
+      height = table_height,
       rowStyle = rowStyle_fn,
       style = list(
         fontFamily = "system-ui, sans-serif",
