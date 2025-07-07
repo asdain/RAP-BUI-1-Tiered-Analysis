@@ -3,5 +3,9 @@
 .RData
 .Ruserdata
 
-"Master Report.nb.html"
+*
+!.gitignore
 
+
+Data
+Output
