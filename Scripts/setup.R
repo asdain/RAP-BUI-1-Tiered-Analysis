@@ -31,6 +31,8 @@ length_levels <- c("15-20cm", "20-25cm", "25-30cm", "30-35cm", "35-40cm", "40-45
                    "45-50cm", "50-55cm", "55-60cm", "60-65cm", "65-70cm", "70-75cm", ">75cm")
 
 
+
+
 # Visualization constants ------------------
 # Custom ggplot theme
 theme_aaron = function(){

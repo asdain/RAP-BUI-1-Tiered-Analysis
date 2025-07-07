@@ -1,5 +1,5 @@
 ---
-title: "Trenton Nearshore Tier 1/2"
+title: "Master Report"
 always_allow_html: true
 output:
   html_document:
@@ -10,7 +10,7 @@ output:
   pdf_document:
     toc: true
 params:
-  AOC: '44057733'
+  AOC: '45087425'
   reference_sites:
   - '44007727'
   - '43557712'
