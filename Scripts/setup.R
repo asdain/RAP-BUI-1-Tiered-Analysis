@@ -2,25 +2,40 @@
 # Loads necessary data, packages, and creates convenient data objects.
 
 # Packages ------------
-library(dplyr)
-library(car)
-library(janitor)
-library(tidyr)
-library(ggplot2)
-library(tidyverse)
-library(forcats)
-library(factoextra)
-library(ggpubr)
-library(RColorBrewer)
-library(ordinal)
-library(knitr)
-library(kableExtra)
-library(reactable)
-library(htmltools)
-library(stringr)
-library(reactablefmtr)
-library(htmlwidgets)
+packages_list = c("dplyr", 
+                  "car", 
+                  "janitor", 
+                  "tidyr", 
+                  "ggplot2", 
+                  "tidyverse", 
+                  "forcats", 
+                  "factoextra",
+                  "ggpubr",
+                  "RColorBrewer",
+                  "ordinal",
+                  "knitr",
+                  "kableExtra",
+                  "reactable",
+                  "htmltools",
+                  "stringr",
+                  "reactablefmtr",
+                  "htmlwidgets",
+                  "sf",
+                  "purrr",
+                  "glue",
+                  "scales",
+                  "mgcv",
+                  "emmeans",
+                  "broom",
+                  "webshot2")
 
+
+installed_packages <- packages_list %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages_list[!installed_packages])
+}
+
+lapply(packages_list, library, character.only = TRUE)
 
 # Input data --------------------------
 # Loading the MNR fish consumption advisory data csv 
