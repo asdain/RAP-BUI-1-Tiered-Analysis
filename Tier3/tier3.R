@@ -1,7 +1,7 @@
 # Tier 3 initial data exploration
 
 source("Scripts/setup.R")
-library(sf)
+
 raw_data = read.csv("Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv")
 
 glimpse(raw_data)
@@ -19,21 +19,20 @@ aoc_shp = st_read(aoc_path)
 print(aoc_shp)
 plot(st_geometry(aoc_shp), col = "lightblue", main = "SLR (Ontario)")
 
-
-
-
 on_shp = st_read(ontario_path)
 plot(st_geometry(on_shp), col = "lightblue")
 
-lsl_shp = st_read(lsl_path) %>%
-  st_transform(lsl_shp, crs = 4326)
-ti_shp = st_read("Tier3/Data/thousislands") %>% st_transform(ti_shp, crs = 4326)
-lsf_shp = st_read("Tier3/Data/lsf") %>% st_transform(lsf_shp, crs = 4326)
-cornwall_shp = st_read("Tier3/Data/cornwall") %>% st_transform(cornwall_shp, crs = 4326)
-brockville_shp = st_read("Tier3/Data/brockville") %>% st_transform(brockville_shp, crs = 4326)
+target_sr = 4326 # Set spatial reference here; 4326 = WGS 84
 
-aoc_shp = st_transform(aoc_shp, crs = 4326) %>% st_make_valid() %>% summarise()
-on_shp = st_transform(on_shp, crs = 4326) %>% st_make_valid() %>% summarise()
+lsl_shp = st_read(lsl_path) %>%
+  st_transform(lsl_shp, crs = target_sr)
+ti_shp = st_read("Tier3/Data/thousislands") %>% st_transform(ti_shp, crs = target_sr)
+lsf_shp = st_read("Tier3/Data/lsf") %>% st_transform(lsf_shp, crs = target_sr)
+cornwall_shp = st_read("Tier3/Data/cornwall") %>% st_transform(cornwall_shp, crs = target_sr)
+brockville_shp = st_read("Tier3/Data/brockville") %>% st_transform(brockville_shp, crs = target_sr)
+
+aoc_shp = st_transform(aoc_shp, crs = target_sr) %>% st_make_valid() %>% summarise()
+on_shp = st_transform(on_shp, crs = target_sr) %>% st_make_valid() %>% summarise()
 
 
 # Combining SLR sections and subtracting AOC
@@ -69,6 +68,11 @@ slr_df = hg_pts[st_intersects(hg_pts, slr_ref, sparse = FALSE),]
 
 on_df = hg_pts[st_intersects(hg_pts, on_shp, sparse = FALSE),]
 
+
+
+
+
+
 plot(st_geometry(aoc_shp), col="lightblue")
 plot(st_geometry(aoc_df), col = "darkred", add = TRUE)
 
@@ -79,6 +83,54 @@ plot(st_geometry(slr_ref), col = "cyan")
 plot(st_geometry(aoc_shp), col = "lightgreen", add = T)
 plot(st_geometry(on_shp), col = "lightblue", alpha = 0.8, add = T)
 plot(st_geometry(walleye_df), pch = 1,col = "darkred", lwd = 3, add = T)
+
+
+
+# Alternatively, filtering ALL sites by Lake Ontario/SLR in the name
+on_df_full = hg_data %>%
+  filter(grepl("Lake Ontario", Locname.Fishbase)) 
+
+slr_df_full = hg_data %>%
+  filter(grepl("St. Lawrence River",Locname.Fishbase))
+
+on_df_full$region = "Lake Ontario"
+slr_df_full$region = "St. Lawrence River"
+
+full_df =
+  bind_rows(on_df_full, slr_df_full) %>%
+  mutate(site = Locname.Fishbase) %>%
+  filter(Specname %in% aoc_species) %>%
+  mutate(region = as.factor(region))
+
+full_df_walleye = full_df %>%
+  filter(Specname == "Walleye")
+
+
+ontario_names = full_df_walleye %>%
+  filter(grepl("Lake Ontario", site)) %>%
+  distinct(site) %>%
+  arrange(site) %>%
+  pull(site)
+
+print(ontario_names)
+
+slr_names = full_df_walleye %>%
+  filter(grepl("St. Lawrence River", site)) %>%
+  distinct(site) %>%
+  arrange(site) %>%
+  pull(site)
+slr_names
+
+site_order <- full_df_walleye %>%
+  group_by(site) %>%
+  summarise(median_hg = median(Value, na.rm = TRUE)) %>%
+  arrange(median_hg) %>%
+  pull(site)
+
+full_df_walleye = full_df_walleye %>%
+  mutate(site = factor(site, levels = site_order))
+
+
 # Initial visualization - walleye Hg concentrations in AOC vs LO
 aoc_df$region = "AOC"
 on_df$region = "Lake Ontario"
@@ -148,8 +200,7 @@ summary(gam_fit)
 
 # Virtual advisory for Hg in walleye
 
-# Convert length
-walleye_df 
+
 
 library(purrr)
 
@@ -222,7 +273,7 @@ ggplot(predictions, aes(x = Length, y = predicted_hg, color = region)) +
   annotate("text", x = 80, y = 0.17, label = "8 meals", hjust = 1, size = 3.5, color = "black") +
   annotate("text", x = 80, y = 0.065, label = "12 meals", hjust = 1, size = 3.5, color = "black")
 
-
+summary(walleye_df$Value)
 library(janitor)
 
 predictions_binned <- predictions %>%
@@ -565,4 +616,6 @@ on_plot  <- plot_region_trends(filter(walleye_top_bins, region == "Lake Ontario"
 print(aoc_plot)
 print(slr_plot)
 print(on_plot)
+
+
 
