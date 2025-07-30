@@ -2,7 +2,7 @@
 #'
 #' @param conc Numeric vector of contaminant concentrations (µg/g for Hg, ng/g for PCBs)
 #' @param population Character, either "General" or "Sensitive"
-#' @param contaminant Character, currently supports "Mercury" or "PCB"
+#' @param contaminant Character, currently supports "Mercury" or "PCBs"
 #'
 #' @return Integer vector of advisory levels (number of meals/month)
 #' @export
@@ -11,8 +11,8 @@ assign_advisory <- function(conc, population = "General", contaminant = "MERCURY
     stop("population must be 'General' or 'Sensitive'")
   }
   
-  if (!contaminant %in% c("MERCURY", "PCB")) {
-    stop("Only 'MERCURY' (must be all-caps) and 'PCB' are currently supported.")
+  if (!contaminant %in% c("MERCURY", "PCBs")) {
+    stop("Only 'MERCURY' (must be all-caps) and 'PCBs' are currently supported.")
   }
   
   if (contaminant == "MERCURY") {
@@ -38,7 +38,7 @@ assign_advisory <- function(conc, population = "General", contaminant = "MERCURY
     }
   }
   
-  if (contaminant == "PCB") {
+  if (contaminant == "PCBs") {
     return(case_when(
       conc > 844   ~ 0L,
       conc > 422   ~ 1L,
@@ -50,4 +50,7 @@ assign_advisory <- function(conc, population = "General", contaminant = "MERCURY
       TRUE         ~ 32L
     ))
   }
+  
+  #  Fallback to prevent NULL return if no match above (safety net)
+  stop("Unrecognized input combination. Check contaminant and population.")
 }
