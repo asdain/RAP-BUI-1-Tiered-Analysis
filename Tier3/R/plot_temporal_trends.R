@@ -1,5 +1,6 @@
-plot_temporal_trends <- function(include_reference = TRUE, include_aoc = TRUE) {
-  temporal_df <- full_data %>%
+plot_temporal_trends <- function(df, include_reference = TRUE, include_aoc = TRUE, contaminant_label = NULL, unit_label = NULL) {
+  
+  temporal_df <- df %>%
     filter(!is.na(Sample.Year), !is.na(Length), !is.na(Value)) %>%
     mutate(
       year = Sample.Year

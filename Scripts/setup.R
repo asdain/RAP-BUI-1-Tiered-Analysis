@@ -39,7 +39,7 @@ lapply(packages_list, library, character.only = TRUE)
 
 # Input data --------------------------
 # Loading the MNR fish consumption advisory data csv 
-cons_data = read.csv("Data/mnr_fish_consumption_advisory_data_2024.csv") %>%
+cons_data = read.csv(here::here("Data","mnr_fish_consumption_advisory_data_2024.csv")) %>%
   clean_names()
 
 length_levels <- c("15-20cm", "20-25cm", "25-30cm", "30-35cm", "35-40cm", "40-45cm",

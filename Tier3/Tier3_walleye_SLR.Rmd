@@ -1,5 +1,5 @@
 ---
-title: "Tier 3 Report - Walleye"
+title: "Tier 3 Report - SLR"
 author: "Aaron Dain"
 always_allow_html: true
 output:
@@ -20,7 +20,7 @@ output:
     toc: true
 params:
   AOC_name: St. Lawrence River (Cornwall/Akwesasne)
-  species: Walleye
+  species: Yellow Perch
   contaminant: MERCURY
   aoc_shapefile: Tier3/Data/SLR_AOC
   raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
@@ -37,7 +37,6 @@ params:
   exclude_missing: TRUE
   standard_length: 45
 ---
-
 
 ```{r Setup, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, messages = FALSE)
@@ -110,9 +109,6 @@ unit_label <- get_unit_label(params$contaminant)
 
 
 ```
-
-
-
 
 ```{r Dataset-Filtering, include = FALSE}
 
@@ -197,8 +193,6 @@ filtered_data %>%
 
 ```
 
-
-
 # Tier 3 Analysis for `r contaminant_label` in `r params$species` for the `r params$AOC_name` AOC
 
 ## Reference Sites
@@ -256,7 +250,6 @@ adjust_bbox_to_aspect <- function(bbox, aspect_ratio = 10/6, crs = 3857) {
 
 ```
 
-
 ```{r map-creation, message = FALSE, include = FALSE}
 
 library(maptiles)
@@ -289,7 +282,6 @@ if (has_inset) {
 
 
 ```
-
 
 ```{r map, fig.cap='(ref:map)', message = FALSE}
 aspect_ratio = 6/10
@@ -358,7 +350,6 @@ print(combined_map)
 
 ```
 
-
 ```{r Display-Reference-Sites, include = FALSE}
 # Step 1: Ensure distinct region-site combinations
 ref_site_listing <- recent_data %>%
@@ -392,7 +383,6 @@ The following reference sites were used in the Tier 3 analysis of `r contaminant
 
 <br />
 
-
 ```{r report-missing-sites-message, results = "asis"}
 
 # Print out missing location sites
@@ -413,8 +403,7 @@ if (length(missing_sites) > 0) {
 
 ## Tier 3A: Virtual Advisory for `r contaminant_label` in `r params$species`
 
-Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration  for  `r params$species` and `r contaminant_label`. For each region, the function fits a log-log linear model (lm(log(Value) ~ log(Length)) to evaluate whether a significant relationship exists (p ≤ 0.05). If so, predicted concentrations are generated across a continuous length range, and then averaged within fixed 5 cm bins. Advisory levels are assigned using MECP-defined contaminant- and population-specific (General/Sensitive) thresholds to the mean predicted concentrations. If no significant relationship is detected, advisory levels are based on the mean concentration of all observations within each bin. 
-
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for `r params$species` and `r contaminant_label`. For each region, the function fits a log-log linear model (lm(log(Value) \~ log(Length)) to evaluate whether a significant relationship exists (p ≤ 0.05). If so, predicted concentrations are generated across a continuous length range, and then averaged within fixed 5 cm bins. Advisory levels are assigned using MECP-defined contaminant- and population-specific (General/Sensitive) thresholds to the mean predicted concentrations. If no significant relationship is detected, advisory levels are based on the mean concentration of all observations within each bin.
 
 ```{r Generate virtual advisories, include = FALSE}
 virtual_advisory = generate_virtual_advisories(
@@ -523,9 +512,7 @@ cat(paste0("### Model Summary by Region {-} \n\n ",
 
 ```
 
-
-
- <caption>(\#tab:virtual-advisory-table) Virtual advisory levels for `r contaminant_label` in `r params$species`  across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory falling below the desired consumption rate of `r params$restrict_threshold` meals/month; green cells indicate unrestrictive virtual advisory equal to or above the desired consumption rate.</caption>
+<caption>(#tab:virtual-advisory-table) Virtual advisory levels for `r contaminant_label` in `r params$species` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory falling below the desired consumption rate of `r params$restrict_threshold` meals/month; green cells indicate unrestrictive virtual advisory equal to or above the desired consumption rate.</caption>
 
 ```{r virtual-advisory-table, results='asis', warning = TRUE}
 
@@ -679,7 +666,6 @@ tier3a_summary_tibble <- tibble(
 )
 ```
 
-
 ```{r tier-3a-decision-table, results='asis'}
 cat(tier3a_text)
 
@@ -687,11 +673,9 @@ cat(tier3a_text)
 
 <br />
 
-
 **Tier 3A Overall Decision:** `r tier3a_overall`
 
 <br />
-
 
 ## Tier 3B: Comparison of contaminant concentrations in `r params$species` in AOC to reference
 
@@ -716,12 +700,9 @@ ggplot(recent_data, aes(x = Length, y = Value, color = region)) +
 
 ```
 
-
-
-
 ```{r Tier 3B Reference Comparison}
 # Fit GAMs
-gam_model <- gam(Value ~ s(Length, by = region) + region,
+gam_model <- gam(Value ~ s(Length, by = region) + s(Locname.Fishbase, bs = "re") + s(Sample.Year, k = 10) + region,
                  data = recent_data,
                  method = "REML")
 
@@ -734,12 +715,18 @@ interaction_test <- anova(gam_null, gam_model, test = "Chisq")
 interaction_p <- interaction_test$`Pr(>Chi)`[2]
 interaction_p_val <- signif(interaction_p, 3)
 
+gam.check(gam_model)
 
+par(mar=c(3,3,3,0),mfrow=c(1,2))
+acf(resid(gam_model), lag.max = 36, main = "ACF")
+pacf(resid(gam_model), lag.max = 36, main = "pACF")
+
+plot(gam_model)
+
+summary(gam_model)
 ```
 
-
- <caption>(\#tab:tier-3b-summary-table) Predicted `r contaminant_label` concentrations (µg/g) in `r params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths. Values represent model-predicted means with 95% confidence intervals. Asterisks (*) indicate size classes where the AOC differs significantly (p < 0.05) from reference.</caption>
-
+<caption>(#tab:tier-3b-summary-table) Predicted `r contaminant_label` concentrations (µg/g) in `r params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.</caption>
 
 ```{r tier-3b-summary-table, echo=FALSE}
 
@@ -818,8 +805,6 @@ if (interaction_p < 0.05) {
 
 
 ```
-
-
 
 ```{r tier-3b-summary-text}
 
@@ -932,18 +917,13 @@ cat(tier3b_decision_text)
 
 <br />
 
-
 **Tier 3B Overall Decision:** `r tier3b_overall`
 
 <br />
 
-
 ## Tier 3C: Temporal Trends
 
 Temporal trends in `r params$species` for `r contaminant_label` were assessed using linear models across all years of data. An initial model tested for a significant interaction between fish length and sampling year. If an interaction was detected, trends were evaluated separately for the three most frequently sampled length bins. Otherwise, annual mean contaminant concentrations were used. Trends help support Tier 3C by assessing if contaminant levels have declined, remained stable, or increased over time.
-
-
-
 
 ```{r temp-trends-setup, message = FALSE}
 trend_results <- plot_temporal_trends(include_reference = FALSE, include_aoc = TRUE)
@@ -980,9 +960,7 @@ temp_trends_caption <- {
 }
 ```
 
-
- `r temp_trends_caption`
-
+`r temp_trends_caption`
 
 ```{r temp-trends-figure, fig.cap='(ref:temp-trends-fig)', fig.width=6,fig.height=4, message=FALSE}
 print(trend_results$plot)
@@ -1032,7 +1010,6 @@ temporal_text <- {
 
 
 ```
-
 
 ```{r tier3c-result-text}
 if (trend_results$interaction_sig) {
@@ -1133,6 +1110,7 @@ cat(tier3c_result_text)
 **Tier 3C Overall Decision:** `r tier3c_overall`
 
 # Final summary
+
 ```{r}
 tier3_summary_table <- bind_rows(
   tier3a_summary_tibble,
