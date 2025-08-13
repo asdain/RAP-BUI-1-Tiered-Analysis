@@ -39,9 +39,10 @@ params:
 ---
 
 ```{r Setup, include = FALSE}
+# Document setup
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, messages = FALSE)
 
-
+# Loading setup script
 source(here::here("Scripts", "Setup.R"))
 
 raw_data = read.csv(params$raw_csv)
@@ -104,6 +105,7 @@ get_unit_label <- function(contaminant) {
   }
 }
 
+# Creates label for units dynamically usign get_unit_label function
 unit_label <- get_unit_label(params$contaminant)
 
 
@@ -122,6 +124,7 @@ filtered_data <- raw_data %>%
 has_coords <- !is.na(filtered_data$Longitude.Decimal) & !is.na(filtered_data$Latitude.Decimal)
 
 # Load shapefile for AOC region and reproject
+# If there is shapefile for AOC. Is ignored if not
 if (use_aoc_shapefile) {
   aoc_shp <- st_read(params$aoc_shapefile) %>% st_transform(crs = params$target_sr)
 
@@ -135,7 +138,7 @@ if (use_aoc_shapefile) {
 }
 
 
-
+# Assigns region, "AOC" and reference names (option to combine ref_1 and ref_2 as "Reference")
 filtered_data <- filtered_data %>%
   mutate(
     region = case_when(
@@ -164,7 +167,7 @@ filtered_data <- filtered_data %>%
   mutate(region = factor(region, levels = region_levels))
 
 
-# Full analysis data
+# Full analysis data - for temporal trends
 full_data <- if (params$exclude_missing) {
   filtered_data %>% filter(!is.na(Longitude.Decimal), !is.na(Latitude.Decimal))
 } else {
@@ -200,6 +203,7 @@ filtered_data %>%
 (ref:map) Map showing AOC and reference site locations.
 
 ```{r map-setup}
+# Function for consistent aspect ratio for map
 adjust_bbox_to_aspect <- function(bbox, aspect_ratio = 10/6, crs = 3857) {
   # Validate input
   if (anyNA(bbox)) {
@@ -239,10 +243,10 @@ adjust_bbox_to_aspect <- function(bbox, aspect_ratio = 10/6, crs = 3857) {
     new_bbox <- c(xmin = new_xmin, ymin = ymin, xmax = new_xmax, ymax = ymax)
   }
 
-  # ✅ Ensure new_bbox has correct names and is a named numeric vector
+  # Ensure new_bbox has correct names and is a named numeric vector
   new_bbox_named <- setNames(new_bbox, c("xmin", "ymin", "xmax", "ymax"))
 
-  # Now construct the bbox object
+  # Now construct bbox object
   st_bbox(new_bbox_named, crs = st_crs(crs))
 }
 
@@ -297,7 +301,6 @@ main_map = ggplot() +
     clip = "on",
     datum = NA)+
   annotation_scale(location = "bl", width_hint = 0.2) +
-  #annotation_north_arrow(location = "bl", which_north = "true", style = north_arrow_fancy_orienteering) +
   labs(color = "Region") +
   theme_void(base_size = 12) +
   theme(
@@ -335,15 +338,6 @@ combined_map <- ggdraw(main_map) +
   draw_plot(inset_map, x = -0.04, y = 0.6, width = 0.4, height = 0.35) +# adjust x/y/size as needed
   theme(plot.margin = unit(c(0,0,0,0), "pt"))
 
-#source("Tier3/R/draw_map_with_inset.R")
-#combined_map <- draw_map_with_inset(
-#  main_map = main_map,
-#  inset_map = inset_map,
-#  pos = "tl",         # top-left
-#  inset_scale = 0.35, # 35% of main map width
-#  x_offset = 0.02,
-#  y_offset = -0.15
-#)
 
 print(combined_map)
 

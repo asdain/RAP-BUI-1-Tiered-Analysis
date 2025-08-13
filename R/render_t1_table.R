@@ -19,7 +19,8 @@ render_t1_table <- function(df,
                             contaminant_colours,
                             generate_shape_fn = generate_shape,
                             table_height = "1500px",
-                            show_legend = TRUE) {
+                            show_legend = TRUE,
+                            restrict_threshold = 8) {
   
   if (is.null(length_levels)) {
     length_levels <- get("length_levels", envir = .GlobalEnv)
@@ -49,7 +50,9 @@ render_t1_table <- function(df,
             colour <- contaminant_colours[[cause]] %||% "gray"
             generate_shape_fn(shape, colour, size = 12)
           })
-          return(htmltools::span(icons))
+          # OLD: return(htmltools::span(icons))
+          return(do.call(htmltools::span, c(icons, list(style = "display:inline-flex;gap:6px;align-items:center;"))))
+        
         }
         
         if (row_type != "Adv cause" && !is.na(value)) return(value)
@@ -65,7 +68,7 @@ render_t1_table <- function(df,
           styles$paddingBottom <- "10px"
         } else if (!is.na(value)) {
           val <- as.numeric(value)
-          styles$background <- if (val < params$restrict_threshold) "#d80032" else "#4CAF50"
+          styles$background <- if (val < restrict_threshold) "#d80032" else "#4CAF50"
           styles$color <- "#ffffff"
         } else if ((is.na(value) || value == "") && row_type %in% c("General", "Sensitive")) {
           styles$background <- "#eeeeee"
