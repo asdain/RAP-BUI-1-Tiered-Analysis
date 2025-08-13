@@ -1,8 +1,20 @@
 #' Compute Tier 1 and Tier 2 pass/fail flags per species
 #' Optionally excludes Tier 1 passing species from Tier 2 analysis
 #' Returns a table with Species, t1_pass, t2_pass
-get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_levels) {
-  # Tier 1
+get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_levels, interest_species = NULL) {
+
+  # Apply species filter
+  if (!is.null(interest_species)) {
+    cons_data <- cons_data %>%
+      filter(specname %in% interest_species)
+    
+    if (nrow(cons_data) == 0) {
+      warning("No matching records found for interest_species filter.")
+      return(tibble(Species = interest_species, t1_pass = NA, t2_pass = NA))
+    }
+  }
+
+    # Tier 1
   t1_flags <- cons_data %>%
     filter(waterbody_group == aoc_id,
            population_type_desc %in% c("General", "Sensitive")) %>%
@@ -13,13 +25,25 @@ get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_le
   # Tier 2
   base_data <- cons_data %>%
     filter_advisory_data(site_ids = c(aoc_id, reference_sites), aoc_id, length_levels) %>%
-    summarise_max_advisory()
+    summarise_max_advisory() 
   
   aoc_data <- base_data %>% filter(site_type == "AOC")
   ref_medians <- base_data %>%
     filter(site_type == "Reference") %>%
     group_by(Species, Population, Size) %>%
     summarise(Median = median(advisory, na.rm = TRUE), .groups = "drop")
+  
+
+  ref_counts <- base_data %>%
+    filter(site_type == "Reference") %>%
+    group_by(Species, Population, Size) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    group_by(Species) %>%
+    summarise(
+      low_ref_n = mean(n < 3, na.rm = TRUE) >= 0.5,
+      .groups = "drop"
+    )
+  
   
   t2_compare <- aoc_data %>%
     left_join(ref_medians, by = c("Species", "Population", "Size")) %>%
@@ -28,18 +52,27 @@ get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_le
   t2_flags <- t2_compare %>%
     group_by(Species) %>%
     summarise(
-      has_refs = any(!is.na(Median)),
-      t2_pass = ifelse(!has_refs, FALSE, all(pass)),
+      t2_pass = if (all(is.na(Median))) NA else all(pass),
       .groups = "drop"
-    ) %>%
-    select(Species, t2_pass)
+    )
   
-  # Join
+  
+  # Join and merge low_n flag
   full_flags <- t1_flags %>%
     left_join(t2_flags, by = "Species") %>%
+    left_join(ref_counts, by = "Species") %>%
     mutate(
-      t2_pass = ifelse(t1_pass, TRUE, ifelse(is.na(t2_pass), FALSE, t2_pass))
+      t2_pass = case_when(
+        t1_pass ~ TRUE,
+        !t1_pass & is.na(t2_pass) & is.na(low_ref_n) ~ NA,
+        TRUE ~ t2_pass
+      )
     )
+  
+
+  
+
+  
   
   return(full_flags)
 }
@@ -47,7 +80,6 @@ get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_le
 
 
 
-#' Generate a markdown list or table of species by pass/fail group
 #' Generate a markdown list or table of species by pass/fail group
 #' Optionally filters Tier 2 report to exclude Tier 1 passers
 report_pass_fail_species <- function(flag_df = flags,
@@ -63,16 +95,25 @@ report_pass_fail_species <- function(flag_df = flags,
     summary_df <- flag_df %>%
       mutate(
         `Tier 1` = ifelse(t1_pass, "✔️", "❌"),
-        `Tier 2` = ifelse(t2_pass, "✔️", "❌")
+        `Tier 2` = case_when(
+          !is.na(t2_pass) & t2_pass & low_ref_n ~ "✔️ ⚠️",
+          !is.na(t2_pass) & !t2_pass & low_ref_n ~ "❌ ⚠️",
+          !is.na(t2_pass) & t2_pass ~ "✔️",
+          !is.na(t2_pass) & !t2_pass ~ "❌",
+          is.na(t2_pass) & is.na(low_ref_n) ~ "— ⚠️",  # No reference data at all
+          TRUE ~ "—"
+        )
       ) %>%
       select(Species, `Tier 1`, `Tier 2`)
     
+    
+    
     if (tier == "t1") {
-      print(knitr::kable(summary_df %>% select(Species, `Tier 1`), format = "markdown"))
+      print(knitr::kable(summary_df %>% select(Species, `Tier 1`), format = format_type))
     } else if (tier == "t2") {
       filtered <- if (filter_t1_pass) flag_df %>% filter(!t1_pass) else flag_df
       summary_df <- summary_df %>% filter(Species %in% filtered$Species)
-      print(knitr::kable(summary_df %>% select(Species, `Tier 2`), format = "markdown"))
+      print(knitr::kable(summary_df %>% select(Species, `Tier 2`), format = format_type))
     } else {
       print(knitr::kable(summary_df, format = format_type))
     }
@@ -115,12 +156,23 @@ report_pass_fail_species <- function(flag_df = flags,
     }
     
   } else {
+    
+
     summary_df <- flag_df %>%
       mutate(
         `Tier 1` = ifelse(t1_pass, "✔️", "❌"),
-        `Tier 2` = ifelse(t2_pass, "✔️", "❌")
+        `Tier 2` = case_when(
+          !is.na(t2_pass) & t2_pass & low_ref_n ~ "✔️ ⚠️",
+          !is.na(t2_pass) & !t2_pass & low_ref_n ~ "❌ ⚠️",
+          !is.na(t2_pass) & t2_pass ~ "✔️",
+          !is.na(t2_pass) & !t2_pass ~ "❌",
+          is.na(t2_pass) & is.na(low_ref_n) ~ "— ⚠️",  # No reference data at all
+          TRUE ~ "—"
+        )
       ) %>%
       select(Species, `Tier 1`, `Tier 2`)
+    
+    
     
     print(knitr::kable(summary_df, format = format_type))
   }

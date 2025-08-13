@@ -138,9 +138,10 @@ render_t1_table <- function(df,
         defaultPageSize = 10,
         showPageSizeOptions = TRUE,
         pagination = FALSE,
+        sortable = FALSE,
         height = table_height,
         defaultColDef = colDef(
-          sortable = TRUE,
+          sortable = FALSE,
           align = "center",
           minWidth = 80,
           style = list(

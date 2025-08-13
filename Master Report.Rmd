@@ -1,10 +1,14 @@
 ---
-title: "Master BUI 1 Report"
+title: "Master Report"
+always_allow_html: true
 output:
-  pdf_document: default
-  html_notebook: default
   html_document:
-    df_print: paged
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
 params:
   AOC: '45087425'
   reference_sites:
@@ -19,10 +23,27 @@ params:
   - '43557717'
   - '43527856'
   restrict_threshold: 8
-  interest_species: null
+  interest_species:
+  - Bluegill
+  - Black Crappie
+  - Brown Bullhead
+  - Freshwater Drum
+  - Largemouth Bass
+  - Northern Pike
+  - Pumpkinseed
+  - Rock Bass
+  - Smallmouth Bass
+  - Walleye
+  - White Perch
+  - Yellow Perch
+  - White Bass
+  - American Eel
+  - Rainbow Smelt
+  - Channel Catfish
+  - Chinook Salmon
 ---
 
-```{r Setup, echo=FALSE}
+```{r Setup, echo=FALSE, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 options(inline_output = TRUE)
 
@@ -32,7 +53,7 @@ source("Scripts/setup.R")
 
 
 aoc_name = get_waterbody_names(cons_data, site_id = params$AOC)
-ref_names = get_waterbody_names(cons_data, site_id = ref_sites)
+ref_names = get_waterbody_names(cons_data, site_id = params$reference_sites)
 
 # Make table
 t1_df = make_restrict_table(cons_data,
@@ -63,9 +84,9 @@ render_t1_table(
   df = t1_df,
   contaminant_shapes = contaminant_shapes,
   contaminant_colours = contaminant_colours,
-  table_height = "1500px",
+  table_height = "800px",
   show_legend = TRUE,
-  interest_species = params$interest_species,
+  interest_species = params$interest_species
 )
 ```
 Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the "Restrictive" threshold of `r params$restrict_threshold` meals/month, and green cells indicate advisories levels above this threshold. The contaminants driving the advisories are displayed below each cell with an indicated colour and shape.
@@ -73,9 +94,15 @@ Numbers in cells indicate advisory levels for a species, size class, and populat
 
 
 ## The following species pass/fail Tier 1:
-```{r Tier 1 Pass/Fail}
+```{r Tier 1 Pass/Fail, results = 'asis'}
+flags = get_species_pass_flags(cons_data, params$AOC, params$reference_sites, length_levels, interest_species = params$interest_species)
+
+
+  
 report_pass_fail_species(flags, tier = "t1", output = "table")
 ```
+
+
 
 ### The following reference sites will be used for the Tier 2 analysis of `r aoc_name`:
 
@@ -84,7 +111,7 @@ report_pass_fail_species(flags, tier = "t1", output = "table")
 
 # Tier 2 Assessment for `r aoc_name`
 ```{r Tier 2 Table}
-t2_table <- render_t2_table()
+t2_table <- render_t2_table(table_height = "800px")
 
 t2_table
 
@@ -94,6 +121,8 @@ Numbers in cells indicate advisory levels for a species, size class, and populat
 
 
 ## The following species pass/fail Tier 2:
-```{r Tier 2 Pass/Fail}
+```{r Tier 2 Pass/Fail, results = 'asis'}
 report_pass_fail_species(flags, tier = "t2", output = "table", filter_t1_pass = TRUE)
 ```
+
+⚠️ - Species has low reference site count (<3) at more than 50% of size classes.

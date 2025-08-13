@@ -1,0 +1,1124 @@
+---
+title: "Tier 3 Report - SLR"
+author: "Aaron Dain"
+always_allow_html: true
+output:
+  bookdown::html_document2:
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  html_document:
+    toc: true
+    df_print: paged
+  pdf_document:
+    toc: true
+    latex_engine: wkhtmltopdf
+  html_notebook:
+    self_contained: true
+  bookdown::pdf_document2:
+    toc: true
+params:
+  AOC_name: St. Lawrence River (Cornwall/Akwesasne)
+  species: Yellow Perch
+  contaminant: MERCURY
+  aoc_shapefile: Tier3/Data/SLR_AOC
+  raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
+  ref_1: Lake Ontario
+  ref_2: St. Lawrence River
+  combine_ref: TRUE
+  add_AOC: St Regis Island
+  exclude_site:
+  - Hamilton Harbour
+  - Trent River
+  - Niagara River
+  target_sr: 4326
+  restrict_threshold: 8
+  exclude_missing: TRUE
+  standard_length: 45
+---
+
+```{r Setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, messages = FALSE)
+
+
+source(here::here("Scripts", "Setup.R"))
+
+raw_data = read.csv(params$raw_csv)
+
+tool_files_t3 = list.files(path = "Tier3/R", pattern = "\\.R$", full.names = TRUE)
+invisible(lapply(tool_files_t3, source))
+
+
+
+# Dynamically assign ref_1 and ref_2 based on whether combining reference regions
+if (params$combine_ref) {
+  ref_1 <- "Reference"
+  ref_2 <- "none"
+  region_levels <- c("AOC", ref_1)
+  ref_label <- "Reference"
+  ref_regions_to_match <- c(params$ref_1, params$ref_2)
+} else {
+  ref_1 <- params$ref_1
+  ref_2 <- params$ref_2
+  region_levels <- c("AOC", ref_1, if (ref_2 != "none") ref_2 else NULL)
+  ref_label <- if (ref_2 != "none") paste(ref_1, "and", ref_2) else ref_1
+  ref_regions_to_match <- c(ref_1, if (ref_2 != "none") ref_2 else NULL)
+}
+
+
+# Check if AOC shapefile exists
+use_aoc_shapefile <- !is.null(params$aoc_shapefile) && file.exists(params$aoc_shapefile) 
+
+```
+
+```{r Options, include = FALSE}
+
+# Assigning colours to regions
+region_colours <- setNames(
+  c("red", "cyan", "magenta")[seq_along(region_levels)],
+  region_levels
+)
+
+
+
+# Setup Webshot 2 to browswer to allow tables to be rendered in PDF. 
+# IMPORTANT: Please set this up correctly - the path to your browser application.
+Sys.setenv(CHROMOTE_CHROME = "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe")
+
+
+# Makes contaminant label title-capitalized
+contaminant_label <- if (params$contaminant == "MERCURY") {
+str_to_title(params$contaminant)
+} else {params$contaminant}
+
+# Get unit label
+get_unit_label <- function(contaminant) {
+  contaminant_upper <- toupper(contaminant)
+  if (contaminant_upper == "MERCURY") {
+    return("µg/g")
+  } else if (contaminant_upper == "PCBs") {
+    return("ng/g")
+  } else {
+    return("units")
+  }
+}
+
+unit_label <- get_unit_label(params$contaminant)
+
+
+
+```
+
+```{r Dataset-Filtering, include = FALSE}
+
+
+# Filter raw data by species and contaminant
+filtered_data <- raw_data %>%
+  filter(Specname == params$species,
+         Contaminant == params$contaminant) %>%
+  mutate(region = NA_character_)
+
+has_coords <- !is.na(filtered_data$Longitude.Decimal) & !is.na(filtered_data$Latitude.Decimal)
+
+# Load shapefile for AOC region and reproject
+if (use_aoc_shapefile) {
+  aoc_shp <- st_read(params$aoc_shapefile) %>% st_transform(crs = params$target_sr)
+
+  filtered_sf <- filtered_data[has_coords, ] %>%
+    st_as_sf(coords = c("Longitude.Decimal", "Latitude.Decimal"), crs = params$target_sr) %>%
+    st_transform(crs = st_crs(aoc_shp)) %>%
+    st_make_valid()
+
+  aoc_match <- st_intersects(filtered_sf, st_make_valid(aoc_shp), sparse = FALSE)[, 1]
+  filtered_data$region[has_coords][aoc_match] <- "AOC"
+}
+
+
+
+filtered_data <- filtered_data %>%
+  mutate(
+    region = case_when(
+      region == "AOC" ~ "AOC",
+      is.na(region) & str_detect(Locname.Fishbase, regex(str_c(params$add_AOC, collapse = "|"), ignore_case = TRUE)) ~ "AOC",
+
+      params$combine_ref & is.na(region) & (
+        str_detect(Locname.Fishbase, fixed(params$ref_1, ignore_case = TRUE)) |
+        str_detect(Locname.Fishbase, fixed(params$ref_2, ignore_case = TRUE))
+      ) ~ "Reference",
+
+      !params$combine_ref & is.na(region) & str_detect(Locname.Fishbase, fixed(params$ref_1, ignore_case = TRUE)) ~ params$ref_1,
+
+      !params$combine_ref & is.na(region) & 
+        !is.null(params$ref_2) & 
+        params$ref_2 != "none" &
+        str_detect(Locname.Fishbase, fixed(params$ref_2, ignore_case = TRUE)) ~ params$ref_2,
+
+      TRUE ~ region
+    )
+  ) %>%
+  filter(
+    !str_detect(Locname.Fishbase, str_c(params$exclude_site, collapse = "|")),
+    !is.na(region)
+  ) %>%
+  mutate(region = factor(region, levels = region_levels))
+
+
+# Full analysis data
+full_data <- if (params$exclude_missing) {
+  filtered_data %>% filter(!is.na(Longitude.Decimal), !is.na(Latitude.Decimal))
+} else {
+  filtered_data
+}
+
+# Mapping data (recent + coordinates only)
+map_data <- filtered_data %>%
+  filter(Sample.Year >= 2014,
+         !is.na(Longitude.Decimal),
+         !is.na(Latitude.Decimal))
+
+missing_coords <- filtered_data %>%
+  filter(Sample.Year >= 2014,
+         is.na(Longitude.Decimal) | is.na(Latitude.Decimal))
+missing_sites <- unique(missing_coords$Locname.Fishbase) %>% sort()
+
+recent_data <- filtered_data %>%
+  filter(Sample.Year >= 2014) %>%
+  { if (params$exclude_missing) filter(., !is.na(Longitude.Decimal) & !is.na(Latitude.Decimal)) else . }
+
+
+
+filtered_data %>%
+  count(region, is.na(Longitude.Decimal))  # How many sites per region w/ and w/o coords?
+
+```
+
+# Tier 3 Analysis for `r contaminant_label` in `r params$species` for the `r params$AOC_name` AOC
+
+## Reference Sites
+
+(ref:map) Map showing AOC and reference site locations.
+
+```{r map-setup}
+adjust_bbox_to_aspect <- function(bbox, aspect_ratio = 10/6, crs = 3857) {
+  # Validate input
+  if (anyNA(bbox)) {
+    warning("adjust_bbox_to_aspect: bbox contains NA values.")
+    return(NULL)
+  }
+
+  # Extract numeric coordinates
+  xmin <- bbox["xmin"]
+  xmax <- bbox["xmax"]
+  ymin <- bbox["ymin"]
+  ymax <- bbox["ymax"]
+
+  width <- xmax - xmin
+  height <- ymax - ymin
+
+  if (width <= 0 || height <= 0) {
+    warning("adjust_bbox_to_aspect: invalid bbox dimensions.")
+    return(NULL)
+  }
+
+  current_ratio <- width / height
+  center_x <- (xmin + xmax) / 2
+  center_y <- (ymin + ymax) / 2
+
+  if (current_ratio > aspect_ratio) {
+    # Too wide → expand height
+    new_height <- width / aspect_ratio
+    new_ymin <- center_y - new_height / 2
+    new_ymax <- center_y + new_height / 2
+    new_bbox <- c(xmin = xmin, ymin = new_ymin, xmax = xmax, ymax = new_ymax)
+  } else {
+    # Too tall → expand width
+    new_width <- height * aspect_ratio
+    new_xmin <- center_x - new_width / 2
+    new_xmax <- center_x + new_width / 2
+    new_bbox <- c(xmin = new_xmin, ymin = ymin, xmax = new_xmax, ymax = ymax)
+  }
+
+  # ✅ Ensure new_bbox has correct names and is a named numeric vector
+  new_bbox_named <- setNames(new_bbox, c("xmin", "ymin", "xmax", "ymax"))
+
+  # Now construct the bbox object
+  st_bbox(new_bbox_named, crs = st_crs(crs))
+}
+
+
+
+```
+
+```{r map-creation, message = FALSE, include = FALSE}
+
+library(maptiles)
+library(ggspatial)
+
+# Convert to sf object and project
+sites_sf <- st_as_sf(map_data, coords = c("Longitude.Decimal", "Latitude.Decimal"), crs = params$target_sr)
+sites_proj <- st_transform(sites_sf, 3857)  # Web Mercator
+
+# Main map bounding box
+bbox_buffered <- st_bbox(sites_proj)
+bbox_adjusted <- adjust_bbox_to_aspect(bbox_buffered, aspect_ratio = 10/6, crs = 3857)
+bbox_sfc <- st_as_sfc(bbox_adjusted + c(-40000, -40000, 40000, 40000))
+
+# Get basemap
+basemap <- get_tiles(bbox_sfc, provider = "Esri.WorldShadedRelief", crop = TRUE, zoom = 10)
+bbox_vec <- st_bbox(basemap)
+
+# -------- AOC inset logic (only if shapefile is being used) --------
+aoc_sites <- sites_proj[sites_proj$region == "AOC", ]
+has_inset <- nrow(aoc_sites) > 0
+
+if (has_inset) {
+  aoc_bbox <- st_bbox(aoc_sites) + c(-10000, -10000, 10000, 10000)
+  aoc_bbox_sfc <- st_as_sfc(aoc_bbox)
+  aoc_basemap <- get_tiles(aoc_bbox_sfc, provider = "Esri.WorldShadedRelief", crop = TRUE, zoom = 12)
+
+  aoc_inset_sites <- sites_proj[st_within(sites_proj, aoc_bbox_sfc, sparse = FALSE), ]
+}
+
+
+```
+
+```{r map, fig.cap='(ref:map)', message = FALSE}
+aspect_ratio = 6/10
+
+# Plot map
+main_map = ggplot() +
+  layer_spatial(basemap) +
+  geom_sf(data = sites_proj, aes(color = region), size = 3.5, shape = 21, fill = "white", stroke = 1) +
+  geom_sf(data = aoc_bbox_sfc, fill = NA, color = "red", linewidth = 0.5)+
+  coord_sf(xlim = c(bbox_vec["xmin"], bbox_vec["xmax"]),
+    ylim = c(bbox_vec["ymin"], bbox_vec["ymax"]),
+    expand = FALSE,
+    clip = "on",
+    datum = NA)+
+  annotation_scale(location = "bl", width_hint = 0.2) +
+  #annotation_north_arrow(location = "bl", which_north = "true", style = north_arrow_fancy_orienteering) +
+  labs(color = "Region") +
+  theme_void(base_size = 12) +
+  theme(
+    legend.justification = c(1,0),
+    legend.position = c(.98,.02),
+    legend.box.background = element_rect(fill = "#EEFFEF", color = "black"),
+    legend.box.margin = unit(c(2,2,2,2),  "pt"),
+    plot.margin = unit(c(0,0,0,0), "pt")
+  )+ scale_color_manual(values = region_colours)
+
+
+
+# Create inset map
+inset_map <- ggplot() +
+  layer_spatial(aoc_basemap) +
+  geom_sf(data = aoc_inset_sites, aes(color = region), size = 2.5, shape = 21, fill = "white", stroke = 0.8) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  coord_sf(xlim = c(aoc_bbox["xmin"], aoc_bbox["xmax"]),
+           ylim = c(aoc_bbox["ymin"], aoc_bbox["ymax"]),
+           expand = FALSE) +
+  scale_colour_manual(values = region_colours) +  
+  theme_void() +
+  theme(
+    aspect.ratio = NULL,
+    panel.border = element_rect(color = "black", fill = NA),
+    legend.position = "none"  # Suppress inset legend
+  )
+
+
+
+# Combine using cowplot (inset in top-left)
+library(cowplot)
+
+combined_map <- ggdraw(main_map) +
+  draw_plot(inset_map, x = -0.04, y = 0.6, width = 0.4, height = 0.35) +# adjust x/y/size as needed
+  theme(plot.margin = unit(c(0,0,0,0), "pt"))
+
+#source("Tier3/R/draw_map_with_inset.R")
+#combined_map <- draw_map_with_inset(
+#  main_map = main_map,
+#  inset_map = inset_map,
+#  pos = "tl",         # top-left
+#  inset_scale = 0.35, # 35% of main map width
+#  x_offset = 0.02,
+#  y_offset = -0.15
+#)
+
+print(combined_map)
+
+
+```
+
+```{r Display-Reference-Sites, include = FALSE}
+# Step 1: Ensure distinct region-site combinations
+ref_site_listing <- recent_data %>%
+
+  distinct(region, site = Locname.Fishbase) %>%
+  arrange(region, site)
+
+# Step 2: Collapse to one entry per region
+ref_sites_md <- ref_site_listing %>%
+  group_by(region) %>%
+  reframe(
+    markdown = paste0("#### ", unique(region), " {-}", "\n", paste0("- ", site, collapse = "\n")),
+    .groups = "drop"
+  ) %>%
+  distinct(markdown) %>%  # <-- Remove duplicates if grouped improperly upstream
+  pull(markdown) %>%
+  paste(collapse = "\n\n")
+
+
+
+
+```
+
+<br />
+
+The following reference sites were used in the Tier 3 analysis of `r contaminant_label` in `r params$species` for the `r params$AOC_names` AOC:
+
+<br />
+
+`r ref_sites_md`
+
+<br />
+
+```{r report-missing-sites-message, results = "asis"}
+
+# Print out missing location sites
+
+if (length(missing_sites) > 0) {
+  if (params$exclude_missing) {
+    cat(glue::glue("### Note\n\n {length(missing_sites)} sites with missing coordinates were excluded **from the analysis**.\n\n"))
+  } else {
+    cat(glue::glue("### Note\n\nRetained {length(missing_sites)} sites with missing coordinates **for analysis**, but excluded them from maps.\n\n"))
+  }
+  
+  cat("The following sites were affected:\n\n")
+  cat(paste0("- ", missing_sites, collapse = "\n"))
+}
+
+
+```
+
+## Tier 3A: Virtual Advisory for `r contaminant_label` in `r params$species`
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for `r params$species` and `r contaminant_label`. For each region, the function fits a log-log linear model (lm(log(Value) \~ log(Length)) to evaluate whether a significant relationship exists (p ≤ 0.05). If so, predicted concentrations are generated across a continuous length range, and then averaged within fixed 5 cm bins. Advisory levels are assigned using MECP-defined contaminant- and population-specific (General/Sensitive) thresholds to the mean predicted concentrations. If no significant relationship is detected, advisory levels are based on the mean concentration of all observations within each bin.
+
+```{r Generate virtual advisories, include = FALSE}
+virtual_advisory = generate_virtual_advisories(
+  df = recent_data,
+  group_var = "region",
+  contaminant = params$contaminant
+)
+
+```
+
+(ref:Virtual-advisory-visualization) Virtual `r contaminant_label` advisories in `r params$species`. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for `r params$contaminant` (dashed lines).
+
+```{r Virtual-advisory-visualization, fig.cap='(ref:Virtual-advisory-visualization)'}
+# Extract predictions and original observations
+pred_df <- virtual_advisory$predictions
+obs_df <- recent_data  
+contaminant <- params$contaminant
+
+y_label <- if (contaminant == "MERCURY") {
+  "Mercury Concentration (µg/g)"
+} else if (contaminant == "PCBs") {
+  "PCBs Concentration (ng/g)"
+} else {
+  paste(contaminant_label, "(unknown units)")
+}
+
+get_thresholds <- function(contaminant = "MERCURY", population = "Sensitive") {
+  if (contaminant == "MERCURY") {
+    if (population == "Sensitive") {
+      return(tibble(
+        meals = c(16, 12, 8, 4, 0),
+        conc = c(0.06, 0.12, 0.16, 0.25, 0.50)
+      ))
+    } else {
+      return(tibble(
+        meals = c(32, 16, 12, 8, 4, 2, 0),
+        conc = c(0.15, 0.15, 0.3, 0.4, 0.6, 1.2, 1.8)
+      ))
+    }
+  } else if (contaminant == "PCBs") {
+    return(tibble(
+      meals = c(16, 12, 8, 4, 2, 1, 0),
+      conc = c(26, 53, 70, 105, 211, 422, 844)
+    ))
+  
+} else {
+    
+  return(NULL)
+}
+}
+
+thresholds_df <- get_thresholds(contaminant, population = "Sensitive")
+
+
+# Plot with overlaid observations and advisory thresholds
+ggplot(pred_df, aes(x = Length, y = predicted, color = region)) +
+  geom_point(data = obs_df, aes(x = Length, y = Value, color = region), size = 1.5, alpha = 0.7) +
+  geom_line(linewidth = 1.2) +
+  geom_hline(data = thresholds_df, aes(yintercept = conc), linetype = "dashed", color = "black") +
+  geom_text(data = thresholds_df, aes(x = Inf, y = conc, label = paste0(meals, " meals/mo")),
+            hjust = 1.1, vjust = -0.2, color = "black", size = 3, inherit.aes = FALSE) +
+  scale_colour_manual(values = region_colours) +
+  labs(
+    x = "Length (cm)",
+    y = y_label,
+    color = "Region"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+
+```
+
+<br />
+
+```{r Model-summary-creation, include=FALSE}
+model_summary <- virtual_advisory$model_info %>%
+  mutate(
+    summary_text = pmap_chr(list(lm, correlated, pval, r2), function(mod, sig, pval, r2) {
+      coef_vals <- coef(mod)
+      a <- signif(exp(coef_vals[1]), 3)
+      b <- round(coef_vals[2], 3)
+      pval_fmt <- ifelse(pval < 0.001, "< 0.001", formatC(pval, format = "e", digits = 2))
+      r2_fmt <- round(r2, 3)
+
+      sig_text <- if (sig) {
+        "There is a statistically significant relationship between fish length and contaminant concentration."
+      } else {
+        "There is no significant relationship between fish length and contaminant concentration. Bin-level means were used instead."
+      }
+
+      model_text <- glue("The power model used was: concentration = {a} × Length<sup>{b}</sup> (R² = {r2_fmt}, p = {pval_fmt}).")
+
+      paste0(sig_text, " ", model_text)
+    })
+  ) %>%
+  select(region, summary_text)
+```
+
+<br />
+
+```{r model-summary-printout, results='asis'}
+# display model summaries
+cat(paste0("### Model Summary by Region {-} \n\n ",
+           paste0("**", model_summary$region, "**: ", model_summary$summary_text, collapse = "\n\n")))
+
+```
+
+<caption>(#tab:virtual-advisory-table) Virtual advisory levels for `r contaminant_label` in `r params$species` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory falling below the desired consumption rate of `r params$restrict_threshold` meals/month; green cells indicate unrestrictive virtual advisory equal to or above the desired consumption rate.</caption>
+
+```{r virtual-advisory-table, results='asis', warning = TRUE}
+
+predictions_binned <- virtual_advisory$predictions %>%
+  mutate(
+    length_bin = cut(
+      Length,
+      breaks = c(seq(15, 75, by = 5), Inf),
+      labels = c(paste(seq(15, 70, by = 5), seq(20, 75, by = 5), sep = "-"), "75+"),
+      right = FALSE
+    )
+  ) %>%
+  filter(!is.na(length_bin)) %>%
+  group_by(region, length_bin) %>%
+  summarise(
+    mean_conc = mean(predicted, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+  meals_general   = assign_advisory(mean_conc, "General", params$contaminant),
+  meals_sensitive = assign_advisory(mean_conc, "Sensitive", params$contaminant)
+)
+
+
+
+
+
+color_advisory_cell <- function(value, threshold = params$restrict_threshold) {
+  if (is.na(value)) return("")
+  if (value < threshold) {
+    return(list(background = "red", color = "white", fontWeight = "bold"))
+  } else {
+    return(list(background = "forestgreen", color = "black", fontWeight = "bold"))
+  }
+}
+
+
+
+virtual_long <- predictions_binned %>%
+  pivot_longer(cols = c(meals_general, meals_sensitive),
+               names_to = "Population",
+               names_prefix = "meals_",
+               values_to = "Advisory") %>%
+  mutate(
+    Population = case_when(
+      Population == "general" ~ "General",
+      Population == "sensitive" ~ "Sensitive"
+    )
+  )%>%
+  filter(
+    toupper(params$contaminant) == "MERCURY" | Population == "General"
+  )
+
+
+virtual_wide <- virtual_long %>%
+  select(Region = region, Population, length_bin, Advisory) %>%
+  pivot_wider(names_from = length_bin, values_from = Advisory)
+
+
+virtual_adv_table <- reactable(
+  virtual_wide,
+  bordered = TRUE,
+  highlight = TRUE,
+  striped = TRUE,
+  defaultColDef = colDef(
+    style = function(value) {
+      if (is.numeric(value) && !is.na(value)) {
+        color_advisory_cell(value)
+      } else {
+        NULL
+      }
+    },
+    align = "center"
+  ),
+  columns = list(
+    Region = colDef(name = "Region", sticky = "left", style = list(fontWeight = "bold")),
+    Population = colDef(name = "Population", sticky = "left", style = list(fontWeight = "bold"))
+  )
+)
+
+
+virtual_adv_table
+```
+
+```{r tier-3a-decision}
+# Decision making
+
+
+# Step 3: Is AOC more restrictive than reference? Split AOC and reference tables
+aoc_advisories <- virtual_long %>%
+  filter(region == "AOC") %>%
+  select(length_bin, Population, Advisory) %>%
+  rename(AOC_Advisory = Advisory)
+
+reference_advisories <- virtual_long %>%
+  filter(region != "AOC") %>%
+  group_by(length_bin, Population) %>%
+  summarise(Ref_Advisory = median(Advisory, na.rm = TRUE), .groups = "drop")  # Median across references - important if >1 reference group
+
+
+# Join and evaluate
+tier3a_joined <- aoc_advisories %>%
+  left_join(reference_advisories, by = c("length_bin", "Population")) %>%
+  mutate(
+    restrict_pass = AOC_Advisory >= params$restrict_threshold,
+    restrict_fail = !restrict_pass,
+    more_restrictive_than_ref = AOC_Advisory < Ref_Advisory,
+    final_decision = case_when(
+      restrict_pass ~ "Pass",
+      restrict_fail & !more_restrictive_than_ref ~ "Pass",
+      restrict_fail & more_restrictive_than_ref ~ "Fail",
+      TRUE ~ "Unknown"
+    )
+  )
+
+
+tier3a_summary <- tier3a_joined %>%
+  group_by(Population) %>%
+  summarise(
+    n_bins = n(),
+    n_below_thresh = sum(restrict_fail),
+    n_below_ref = sum(restrict_fail & more_restrictive_than_ref),
+    n_pass = n_bins - n_below_ref,
+    pct_pass = round(100 * n_pass / n_bins, 1),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    decision = if_else(n_below_ref == 0, "Pass", "Fail")
+  )
+
+
+
+tier3a_text <- tier3a_summary %>%
+  mutate(
+    summary = glue::glue(
+      "**{Population}** population: Of {n_bins} size bins, {n_below_thresh} were below the desired consumption rate of {params$restrict_threshold} meals/month. ",
+      "Of these, {n_below_ref} were more restrictive than reference."
+    )
+  ) %>%
+  pull(summary) %>%
+  glue::glue_collapse(sep = " ")
+
+tier3a_overall <- if (any(tier3a_summary$decision == "Fail")) "Fail" else "Pass"
+
+
+tier3a_summary_tibble <- tibble(
+  Tier = "Tier 3A",
+  Description = "Virtual Advisory",
+  Metric = glue_collapse(glue("{tier3a_summary$Population}: {tier3a_summary$n_below_ref}/{tier3a_summary$n_bins} size bins restrictive or more restrictive than reference"), sep = "; "),
+  Outcome = tier3a_overall
+)
+```
+
+```{r tier-3a-decision-table, results='asis'}
+cat(tier3a_text)
+
+```
+
+<br />
+
+**Tier 3A Overall Decision:** `r tier3a_overall`
+
+<br />
+
+## Tier 3B: Comparison of contaminant concentrations in `r params$species` in AOC to reference
+
+To assess differences in fish contamination between the AOC and reference sites, contaminant–length relationships were modeled using Generalized Additive Models (GAMs), allowing for non-linear associations. For each priority contaminant and indicator species, we first tested whether the shape of the concentration–length relationship differed significantly between AOC and reference fish. Where models supported statistically similar trends (non-significant interaction), we compared size-adjusted contaminant levels using estimated marginal means. Where shapes differed significantly, contaminant concentration values were compared by GAM-predicted values at standardized lengths (e.g., 45cm) commonly consumed for each fish species. A threshold of α = 0.05 was used to evaluate statistical significance throughout.
+
+(ref:Tier-3B-Figure) `r contaminant_label` concentration in `r params$species` by length in the AOC compared to reference sites.
+
+```{r Tier-3B-Figure, echo = FALSE, message = FALSE, fig.cap='(ref:Tier-3B-Figure)'}
+# Hg concentration of fish by size
+ggplot(recent_data, aes(x = Length, y = Value, color = region)) +
+  geom_point(alpha = 0.9) +
+  geom_smooth(method = "gam", se = TRUE, linewidth = 1.2) +
+  labs(
+    title = "Contaminant Concentration vs. Fish Length",
+    x = "Length (cm)",
+    y = y_label
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_colour_manual(values = region_colours)
+
+
+
+```
+
+```{r Tier 3B Reference Comparison}
+# Fit GAMs
+gam_model <- gam(Value ~ s(Length, by = region) + s(Locname.Fishbase, bs = "re") + s(Sample.Year, k = 10) + region,
+                 data = recent_data,
+                 method = "REML")
+
+# Null GAM to test for significance of interaction term
+gam_null <- gam(Value ~ s(Length) + region,
+                data = recent_data,
+                method = "REML")
+
+interaction_test <- anova(gam_null, gam_model, test = "Chisq")
+interaction_p <- interaction_test$`Pr(>Chi)`[2]
+interaction_p_val <- signif(interaction_p, 3)
+
+gam.check(gam_model)
+
+par(mar=c(3,3,3,0),mfrow=c(1,2))
+acf(resid(gam_model), lag.max = 36, main = "ACF")
+pacf(resid(gam_model), lag.max = 36, main = "pACF")
+
+plot(gam_model)
+
+summary(gam_model)
+```
+
+<caption>(#tab:tier-3b-summary-table) Predicted `r contaminant_label` concentrations (µg/g) in `r params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.</caption>
+
+```{r tier-3b-summary-table, echo=FALSE}
+
+generate_gam_prediction_table <- function(gam_model, recent_data, params) {
+  library(dplyr)
+  library(glue)
+  library(tidyr)
+  library(emmeans)
+
+  # 1. Round size range to nearest 5 cm (outward)
+  len_min <- floor(min(recent_data$Length, na.rm = TRUE) / 5) * 5
+  len_max <- ceiling(max(recent_data$Length, na.rm = TRUE) / 5) * 5
+  length_seq <- seq(len_min, len_max, by = 5)
+
+  # 2. Generate prediction grid
+  newdata_grid <- expand.grid(Length = length_seq, region = region_levels)
+
+
+  # 3. Predict with SE from GAM
+  pred_out <- predict(gam_model, newdata = newdata_grid, se.fit = TRUE)
+  pred_df <- newdata_grid %>%
+    mutate(
+      fit = pred_out$fit,
+      se = pred_out$se.fit,
+      lower = fit - 1.96 * se,
+      upper = fit + 1.96 * se
+    )
+
+  # 4. Significance test using emmeans at each length
+  em <- emmeans(gam_model, ~ region | Length, at = list(Length = length_seq), type = "response")
+  em_contrasts <- contrast(em, method = "pairwise", adjust = "none") %>% as.data.frame()
+
+  # 5. Extract lengths where AOC is significantly different
+  sig_lengths <- em_contrasts %>%
+    filter(grepl("AOC", contrast) & p.value < 0.05) %>%
+    pull(Length) %>%
+    unique()
+
+  # 6. Add prediction label + asterisk where significant
+  pred_df <- pred_df %>%
+    mutate(
+      sig_star = ifelse(region == "AOC" & Length %in% sig_lengths, "*", ""),
+      length_label = paste0(Length, " cm"),
+      pred_str = glue("{round(fit, 2)} ({round(lower, 2)}–{round(upper, 2)}){sig_star}")
+    )
+
+  # 7. Wide format output: Region × Length (fixed sizes)
+  output_table <- pred_df %>%
+    select(region, length_label, pred_str) %>%
+    pivot_wider(
+      names_from = length_label,
+      values_from = pred_str
+    ) %>%
+    rename(Region = region)
+
+  return(output_table)
+}
+
+
+
+if (interaction_p < 0.05) {
+  gam_table <- generate_gam_prediction_table(gam_model, recent_data, params)
+
+  reactable(
+    gam_table,
+    bordered = TRUE,
+    highlight = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(align = "center"),
+    columns = list(
+      Region = colDef(name = "Region", sticky = "left", style = list(fontWeight = "bold"))
+    )
+  )
+}
+
+
+
+```
+
+```{r tier-3b-summary-text}
+
+if (interaction_p < 0.05) {
+  # Table was generated, so use the same lengths
+  len_min <- floor(min(recent_data$Length, na.rm = TRUE) / 5) * 5
+  len_max <- ceiling(max(recent_data$Length, na.rm = TRUE) / 5) * 5
+  length_seq <- seq(len_min, len_max, by = 5)
+
+  em <- emmeans(gam_model, ~ region | Length, at = list(Length = length_seq), type = "response")
+  em_contrasts <- contrast(em, method = "pairwise", adjust = "none") %>% as.data.frame()
+
+  sig_lengths <- em_contrasts %>%
+    filter(grepl("AOC", contrast) & p.value < 0.05) %>%
+    pull(Length) %>%
+    unique()
+
+  sig_count <- length(sig_lengths)
+  total_lengths <- length(length_seq)
+
+  t3b_summary_text <- glue::glue(
+    "Generalized Additive Models (GAMs) were used to model the relationship between fish length and {contaminant_label} concentrations for {params$species} in the AOC and reference site(s) ({paste(region_levels[-1], collapse = ', ')}). ",
+    "The length-contaminant relationship differed significantly between sites (interaction test p = {interaction_p_val}). ",
+    "Model-predicted concentrations were calculated across the observed size range (every 5 cm from {min(length_seq)} to {max(length_seq)} cm) and are presented in Table \\@ref(tab:tier-3b-summary-table). ",
+    "Asterisks (*) denote sizes where the AOC differs significantly (p < 0.05) from one or more reference site(s); this occurred at {sig_count} of {total_lengths} lengths evaluated."
+  )
+  
+  decision_summary_3b <- em_contrasts %>%
+    filter(grepl("AOC", contrast)) %>%
+    mutate(higher_aoc = estimate > 0 & p.value < 0.05)
+
+  total_bins <- n_distinct(decision_summary_3b$Length)
+  n_fail_b <- sum(decision_summary_3b$higher_aoc, na.rm = TRUE)
+  n_pass_b <- total_bins - n_fail_b
+
+  tier3b_decision_text <- glue::glue(
+    "Of {total_bins} fish lengths evaluated, {n_fail_b} had significantly higher predicted {contaminant_label} concentrations in the AOC compared to reference (p < 0.05). "
+    
+  )
+ tier3b_overall =  if (n_fail_b > total_bins/2) "Fail" else "Pass"
+
+} else {
+  # Use marginal means from the reduced model
+  em_summary <- summary(emmeans(gam_null, ~ region))
+  em_aoc <- em_summary %>% filter(region == "AOC")
+  em_refs <- em_summary %>% filter(region != "AOC")
+
+  ref_texts <- em_refs %>%
+    mutate(
+      out = glue("{region}: {round(emmean, 2)} {unit_label} (95% CI: {round(lower.CL, 2)}–{round(upper.CL, 2)})")
+    ) %>%
+    pull(out) %>%
+    paste(collapse = "; ")
+
+  t3b_summary_text <- glue::glue(
+    "Generalized Additive Models (GAMs) were used to model the relationship between fish length and {contaminant_label} concentrations for {params$species} in the AOC and reference region(s) ({paste(region_levels[-1], collapse = ', ')}). ",
+    "The length-contaminant relationship did not differ significantly between sites (interaction test p = {interaction_p_val}). ",
+    "Marginal mean concentrations were estimated across the full size distribution using a reduced model with shared smooths. ",
+    "The estimated marginal mean {contaminant_label} concentration in the AOC was {round(em_aoc$emmean, 2)} {unit_label} (95% CI: {round(em_aoc$lower.CL, 2)}–{round(em_aoc$upper.CL, 2)}). ",
+    "Estimated values for reference site(s): {ref_texts}."
+  )
+  
+  tier3b_decision_text <- if (em_aoc$emmean > max(em_refs$emmean)) {
+    glue("The AOC has a higher marginal mean concentration than reference, suggesting elevated contamination in this species compared to reference.")
+  } else {
+    glue("The AOC does not exceed reference in marginal mean concentration, suggesting comparable contamination levels in this species.")
+  }
+  
+  tier3b_overall <- if (em_aoc$emmean > max(em_refs$emmean)) "Fail" else "Pass"
+}
+
+
+
+# Construct the summary metric string
+if (interaction_p < 0.05) {
+  tier3b_metric_text <- glue(
+    "Significantly different smooth terms (p = {signif(interaction_p)}); ",
+    "{n_fail_b}/{total_bins} lengths with higher AOC concentration"
+  )
+} else {
+  tier3b_metric_text <- glue(
+    "No significant difference in smooth terms (p = {round(interaction_p, 3)}); ",
+    "AOC marginal mean {if (tier3b_overall == 'Fail') 'higher' else 'not higher'} than reference"
+  )
+}
+
+
+
+tier3b_summary_tibble <- tibble(
+  Tier = "Tier 3B",
+  Description = "Contaminant Concentration vs Reference",
+  Metric = tier3b_metric_text,
+  Outcome = tier3b_overall
+)
+
+
+```
+
+<br />
+
+```{r tier3b-summary, results='asis'}
+cat(t3b_summary_text)
+
+```
+
+```{r tier-3b-decision-table, results='asis'}
+cat(tier3b_decision_text)
+
+```
+
+<br />
+
+**Tier 3B Overall Decision:** `r tier3b_overall`
+
+<br />
+
+## Tier 3C: Temporal Trends
+
+Temporal trends in `r params$species` for `r contaminant_label` were assessed using linear models across all years of data. An initial model tested for a significant interaction between fish length and sampling year. If an interaction was detected, trends were evaluated separately for the three most frequently sampled length bins. Otherwise, annual mean contaminant concentrations were used. Trends help support Tier 3C by assessing if contaminant levels have declined, remained stable, or increased over time.
+
+```{r temp-trends-setup, message = FALSE}
+trend_results <- plot_temporal_trends(include_reference = FALSE, include_aoc = TRUE)
+
+
+temp_trends_caption <- {
+  # Interaction phrase
+  interaction_phrase <- if (trend_results$interaction_sig) {
+    bin_str <- glue::glue_collapse(trend_results$top_bins, sep = ", ", last = " and ")
+    glue::glue(
+      "Temporal {contaminant_label} concentration ({unit_label}) trends for {params$species}, ",
+      "grouped by region and top 3 sampled size bins. ",
+      "The most frequently sampled size bins were {bin_str} cm. ",
+      "Lines represent linear model fits."
+    )
+  } else {
+    glue::glue(
+      "Temporal {contaminant_label} concentration ({unit_label}) trends for {params$species}, ",
+      "grouped by region. Lines represent linear model fits to annual mean concentrations."
+    )
+  }
+
+  # Reference to which regions are included
+  included_regions <- c()
+  if ("AOC" %in% trend_results$model_stats$region) included_regions <- c(included_regions, "AOC")
+  if (ref_1 %in% trend_results$model_stats$region) included_regions <- c(included_regions, ref_1)
+  if (!params$combine_ref && ref_2 != "none" && ref_2 %in% trend_results$model_stats$region) {
+    included_regions <- c(included_regions, ref_2)
+  }
+
+  region_phrase <- glue::glue("Results shown for: {glue::glue_collapse(included_regions, sep = ', ', last = ' and ')}.")
+
+  glue::glue("(ref:temp-trends-fig) {interaction_phrase} {region_phrase}")
+}
+```
+
+`r temp_trends_caption`
+
+```{r temp-trends-figure, fig.cap='(ref:temp-trends-fig)', fig.width=6,fig.height=4, message=FALSE}
+print(trend_results$plot)
+
+interaction_fmt <- ifelse(is.na(trend_results$interaction_p), "NA",
+                          ifelse(trend_results$interaction_p < 0.001, "< 0.001", signif(trend_results$interaction_p, 3)))
+
+temporal_text <- {
+  # Interaction explanation
+  interaction_fmt <- ifelse(
+    is.na(trend_results$interaction_p),
+    "NA",
+    ifelse(trend_results$interaction_p < 0.001, "< 0.001", signif(trend_results$interaction_p, 3))
+  )
+
+  interaction_line <- if (trend_results$interaction_sig) {
+    top_bins_str <- str_sort(trend_results$top_bins, numeric = TRUE) %>%
+  glue::glue_collapse(sep = ", ", last = " and ")
+    glue::glue(
+      "A linear model detected a significant interaction between year and fish length (p = {interaction_fmt}). ",
+      "Trends were therefore assessed separately for the top 3 most sampled length bins: {bin_str} cm."
+    )
+  } else {
+    glue::glue(
+      "No significant interaction was detected between year and fish length (p = {interaction_fmt}). ",
+      "Trends were assessed using mean contaminant concentrations per year."
+    )
+  }
+
+  # R² summary
+  r2_line <- if ("AOC" %in% trend_results$model_stats$region &&
+                 nrow(trend_results$model_stats) == 1) {
+    aoc_r2 <- trend_results$model_stats %>% filter(region == "AOC") %>% pull(r2)
+    glue::glue("Overall model R² = {round(aoc_r2, 2)}.")
+  } else {
+    r2_str <- trend_results$model_stats %>%
+      mutate(str = glue::glue("**{region}** = {round(r2, 2)}")) %>%
+      pull(str) %>%
+      glue::glue_collapse(sep = ", ")
+    glue::glue("Overall model R² by region: {r2_str}.")
+  }
+
+  # Combine both parts
+  glue::glue("{interaction_line} {r2_line}")
+}
+
+
+
+```
+
+```{r tier3c-result-text}
+if (trend_results$interaction_sig) {
+  # ======= Interaction significant — summarize by bin =======
+  tier3c_summary <- trend_results$trend_bins %>%
+    filter(region == "AOC") %>%
+    count(trend, name = "n") %>%
+    mutate(trend = factor(trend, levels = c("Declining", "Stable", "Increasing"))) %>%
+    arrange(trend)
+
+  format_trend_phrase <- function(n, trend) {
+    verb <- ifelse(n == 1, "was", "were")
+    bin_word <- ifelse(n == 1, "bin", "bins")
+    glue::glue("{n} {bin_word} {verb} {tolower(trend)}")
+  }
+
+  trend_sentences <- pmap_chr(
+  list(n = tier3c_summary$n, trend = tier3c_summary$trend),
+  format_trend_phrase
+) %>%
+  glue::glue_collapse(sep = ", ", last = ", and ")
+
+
+  tier3c_result_text <- glue::glue(
+    "In the AOC, {trend_sentences}. These trends were assessed using annual linear models by length bin."
+  )
+
+  tier3c_overall <- if (any(tier3c_summary$trend == "Increasing")) "Fail" else "Pass"
+
+} else {
+  # ======= No interaction — summarize overall slope =======
+  aoc_slope <- trend_results$model_stats %>%
+    filter(region == "AOC") %>%
+    pull(slope)
+
+  direction <- case_when(
+    aoc_slope > 0 ~ "increasing",
+    aoc_slope < 0 ~ "decreasing",
+    TRUE ~ "stable"
+  )
+
+  tier3c_result_text <- glue::glue(
+    "In the AOC, {contaminant_label} concentrations were {direction} over time. ",
+    "This trend was assessed using an annual linear model of mean concentration."
+  )
+
+  tier3c_overall <- if (aoc_slope > 0) "Fail" else "Pass"
+}
+
+
+tier3c_metric_text <- if (trend_results$interaction_sig) {
+  # Interaction model — summarize trend direction per bin
+  trend_counts <- trend_results$trend_bins %>%
+    filter(region == "AOC") %>%
+    count(trend) %>%
+    tidyr::complete(trend = c("Declining", "Stable", "Increasing"), fill = list(n = 0))
+
+  glue::glue(
+    "Significant length × year interaction (p = {interaction_fmt}); ",
+    "{trend_counts$n[trend_counts$trend == 'Declining']} declining, ",
+    "{trend_counts$n[trend_counts$trend == 'Stable']} stable, ",
+    "{trend_counts$n[trend_counts$trend == 'Increasing']} increasing bins"
+  )
+} else {
+  # No interaction — summarize slope direction
+  aoc_slope <- trend_results$model_stats %>%
+    filter(region == "AOC") %>%
+    pull(slope)
+
+  direction <- case_when(
+    aoc_slope > 0 ~ "increasing",
+    aoc_slope < 0 ~ "decreasing",
+    TRUE ~ "stable"
+  )
+
+  glue::glue(
+    "No significant interaction (p = {interaction_fmt}); ",
+    "overall AOC trend: {direction}"
+  )
+}
+
+
+tier3c_summary_tibble <- tibble(
+  Tier = "Tier 3C",
+  Description = "Temporal Trends",
+  Metric = tier3c_metric_text,
+  Outcome = tier3c_overall
+)
+```
+
+```{r temporal-text-printout, results='asis'}
+
+cat(temporal_text)
+cat(tier3c_result_text)
+
+```
+
+**Tier 3C Overall Decision:** `r tier3c_overall`
+
+# Final summary
+
+```{r}
+tier3_summary_table <- bind_rows(
+  tier3a_summary_tibble,
+  tier3b_summary_tibble,
+  tier3c_summary_tibble
+)
+
+knitr::kable(tier3_summary_table, caption = "Summary of Tier 3 Evidence Lines and Outcomes")
+
+
+```
