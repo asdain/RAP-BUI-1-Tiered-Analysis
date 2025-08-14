@@ -1,6 +1,12 @@
 # RUN THIS LOCALLY after analysis builds `cons_data`, `length_levels`, and `aoc_id`
 suppressPackageStartupMessages({ library(readr) })
 
+
+source(here::here("Scripts", "Setup.R"))
+source(here::here("Master Report.Rmd"))
+
+aoc_id = 45087425
+
 # Use existing function to get the wide AOC-only table
 t1_df <- make_restrict_table(
   cons_data      = cons_data,      # your filtered data
