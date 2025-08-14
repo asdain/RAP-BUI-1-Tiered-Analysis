@@ -3,13 +3,26 @@ library(readr)
 library(reactable)
 library(here)
 
-# Bring in your renderer
-source(here("R", "render_t1_table.R"))
+# Source local copies (populated by build), else fall back to repo root for local dev
+if (dir.exists("shared")) {
+  r_files <- list.files("shared", pattern = "\\.R$", full.names = TRUE)
+  for (f in r_files) { source(f) }
+} else if (dir.exists("../../R")) {
+  r_files <- list.files("../../R", pattern = "\\.R$", full.names = TRUE)
+  for (f in r_files) { source(f) }
+}
+
+# Data path: prefer app-local for exported site; fallback for local dev
+t1_path <- "data/t1_wide.csv"
+if (!file.exists(t1_path) && requireNamespace("here", quietly = TRUE)) {
+  t1_path <- here::here("web","tier1","data","t1_wide.csv")
+  }
+
 
 
 #Consumption thresholds
 thr_path <- here("Data","consumption_threshold.csv")
-thr_df <- if (file.exists(thr_path)) readr::read_csv(thr_path, show_col_types = FALSE) else tibble::tibble()
+thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
 
 get_threshold <- function(sp) {
   if (nrow(thr_df)) {
