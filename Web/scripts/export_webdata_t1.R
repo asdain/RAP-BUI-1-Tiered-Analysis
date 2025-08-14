@@ -15,7 +15,7 @@ t1_df <- make_restrict_table(
 )
 
 # make sure the web folder exists
-dir.create("web/tier1/data", recursive = TRUE, showWarnings = FALSE)
+dir.create("Web/tier1/data", recursive = TRUE, showWarnings = FALSE)
 
 # save exactly what render_t1_table expects (it already will, based on your code)
 # Columns include: Species, Species_display, Row_Label, and each size column

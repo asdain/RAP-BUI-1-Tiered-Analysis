@@ -13,6 +13,12 @@ dest_dir <- here("Web", "tier1", "shared")
 dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
 if (!dir.exists(dest_dir)) {stop("Destination directory was not created: ", dest_dir)}
 
+
+message("WD: ", getwd())
+message("From count: ", length(r_files))
+print(head(r_files, 5))
+message("Dest exists? ", dir.exists(dest_dir), "  Dest: ", dest_dir)
+
 # 3) copy all helpers into app-local shared/
 ok <- file.copy(from = r_files, to = dest_dir, overwrite = TRUE)
 if (!all(ok)) {
