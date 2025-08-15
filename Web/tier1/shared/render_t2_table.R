@@ -13,7 +13,7 @@ median_floor <- function(x) {
 
 
 
-render_t2_table <- function(cons_data = NULL, 
+render_t2_table <- function(df, 
                             aoc_id = params$AOC, 
                             reference_sites = params$reference_sites, 
                             length_levels = NULL, 
@@ -21,19 +21,18 @@ render_t2_table <- function(cons_data = NULL,
                             exclude_t1_passed = TRUE,
                             table_height = "1500px") {
   
-  if (is.null(cons_data)) {
-    cons_data <- get("cons_data", envir = .GlobalEnv)
-  }
+
   
   if (is.null(length_levels)) {
-    length_levels <- get("length_levels", envir = .GlobalEnv)
+    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
+                              error = function(...) intersect(names(df), names(df)))
   }
   
 
   
-  aoc_combinations <- prep_aoc_combinations(cons_data, aoc_id, length_levels)
+  aoc_combinations <- prep_aoc_combinations(df, aoc_id, length_levels)
   
-  filtered_data <- cons_data %>%
+  filtered_data <- df %>%
     filter_advisory_data(site_ids = c(reference_sites, aoc_id), aoc_id, length_levels) %>%
     semi_join(aoc_combinations, by = c("Species", "Size", "Population")) %>%
     filter_interest_species(interest_species)

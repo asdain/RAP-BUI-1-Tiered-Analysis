@@ -1,22 +1,32 @@
 # Shared utilities for Tier 1 and Tier 2 fish advisory reactables
 
 #' Prepare species × size × population combinations for the AOC
-prep_aoc_combinations <- function(cons_data, aoc_id, length_levels = length_levels) {
-  cons_data %>%
+prep_aoc_combinations <- function(df, aoc_id, length_levels = NULL) {
+  
+  if (is.null(length_levels)) {
+    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
+                              error = function(...) intersect(names(df), names(df)))
+  }
+  
+  cons_data = df %>%
     filter(waterbody_group %in% aoc_id,
            population_type_desc %in% c("General", "Sensitive")) %>%
     distinct(Species = specname, Size = length_category_label, Population = population_type_desc) %>%
     mutate(Size = factor(Size, levels = length_levels, ordered = TRUE))
 }
 
-if (is.null(length_levels)) {
-  length_levels <- get("length_levels", envir = .GlobalEnv)
-}
+
 
 
 #' Filter and tag AOC/Reference data
-filter_advisory_data <- function(cons_data, site_ids, aoc_id, length_levels) {
-  cons_data %>%
+filter_advisory_data <- function(df, site_ids, aoc_id, length_levels = NULL) {
+  
+  if (is.null(length_levels)) {
+    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
+                              error = function(...) intersect(names(df), names(df)))
+  }
+  
+  cons_data = df %>%
     filter(waterbody_group %in% site_ids,
            population_type_desc %in% c("General", "Sensitive")) %>%
     mutate(
@@ -46,7 +56,13 @@ summarise_max_advisory <- function(df) {
 }
 
 #' Add display rows and order fields to clean repeated labels
-add_row_order_labels <- function(df, length_levels) {
+add_row_order_labels <- function(df, length_levels = NULL) {
+  
+  if (is.null(length_levels)) {
+    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
+                              error = function(...) intersect(names(df), names(df)))
+  }
+  
   existing_size_cols <- intersect(length_levels, names(df))
   
   df %>%

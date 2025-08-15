@@ -1,8 +1,14 @@
 ## Make heatmap N table function
 
-make_heatmap_table <- function(cons_data, length_levels, aoc_site_name, sites) {
+make_heatmap_table <- function(df, length_levels = NULL, aoc_site_name, sites) {
+  
+  if (is.null(length_levels)) {
+    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
+                              error = function(...) intersect(names(df), names(df)))
+  }
+  
   # Get AOC species-size combinations
-  aoc_combinations <- cons_data %>%
+  aoc_combinations <- df %>%
     filter(guide_locname_eng == aoc_site_name,
            population_type_desc == "Sensitive") %>%
     distinct(Species = specname, Size = length_category_label) %>%

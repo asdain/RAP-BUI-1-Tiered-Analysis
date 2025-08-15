@@ -12,6 +12,9 @@
 #' @param table_height CSS height for table
 #' @param show_legend Logical, whether to include contaminant legend
 #' @return A reactable object with legend and formatted table
+
+
+
 render_t1_table <- function(df,
                             length_levels = NULL,
                             interest_species = NULL,
@@ -23,15 +26,22 @@ render_t1_table <- function(df,
                             restrict_threshold = 8) {
   
   if (is.null(length_levels)) {
-    length_levels <- get("length_levels", envir = .GlobalEnv)
+    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
+                              error = function(...) intersect(names(df), names(df)))
   }
+  
   
   
   size_cols <- length_levels[length_levels %in% names(df)]
   
   if (!is.null(interest_species)) {
-    df <- filter_interest_species(df, interest_species)
+    if (exists("filter_interest_species", mode = "function")) {
+      df <- filter_interest_species(df, interest_species)
+    } else {
+      df <- df[df$Species %in% interest_species, , drop = FALSE]
+    }
   }
+  
   
   
   columns_list <- list()

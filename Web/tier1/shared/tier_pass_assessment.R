@@ -1,8 +1,14 @@
 #' Compute Tier 1 and Tier 2 pass/fail flags per species
 #' Optionally excludes Tier 1 passing species from Tier 2 analysis
 #' Returns a table with Species, t1_pass, t2_pass
-get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_levels, interest_species = NULL) {
+get_species_pass_flags <- function(df, aoc_id, reference_sites, length_levels = NULL, interest_species = NULL) {
 
+  
+  if (is.null(length_levels)) {
+    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
+                              error = function(...) intersect(names(df), names(df)))
+  }
+  
   # Apply species filter
   if (!is.null(interest_species)) {
     cons_data <- cons_data %>%
@@ -15,7 +21,7 @@ get_species_pass_flags <- function(cons_data, aoc_id, reference_sites, length_le
   }
 
     # Tier 1
-  t1_flags <- cons_data %>%
+  t1_flags <- df %>%
     filter(waterbody_group == aoc_id,
            population_type_desc %in% c("General", "Sensitive")) %>%
     group_by(specname) %>%
