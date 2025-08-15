@@ -1,0 +1,57 @@
+Species,Species_display,Row_Label,15-20cm,20-25cm,25-30cm,30-35cm,35-40cm,40-45cm,45-50cm,50-55cm,55-60cm,60-65cm,65-70cm,70-75cm,>75cm
+Bluegill,Bluegill,General,4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Bluegill,,Adv cause,PFAS,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Bluegill,,Sensitive,4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Bluegill,,Adv cause,PFAS,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Brown Bullhead,Brown Bullhead,General,8,8,8,8,8,NA,NA,NA,NA,NA,NA,NA,NA
+Brown Bullhead,,Adv cause,PFAS,PFAS,PFAS,PFAS,PFAS,NA,NA,NA,NA,NA,NA,NA,NA
+Brown Bullhead,,Sensitive,8,8,8,8,8,NA,NA,NA,NA,NA,NA,NA,NA
+Brown Bullhead,,Adv cause,PFAS,PFAS,PFAS,PFAS,PFAS,NA,NA,NA,NA,NA,NA,NA,NA
+Channel Catfish,Channel Catfish,General,NA,NA,NA,NA,4,2,1,0,0,0,0,NA,NA
+Channel Catfish,,Adv cause,NA,NA,NA,NA,PCB,PCB,PCB,PCB,PCB,PCB,Mercury,NA,NA
+Channel Catfish,,Sensitive,NA,NA,NA,NA,4,0,0,0,0,0,0,NA,NA
+Channel Catfish,,Adv cause,NA,NA,NA,NA,Mercury,PCB,PCB,PCB,PCB,"Mercury, PCB","Mercury, PCB",NA,NA
+Fallfish,Fallfish,General,NA,NA,16,8,4,NA,NA,NA,NA,NA,NA,NA,NA
+Fallfish,,Adv cause,NA,NA,"Mercury, PCB",PCB,PCB,NA,NA,NA,NA,NA,NA,NA,NA
+Fallfish,,Sensitive,NA,NA,8,4,0,NA,NA,NA,NA,NA,NA,NA,NA
+Fallfish,,Adv cause,NA,NA,Mercury,Mercury,Mercury,NA,NA,NA,NA,NA,NA,NA,NA
+Freshwater Drum,Freshwater Drum,General,NA,NA,NA,NA,NA,NA,NA,NA,NA,2,2,1,NA
+Freshwater Drum,,Adv cause,NA,NA,NA,NA,NA,NA,NA,NA,NA,PCB,PCB,PCB,NA
+Freshwater Drum,,Sensitive,NA,NA,NA,NA,NA,NA,NA,NA,NA,0,0,0,NA
+Freshwater Drum,,Adv cause,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Mercury, PCB","Mercury, PCB","Mercury, PCB",NA
+Largemouth Bass,Largemouth Bass,General,8,8,8,8,8,4,4,NA,NA,NA,NA,NA,NA
+Largemouth Bass,,Adv cause,PFAS,PFAS,PFAS,PFAS,"Mercury, PFAS","Mercury, PFAS","Mercury, PFAS",NA,NA,NA,NA,NA,NA
+Largemouth Bass,,Sensitive,8,8,8,4,0,0,0,NA,NA,NA,NA,NA,NA
+Largemouth Bass,,Adv cause,PFAS,PFAS,"Mercury, PFAS",Mercury,Mercury,Mercury,Mercury,NA,NA,NA,NA,NA,NA
+Northern Pike,Northern Pike,General,NA,32,32,16,16,16,16,16,16,12,8,4,4
+Northern Pike,,Adv cause,NA,,,PCB,"Mercury, PCB","Mercury, PCB",Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,"Mercury, PFAS"
+Northern Pike,,Sensitive,NA,16,16,16,16,12,8,8,8,4,4,0,0
+Northern Pike,,Adv cause,NA,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury
+Rock Bass,Rock Bass,General,4,4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Rock Bass,,Adv cause,PFAS,PFAS,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Rock Bass,,Sensitive,4,4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Rock Bass,,Adv cause,"Mercury, PFAS","Mercury, PFAS",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Smallmouth Bass,Smallmouth Bass,General,4,4,4,4,4,4,4,4,NA,NA,NA,NA,NA
+Smallmouth Bass,,Adv cause,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,Mercury,PFAS,NA,NA,NA,NA,NA
+Smallmouth Bass,,Sensitive,4,4,4,4,4,0,0,0,NA,NA,NA,NA,NA
+Smallmouth Bass,,Adv cause,PFAS,PFAS,Mercury,Mercury,Mercury,Mercury,Mercury,Mercury,NA,NA,NA,NA,NA
+Tench,Tench,General,NA,NA,NA,NA,NA,NA,8,NA,NA,NA,NA,NA,NA
+Tench,,Adv cause,NA,NA,NA,NA,NA,NA,PFAS,NA,NA,NA,NA,NA,NA
+Tench,,Sensitive,NA,NA,NA,NA,NA,NA,0,NA,NA,NA,NA,NA,NA
+Tench,,Adv cause,NA,NA,NA,NA,NA,NA,"Mercury, PFAS",NA,NA,NA,NA,NA,NA
+Walleye,Walleye,General,4,4,4,4,4,4,4,4,4,4,4,4,0
+Walleye,,Adv cause,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,"Mercury, PFAS","Mercury, PFAS","Mercury, PFAS",Mercury
+Walleye,,Sensitive,4,4,4,4,4,4,4,4,0,0,0,0,0
+Walleye,,Adv cause,PFAS,PFAS,PFAS,PFAS,"Mercury, PFAS","Mercury, PFAS","Mercury, PFAS","Mercury, PFAS",Mercury,Mercury,Mercury,Mercury,Mercury
+White Perch,White Perch,General,8,4,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+White Perch,,Adv cause,Mercury,Mercury,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+White Perch,,Sensitive,4,0,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+White Perch,,Adv cause,Mercury,Mercury,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+White Sucker,White Sucker,General,4,4,4,4,4,4,4,4,4,4,NA,NA,NA
+White Sucker,,Adv cause,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,"Mercury, PFAS","Mercury, PFAS",NA,NA,NA
+White Sucker,,Sensitive,4,4,4,4,4,4,4,4,0,0,NA,NA,NA
+White Sucker,,Adv cause,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,PFAS,Mercury,Mercury,NA,NA,NA
+Yellow Perch,Yellow Perch,General,4,4,4,4,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Yellow Perch,,Adv cause,PFAS,PFAS,PFAS,"Mercury, PFAS",NA,NA,NA,NA,NA,NA,NA,NA,NA
+Yellow Perch,,Sensitive,4,4,4,0,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Yellow Perch,,Adv cause,PFAS,PFAS,PFAS,Mercury,NA,NA,NA,NA,NA,NA,NA,NA,NA
