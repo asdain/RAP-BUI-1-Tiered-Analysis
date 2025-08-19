@@ -7,9 +7,16 @@ source("Web/scripts/export_webdata_t1.R")
 if (!requireNamespace("here", quietly = TRUE)){ install.packages("here")}
 library(here)
 
-# 1) list all R helpers from root/R using absolute paths
-r_files <- list.files(here("R"), pattern = "\\.R$", full.names = TRUE)
-if (length(r_files) == 0) {stop("No .R files found in ", here("R"))}
+## 1) list all R helpers from root/R using absolute paths
+#r_files <- list.files(here("R"), pattern = "\\.R$", full.names = TRUE)
+#if (length(r_files) == 0) {stop("No .R files found in ", here("R"))}
+
+needed_helpers <- c(
+  here("R", "render_t1_table.R"),
+  here("R", "tier_table_shared.R")
+)
+file.copy(needed_helpers, dest_dir, overwrite = TRUE)
+
 
 # 2) create destination dir (absolute) and verify it is a directory
 dest_dir <- here("Web", "tier1", "shared")
@@ -48,10 +55,6 @@ if (ok) {
 
 
 
-
-
-
-
 # AFTER shinylive::export(...)
 if (!requireNamespace("fs", quietly = TRUE)) install.packages("fs")
 library(fs)
@@ -65,6 +68,19 @@ dir_copy("Web/tier1/data",   "docs/tier1_site_local/data",   overwrite = TRUE)
 dir_copy("Web/tier1/shared", "docs/tier1_site_local/shared", overwrite = TRUE)
 
 
+
+
+
+# AFTER shinylive::export(...)
+if (!requireNamespace("fs", quietly = TRUE)) install.packages("fs")
+library(fs)
+# ensure the subdirs exist in the exported site
+dir_create("docs/tier1_site/data")
+dir_create("docs/tier1_site/shared")
+
+# copy app-local assets from the source app folder
+dir_copy("Web/tier1/data",   "docs/tier1_site/data",   overwrite = TRUE)
+dir_copy("Web/tier1/shared", "docs/tier1_site/shared", overwrite = TRUE)
 
 
 shinylive::export(
