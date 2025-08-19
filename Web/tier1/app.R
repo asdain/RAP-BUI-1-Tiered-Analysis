@@ -13,11 +13,17 @@ length_levels <- c("15-20cm", "20-25cm", "25-30cm", "30-35cm", "35-40cm", "40-45
                    "45-50cm", "50-55cm", "55-60cm", "60-65cm", "65-70cm", "70-75cm", ">75cm")
 
 # Data path: prefer app-local for exported site; fallback for local dev
-t1_path <- "data/t1_wide.csv"
+
+
 thr_path <- "data/consumption_threshold.csv"
 
 
-t1_wide <- readr::read_csv(t1_path, show_col_types = FALSE)
+if (file.exists("data/t1_wide.rds")) {
+  t1_wide <- readRDS("data/t1_wide.rds")
+} else {
+  t1_wide <- readr::read_csv("data/t1_wide.csv", show_col_types = FALSE)
+}
+
 thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
 
 

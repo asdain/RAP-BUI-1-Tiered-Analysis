@@ -26,6 +26,9 @@ dir.create("Web/tier1/data", recursive = TRUE, showWarnings = FALSE)
 
 # save exactly what render_t1_table expects (it already will, based on your code)
 # Columns include: Species, Species_display, Row_Label, and each size column
+
+saveRDS(t1_df, "Web/tier1/data/t1_wide.rds", compress = "xz")
+
 readr::write_csv(t1_df, "Web/tier1/data/t1_wide.csv")
 cat("\n✓ Wrote Web/tier1/data/t1_wide.csv\n")
 
