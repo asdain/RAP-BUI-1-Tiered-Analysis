@@ -1,10 +1,7 @@
 library(shiny)
 library(readr)
 library(reactable)
-library(rlang)
-library(dplyr)
 library(htmltools)
-library(htmlwidgets)
 
 # Globals
 contaminant_shapes  <- list("Mercury"="circle","PCB"="square","PFAS"="triangle")
@@ -18,6 +15,11 @@ length_levels <- c("15-20cm", "20-25cm", "25-30cm", "30-35cm", "35-40cm", "40-45
 thr_path <- "data/consumption_threshold.csv"
 
 
+if (!file.exists("data/t1_wide.rds") && !file.exists("data/t1_wide.csv")) {
+  stop("Missing data/t1_wide.rds or data/t1_wide.csv.")
+}
+
+
 if (file.exists("data/t1_wide.rds")) {
   t1_wide <- readRDS("data/t1_wide.rds")
 } else {
@@ -27,11 +29,6 @@ if (file.exists("data/t1_wide.rds")) {
 thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
 
 
-
-# Validate data present
-if (!file.exists("data/t1_wide.csv")) {
-  stop("Missing data/t1_wide.csv. Ensure the data directory is included in the exported app.")
-}
 
 # After reading:
 validate_cols <- c("Species","Species_display","Row_Label")
@@ -51,15 +48,6 @@ if (dir.exists("shared")) {
 
 
 
-
-
-## Example switch to URL reading (only if you’re sure files are web-served):
-#t1_url  <- "./data/t1_wide.csv"
-#thr_url <- "./data/consumption_threshold.csv"
-#
-#t1_wide <- readr::read_csv(t1_url, show_col_types = FALSE)
-#thr_df  <- tryCatch(readr::read_csv(thr_url, show_col_types = FALSE),
-#                    error = function(e) tibble::tibble())
 
 #Consumption thresholds
 
@@ -103,7 +91,11 @@ species_choices <- sort(unique(t1_wide$Species))
 default_species <- if ("Walleye" %in% species_choices) "Walleye" else species_choices[1]
 
 ui <- fluidPage(
-  tags$head(tags$style("main{max-width:1200px;margin:0 auto}")),
+    tags$head(tags$style(HTML("
+  main{max-width:900px;margin:0 auto;}
+  .Reactable .rt-th, .Reactable .rt-td { white-space: nowrap; }  
+  @media (max-width: 600px) { main{max-width:100%; padding: 0 8px;} }
+"))),
   h2("Tier 1 — Advisory Table (AOC)"),
   fluidRow(
     column(6, selectInput("species","Species",
@@ -135,11 +127,14 @@ server <- function(input, output) {
       contaminant_shapes = contaminant_shapes,
       contaminant_colours = contaminant_colours,
       generate_shape_fn = generate_shape,
-      table_height = "1200px",
+      table_height = NULL,
       show_legend = TRUE,
-      restrict_threshold = get_threshold(input$species)
+      restrict_threshold = get_threshold(input$species),
+      use_pagination = FALSE,    
+      default_page_size = 12        
     )
   })
+  
 }
 
 
