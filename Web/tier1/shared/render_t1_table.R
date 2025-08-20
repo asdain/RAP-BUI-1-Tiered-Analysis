@@ -23,7 +23,9 @@ render_t1_table <- function(df,
                             generate_shape_fn = generate_shape,
                             table_height = "1500px",
                             show_legend = TRUE,
-                            restrict_threshold = 8) {
+                            restrict_threshold = 8,
+                            use_pagination = FALSE,
+                            default_page_size = 12) {
   
   if (is.null(length_levels)) {
     length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
@@ -62,7 +64,7 @@ render_t1_table <- function(df,
           })
           # OLD: return(htmltools::span(icons))
           return(do.call(htmltools::span, c(icons, list(style = "display:inline-flex;gap:6px;align-items:center;"))))
-        
+          
         }
         
         if (row_type != "Adv cause" && !is.na(value)) return(value)
@@ -131,6 +133,7 @@ render_t1_table <- function(df,
         generate_shape_fn(shape, colour, 12),
         contaminant
       )
+      
     })
     
     htmltools::div(
@@ -142,44 +145,49 @@ render_t1_table <- function(df,
     NULL
   }
   
-  htmltools::div(
-    htmltools::browsable(htmltools::tagList(
-      legend_html,
-      reactable::reactable(
-        df,
-        columns = columns_list,
-        defaultPageSize = 10,
-        showPageSizeOptions = TRUE,
-        pagination = FALSE,
-        sortable = FALSE,
-        height = table_height,
-        defaultColDef = colDef(
-          sortable = FALSE,
-          align = "center",
-          minWidth = 80,
-          style = list(
-            padding = "0",
-            margin = "0",
-            border = "none",
-            verticalAlign = "middle",
-            fontFamily = "system-ui, sans-serif",
-            fontSize = "13px"
-          )
-        ),
-        rowStyle = rowStyle_fn,
-        bordered = FALSE,
-        striped = FALSE,
-        highlight = TRUE,
-        style = list(
-          fontFamily = "system-ui, sans-serif",
-          fontSize = "13px",
-          borderCollapse = "collapse",
-          borderSpacing = "0",
-          margin = "0 auto",
-          width = "auto"
-        )
-      )
-    )),
-    style = "max-width: 100%; overflow-x: auto;"
+  tbl <- reactable::reactable(
+    df,
+    columns = columns_list,
+    pagination = isTRUE(use_pagination),
+    defaultPageSize = if (isTRUE(use_pagination)) default_page_size else 10,
+    showPageSizeOptions = isTRUE(use_pagination),
+    sortable = FALSE,
+    height = if (isTRUE(use_pagination)) NULL else table_height,
+    defaultColDef = colDef(
+      sortable = FALSE,
+      align = "center",
+      minWidth = 90,
+      style = list(
+        padding = "3px 6px",
+        margin  = "0",
+        border  = "none",
+        verticalAlign = "middle",
+        fontFamily = "system-ui, sans-serif",
+        fontSize   = "12px"
+      ),
+      headerStyle = list(padding = "6px 6px")
+    ),
+    rowStyle = rowStyle_fn,
+    bordered = FALSE,
+    striped  = FALSE,
+    highlight = FALSE,
+    style = list(
+      fontFamily = "system-ui, sans-serif",
+      fontSize   = "12px",
+      borderCollapse = "collapse",
+      borderSpacing  = "0",
+      margin     = "0 auto",
+      width      = "max-content"   # <-- key
+    )
   )
+  
+  htmltools::tagList(
+    legend_html,
+    htmltools::div(
+      tbl,
+      style = "max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-gutter: stable;"
+    )
+  )
+  
+  
 }
