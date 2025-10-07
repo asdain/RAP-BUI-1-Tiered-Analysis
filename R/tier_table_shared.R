@@ -96,3 +96,47 @@ make_common_column_defs <- function() {
 }
 
 
+# Table utility to figure out which columns are the "size bins"
+t1_size_cols <- function(df, length_levels = NULL) {
+  if (!is.null(length_levels)) return(intersect(length_levels, names(df)))
+  sc <- attr(df, "size_cols")
+  if (!is.null(sc)) return(sc)
+  setdiff(names(df), c("Species","Species_display","Row_Label","Unrestrictive_Threshold"))
+}
+
+
+# To return table advisory causes as indices (numbered) instead of icons (helpful for Word doc version)
+# returns a list: list(df = mutated_df, legend = tibble(idx, contaminant))
+encode_adv_causes_as_indices <- function(df, size_cols) {
+  # gather causes only from Adv cause rows
+  cause_vals <- df[df$Row_Label == "Adv cause", size_cols, drop = FALSE] |>
+    unlist(use.names = FALSE) |>
+    as.character()
+  cause_vals <- cause_vals[!is.na(cause_vals) & nzchar(cause_vals)]
+  
+  if (length(cause_vals) == 0) {
+    return(list(df = df, legend = tibble::tibble(idx = integer(), contaminant = character())))
+  }
+  
+  contaminants <- unique(trimws(unlist(strsplit(cause_vals, ","))))
+  contaminants <- contaminants[nzchar(contaminants)]
+  # stable index (alphabetical so it's deterministic)
+  contaminants <- sort(contaminants)
+  map <- stats::setNames(seq_along(contaminants), contaminants)
+  
+  # replace each Adv cause cell with comma-separated indices "1,2,3"
+  df2 <- df
+  for (i in which(df2$Row_Label == "Adv cause")) {
+    for (col in size_cols) {
+      x <- df2[[col]][i]
+      if (is.na(x) || !nzchar(x)) next
+      items <- trimws(unlist(strsplit(as.character(x), ",")))
+      nums <- map[items]
+      df2[[col]][i] <- paste(nums, collapse = ", ")
+    }
+  }
+  
+  legend <- tibble::tibble(idx = seq_along(contaminants), contaminant = contaminants)
+  list(df = df2, legend = legend)
+}
+

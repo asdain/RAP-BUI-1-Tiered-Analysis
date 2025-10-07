@@ -24,23 +24,15 @@ params:
   - '43527856'
   restrict_threshold: 8
   interest_species:
-  - Bluegill
-  - Black Crappie
   - Brown Bullhead
   - Freshwater Drum
   - Largemouth Bass
   - Northern Pike
-  - Pumpkinseed
   - Rock Bass
   - Smallmouth Bass
   - Walleye
   - White Perch
   - Yellow Perch
-  - White Bass
-  - American Eel
-  - Rainbow Smelt
-  - Channel Catfish
-  - Chinook Salmon
 ---
 
 ```{r Setup, echo=FALSE, include = FALSE}
@@ -55,15 +47,29 @@ source("Scripts/setup.R")
 aoc_name = get_waterbody_names(cons_data, site_id = params$AOC)
 ref_names = get_waterbody_names(cons_data, site_id = params$reference_sites)
 
+
+# This is a csv file with consumption thresholds for each species (ie, how many meals/month is considered unrestrictive in the AOC?). It is located in the Data folder,  and you can change it yourself based on your species of interest and consumption thresholds. When calling the T1 table, you can set restrict_thresholds = NULL  and restrict_threshold = (some number) to use the same number for all species (default 8)
+thr_path <- "Data/consumption_threshold_slr.csv"
+thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
+
+
 # Make table
-t1_df = make_restrict_table(cons_data,
-                                params$AOC,
-                                length_levels)
+t1_df <- make_restrict_table(
+  df = your_input_df,
+  aoc_id = params$aoc_id,
+  length_levels = length_levels,
+  restrict_threshold = thr_df,     # single value, named vector, or df
+  interest_species = params$interest_species 
+)
+
 # Set contaminant mappings
 unique_contaminants <- extract_unique_adv_causes(t1_df)
 mappings <- assign_contaminant_mappings(unique_contaminants)
 contaminant_shapes <- mappings$shapes
 contaminant_colours <- mappings$colours
+
+
+
 
 
 
@@ -86,7 +92,8 @@ render_t1_table(
   contaminant_colours = contaminant_colours,
   table_height = "800px",
   show_legend = TRUE,
-  interest_species = params$interest_species
+  interest_species = params$interest_species,
+  restrict_thresholds = thr_df
 )
 ```
 Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the "Restrictive" threshold of `r params$restrict_threshold` meals/month, and green cells indicate advisories levels above this threshold. The contaminants driving the advisories are displayed below each cell with an indicated colour and shape.

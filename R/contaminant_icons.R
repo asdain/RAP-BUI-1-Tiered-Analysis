@@ -56,7 +56,7 @@ generate_shape <- function(shape, colour = "gray", size = 12, border_width = 2) 
 
 # Function to extract all unique advisory causes from the wide-format reactable input
 extract_unique_adv_causes <- function(t1_df) {
-  size_cols <- setdiff(names(t1_df), c("Species", "Row_Label"))
+  size_cols <- setdiff(names(t1_df), c("Species", "Row_Label",  "Unrestrictive_Threshold"))
   cause_strings <- t1_df %>%
     dplyr::filter(Row_Label == "Adv cause") %>%
     dplyr::select(dplyr::all_of(size_cols)) %>%
