@@ -27,7 +27,11 @@ packages_list = c("dplyr",
                   "mgcv",
                   "emmeans",
                   "broom",
-                  "webshot2")
+                  "webshot2",
+                  "flextable",
+                  "here",
+                  "readr",
+                  "fs")
 
 
 installed_packages <- packages_list %in% rownames(installed.packages())
@@ -66,6 +70,6 @@ theme_aaron = function(){
 }
 
 # Loading all custom script
-tool_files = list.files(path = "R", pattern = "\\.R$", full.names = TRUE)
+tool_files = list.files(path = here::here("R"), pattern = "\\.R$", full.names = TRUE)
 invisible(lapply(tool_files, source))
 

@@ -1,0 +1,136 @@
+---
+title: "SLR BUI 1 Report"
+always_allow_html: true
+output:
+  html_document:
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+params:
+  AOC: '45087425'
+  AOC_shorthand: "SLR"
+  reference_sites:
+  - '44007727'
+  - '43557712'
+  - '43497905'
+  - '43117922'
+  - '43397900'
+  - '43517847'
+  - '43527851'
+  - '44397535'
+  - '43557717'
+  - '43527856'
+  restrict_threshold: 8
+  interest_species:
+  - Bluegill
+  - Brown Bullhead
+  - Freshwater Drum
+  - Largemouth Bass
+  - Northern Pike
+  - Rock Bass
+  - Smallmouth Bass
+  - Walleye
+  - White Perch
+  - Yellow Perch
+---
+
+```{r Setup, echo=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(inline_output = TRUE)
+
+# Base setup
+source("Scripts/setup.R")
+aoc_short = params$AOC_shorthand
+
+dir_derived = here("Derived", aoc_short)
+dir_figs    <- here("Derived", aoc_short, "figs")
+dir_create(c(dir_derived, dir_figs))
+
+
+
+aoc_name = get_waterbody_names(cons_data, site_id = params$AOC)
+ref_names = get_waterbody_names(cons_data, site_id = params$reference_sites)
+readr::write_rds(ref_names, file = path(dir_derived, "t2_ref_sites.rds"))
+
+
+
+# make knitr write figures to Derived/<AOC>/figs from project root (works even if Rmd is in Analysis/)
+knitr::opts_knit$set(root.dir = here())
+knitr::opts_chunk$set(fig.path = file.path("Derived", aoc_short, "figs/"))
+
+
+# This is a csv file with consumption thresholds for each species (ie, how many meals/month is considered unrestrictive in the AOC?). It is located in the Data folder,  and you can change it yourself based on your species of interest and consumption thresholds. When calling the T1 table, you can set restrict_thresholds = NULL  and restrict_threshold = (some number) to use the same number for all species (default 8)
+thr_path <- "Data/consumption_threshold_slr.csv"
+thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
+
+# Save thresholds to derived RDS for Bookdown
+readr::write_rds(thr_df, file = path(dir_derived, "thr_df.rds"))
+
+
+# Make table
+t1_df <- make_restrict_table(
+  df = cons_data,
+  aoc_id = params$AOC,
+  length_levels = length_levels,
+  restrict_threshold = thr_df,     # single value, named vector, or df
+  interest_species = params$interest_species  
+)
+
+# Save table to Derived folder
+readr::write_rds(t1_df, file = path(dir_derived, "t1_df.rds"))
+
+# Set contaminant mappings
+unique_contaminants <- extract_unique_adv_causes(t1_df)
+mappings <- assign_contaminant_mappings(unique_contaminants)
+
+readr::write_rds(mappings, file = path(dir_derived, "mappings.rds"))
+
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+
+
+
+flags_SLR <- get_species_pass_flags(
+  df = cons_data,
+  aoc_id = params$AOC,
+  reference_sites = params$reference_sites,
+  length_levels = length_levels,
+  interest_species = params$interest_species
+)
+
+
+readr::write_rds(flags_SLR, here::here("Derived", "SLR", "flags.rds"))
+
+
+```
+
+```{r, Waterbody Lookup, include=FALSE, echo=FALSE}
+# As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
+
+get_waterbody_ids(cons_data, site_name = "St. Lawrence River (Lake St. Francis)")
+
+```
+
+# Tier 2
+```{r tier-2-prep}
+
+
+prep <- t2_prep_display(
+  df = cons_data,         # your big input
+  aoc_id = params$AOC,
+  reference_sites = params$reference_sites,
+  length_levels = length_levels,
+  interest_species = params$interest_species,
+  exclude_t1_passed = TRUE,
+  flags_df = flags        # (optional) if you already computed them
+)
+readr::write_rds(prep, file = path(dir_derived, "t2_prep.rds"))
+
+
+
+
+```
+
