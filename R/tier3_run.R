@@ -484,72 +484,7 @@ tier3_run <- function(
     region_levels
   )
   
-  # ---------- Map (best-effort; falls back if maptiles/ggspatial missing) ----------
-  map_plot <- NULL
-  if (nrow(map_data) > 0) {
-    sites_sf  <- sf::st_as_sf(map_data, coords = c("Longitude.Decimal","Latitude.Decimal"), crs = params$target_sr)
-    sites_proj <- sf::st_transform(sites_sf, 3857)
-    if (has_maptiles) {
-      bbox_buffered <- sf::st_bbox(sites_proj)
-      bbox_adjusted <- adjust_bbox_to_aspect(bbox_buffered, aspect_ratio = 10/6, crs = 3857)
-      bbox_sfc <- sf::st_as_sfc(bbox_adjusted + c(-40000,-40000,40000,40000))
-      basemap <- tryCatch(maptiles::get_tiles(bbox_sfc, provider = "Esri.WorldShadedRelief", crop = TRUE, zoom = 10), error=function(e) NULL)
-      if (!is.null(basemap)) {
-        bbox_vec <- sf::st_bbox(basemap)
-        p_main <- ggplot2::ggplot() +
-          maptiles::layer_spatial(basemap) +
-          ggplot2::geom_sf(data = sites_proj, ggplot2::aes(color = region), size = 3.5, shape = 21, fill = "white", stroke = 1) +
-          ggplot2::coord_sf(xlim = c(bbox_vec["xmin"], bbox_vec["xmax"]),
-                            ylim = c(bbox_vec["ymin"], bbox_vec["ymax"]),
-                            expand = FALSE, clip = "on", datum = NA) +
-          ggplot2::labs(color = "Region") +
-          ggplot2::theme_void(base_size = 12) +
-          ggplot2::theme(
-            legend.justification = c(1,0),
-            legend.position = c(.98,.02),
-            plot.margin = grid::unit(c(0,0,0,0), "pt")
-          ) + ggplot2::scale_color_manual(values = region_colours)
-        if (has_ggspatial) p_main <- p_main + ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
-        
-        # Optional inset if AOC points exist
-        aoc_sites <- sites_proj[sites_proj$region == "AOC", ]
-        if (nrow(aoc_sites) > 0) {
-          aoc_bbox <- sf::st_bbox(aoc_sites) + c(-10000,-10000,10000,10000)
-          aoc_bbox_sfc <- sf::st_as_sfc(aoc_bbox)
-          aoc_basemap <- tryCatch(maptiles::get_tiles(aoc_bbox_sfc, provider = "Esri.WorldShadedRelief", crop = TRUE, zoom = 12), error=function(e) NULL)
-          if (!is.null(aoc_basemap)) {
-            inset_map <- ggplot2::ggplot() +
-              maptiles::layer_spatial(aoc_basemap) +
-              ggplot2::geom_sf(data = sites_proj[sf::st_within(sites_proj, aoc_bbox_sfc, sparse = FALSE),],
-                               ggplot2::aes(color = region), size = 2.5, shape = 21, fill = "white", stroke = 0.8) +
-              ggplot2::coord_sf(xlim = c(aoc_bbox["xmin"], aoc_bbox["xmax"]),
-                                ylim = c(aoc_bbox["ymin"], aoc_bbox["ymax"]), expand = FALSE) +
-              ggplot2::scale_colour_manual(values = region_colours) +
-              ggplot2::theme_void() +
-              ggplot2::theme(panel.border = ggplot2::element_rect(color="black", fill=NA),
-                             legend.position = "none")
-            p_main <- p_main + ggplot2::geom_sf(data = sf::st_as_sfc(aoc_bbox), fill = NA, color = "red", linewidth = 0.5)
-            map_plot <- cowplot::ggdraw(p_main) +
-              cowplot::draw_plot(inset_map, x = -0.04, y = 0.6, width = 0.4, height = 0.35) +
-              ggplot2::theme(plot.margin = grid::unit(c(0,0,0,0), "pt"))
-          } else {
-            map_plot <- p_main
-          }
-        } else {
-          map_plot <- p_main
-        }
-      }
-    }
-    if (is.null(map_plot)) {
-      # fallback: simple point plot (no basemap)
-      map_plot <- ggplot2::ggplot(map_data, ggplot2::aes(x = Longitude.Decimal, y = Latitude.Decimal, color = region)) +
-        ggplot2::geom_point(size=2) +
-        ggplot2::scale_color_manual(values = region_colours) +
-        ggplot2::theme_minimal() +
-        ggplot2::labs(x="Longitude", y="Latitude", color="Region")
-    }
-  }
-  
+ 
   # ---------- Reference site listing markdown ----------
   ref_sites_md <- tryCatch({
     recent_data %>%
@@ -834,7 +769,7 @@ tier3_run <- function(
     any_increasing <- trend_results$trend_bins %>%
       dplyr::filter(region == "AOC") %>%
       dplyr::pull(trend) %>% any(. == "Increasing")
-    if (any_increasing) "Unsupportive" else "Supportive"
+    if (isTRUE(params$combine_ref)) "Unsupportive" else "Supportive"
   } else {
     aoc_slope <- trend_results$model_stats %>% dplyr::filter(region == "AOC") %>% dplyr::pull(slope)
     if (aoc_slope > 0) "Unsupportive" else "Supportive"

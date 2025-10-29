@@ -1,5 +1,5 @@
 ---
-title: "Tier 3 Report - SLR"
+title: "SLR BUI 1 Tier 3 Report - Walleye"
 author: "Aaron Dain"
 always_allow_html: true
 output:
@@ -20,7 +20,7 @@ output:
     toc: true
 params:
   AOC_name: St. Lawrence River (Cornwall/Akwesasne)
-  species: Yellow Perch
+  species: Walleye
   contaminant: MERCURY
   aoc_shapefile: Tier3/Data/SLR_AOC
   raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
@@ -34,8 +34,7 @@ params:
   - Niagara River
   target_sr: 4326
   restrict_threshold: 8
-  exclude_missing: TRUE
-  standard_length: 45
+  exclude_missing: FALSE
 ---
 
 ```{r Setup, include = FALSE}
@@ -43,12 +42,10 @@ params:
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, messages = FALSE)
 
 # Loading setup script
-source(here::here("Scripts", "Setup.R"))
+source(here::here("Scripts", "setup.R"))
 
 raw_data = read.csv(params$raw_csv)
 
-tool_files_t3 = list.files(path = "Tier3/R", pattern = "\\.R$", full.names = TRUE)
-invisible(lapply(tool_files_t3, source))
 
 
 
@@ -166,7 +163,6 @@ filtered_data <- filtered_data %>%
   ) %>%
   mutate(region = factor(region, levels = region_levels))
 
-
 # Full analysis data - for temporal trends
 full_data <- if (params$exclude_missing) {
   filtered_data %>% filter(!is.na(Longitude.Decimal), !is.na(Latitude.Decimal))
@@ -276,7 +272,7 @@ bbox_vec <- st_bbox(basemap)
 aoc_sites <- sites_proj[sites_proj$region == "AOC", ]
 has_inset <- nrow(aoc_sites) > 0
 
-if (has_inset) {
+if (isTRUE(has_inset)) {
   aoc_bbox <- st_bbox(aoc_sites) + c(-10000, -10000, 10000, 10000)
   aoc_bbox_sfc <- st_as_sfc(aoc_bbox)
   aoc_basemap <- get_tiles(aoc_bbox_sfc, provider = "Esri.WorldShadedRelief", crop = TRUE, zoom = 12)
@@ -294,7 +290,6 @@ aspect_ratio = 6/10
 main_map = ggplot() +
   layer_spatial(basemap) +
   geom_sf(data = sites_proj, aes(color = region), size = 3.5, shape = 21, fill = "white", stroke = 1) +
-  geom_sf(data = aoc_bbox_sfc, fill = NA, color = "red", linewidth = 0.5)+
   coord_sf(xlim = c(bbox_vec["xmin"], bbox_vec["xmax"]),
     ylim = c(bbox_vec["ymin"], bbox_vec["ymax"]),
     expand = FALSE,
@@ -312,7 +307,7 @@ main_map = ggplot() +
   )+ scale_color_manual(values = region_colours)
 
 
-
+if(isTRUE(has_inset)){
 # Create inset map
 inset_map <- ggplot() +
   layer_spatial(aoc_basemap) +
@@ -334,13 +329,15 @@ inset_map <- ggplot() +
 # Combine using cowplot (inset in top-left)
 library(cowplot)
 
+main_map = main_map +  geom_sf(data = aoc_bbox_sfc, fill = NA, color = "red", linewidth = 0.5)
+
 combined_map <- ggdraw(main_map) +
   draw_plot(inset_map, x = -0.04, y = 0.6, width = 0.4, height = 0.35) +# adjust x/y/size as needed
   theme(plot.margin = unit(c(0,0,0,0), "pt"))
 
 
 print(combined_map)
-
+} else print(main_map)
 
 ```
 
@@ -649,7 +646,7 @@ tier3a_text <- tier3a_summary %>%
   pull(summary) %>%
   glue::glue_collapse(sep = " ")
 
-tier3a_overall <- if (any(tier3a_summary$decision == "Fail")) "Fail" else "Pass"
+tier3a_overall <- if (any(tier3a_summary$decision == "Fail")) "Unsupportive" else "Supportive"
 
 
 tier3a_summary_tibble <- tibble(
@@ -675,39 +672,114 @@ cat(tier3a_text)
 
 To assess differences in fish contamination between the AOC and reference sites, contaminant–length relationships were modeled using Generalized Additive Models (GAMs), allowing for non-linear associations. For each priority contaminant and indicator species, we first tested whether the shape of the concentration–length relationship differed significantly between AOC and reference fish. Where models supported statistically similar trends (non-significant interaction), we compared size-adjusted contaminant levels using estimated marginal means. Where shapes differed significantly, contaminant concentration values were compared by GAM-predicted values at standardized lengths (e.g., 45cm) commonly consumed for each fish species. A threshold of α = 0.05 was used to evaluate statistical significance throughout.
 
-(ref:Tier-3B-Figure) `r contaminant_label` concentration in `r params$species` by length in the AOC compared to reference sites.
+(ref:Tier-3B-Figure) `r contaminant_label` concentration in `r params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval.
 
-```{r Tier-3B-Figure, echo = FALSE, message = FALSE, fig.cap='(ref:Tier-3B-Figure)'}
-# Hg concentration of fish by size
-ggplot(recent_data, aes(x = Length, y = Value, color = region)) +
-  geom_point(alpha = 0.9) +
-  geom_smooth(method = "gam", se = TRUE, linewidth = 1.2) +
-  labs(
-    title = "Contaminant Concentration vs. Fish Length",
-    x = "Length (cm)",
-    y = y_label
-  ) +
-  theme_minimal(base_size = 14) +
-  scale_colour_manual(values = region_colours)
 
+
+```{r Tier 3B Reference Comparison, include = FALSE}
+# Model data, factorizing inputs
+gam_df = recent_data %>%
+  mutate(Waterbody.Code = factor(Waterbody.Code), Sample.Year = factor(Sample.Year))
+
+
+# Fit gam robustly given possible single-level factors
+library(mgcv)
+library(dplyr)
+library(glue)
+
+fit_gam <- function(gam_df, k_len = 10, method = "REML", verbose = TRUE) {
+  # Ensure factors & drop unused
+  gam_df <- gam_df %>%
+    mutate(
+      region = factor(region),
+      Waterbody.Code = factor(Waterbody.Code)
+    ) %>%
+    droplevels()
+
+  n_region <- nlevels(gam_df$region)
+  n_site   <- nlevels(gam_df$Waterbody.Code)
+
+  # Base term always present
+  base <- glue("log(Value) ~ s(Length, k = {k_len})")
+
+  # Optional terms based on cardinality
+  has_region <- n_region >= 2
+  has_siteRE <- n_site   >= 2
+
+  # FULL model: s(Length) + fs(Length, region) [if >=2] + s(Waterbody.Code, re) [if >=2]
+  full_terms <- base
+  if (has_region) full_terms <- glue("log(Value) ~ s(Length, region, bs = 'fs', k = {k_len})")
+  if (has_siteRE) full_terms <- paste0(full_terms, " + s(Waterbody.Code, bs = 're')")
+  f_full <- as.formula(full_terms)
+
+  # NULL model: s(Length) + region main effect [if >=2] + s(Waterbody.Code, re) [if >=2]
+  null_terms <- base
+  if (has_region) null_terms <- paste0(null_terms, " + region")
+  if (has_siteRE) null_terms <- paste0(null_terms, " + s(Waterbody.Code, bs = 're')")
+  f_null <- as.formula(null_terms)
+
+  if (verbose) {
+    message("Region levels: ", n_region, " | Site levels: ", n_site)
+    message("NULL: ", deparse(f_null))
+    message("FULL: ", deparse(f_full))
+  }
+
+  # Fit models
+  gam_null <- gam(f_null, data = gam_df, method = method)
+  gam_full <- gam(f_full, data = gam_df, method = method)
+
+  # If fs term couldn't be included (has_region == FALSE), no interaction test is meaningful
+  if (!has_region) {
+    if (verbose) message("Skipping interaction test: only one region level present.")
+    return(list(
+      gam_null = gam_null,
+      gam_full = gam_full,
+      interaction_p = NA_real_,
+      interaction_msg = "Not tested (single region level)."
+    ))
+  }
+
+  # If formulas end up identical (e.g., both lack fs term), skip test
+  if (identical(f_null, f_full)) {
+    if (verbose) message("Skipping interaction test: NULL and FULL are identical.")
+    return(list(
+      gam_null = gam_null,
+      gam_full = gam_full,
+      interaction_p = pval,
+      interaction_msg = "Not tested (null and full identical)."
+    ))
+  }
+
+  # Run LR test on smooth structure
+  atab <- anova(gam_null, gam_full, test = "Chisq")
+  # try to pull the right cell; fallbacks cover weird table layouts
+  pcol <- suppressWarnings(as.numeric(atab$`Pr(>Chi)`))
+  pval <- if (length(pcol) >= 2) pcol[2] else if (length(pcol) >= 1) pcol[length(pcol)] else NA_real_
+  if (!is.finite(pval)) pval <- NA_real_
+
+  list(
+    gam_null = gam_null,
+    gam_full = gam_full,
+    interaction_p = pval,
+    interaction_msg = "Tested (NULL: s(Length)+region+RE; FULL: + fs(Length,region))."
+  )
+}
+
+
+# Fit GAMs
+res <- fit_gam(gam_df, k_len = 10, method = "REML", verbose = TRUE)
+
+gam_model <- res$gam_full
+gam_null <- res$gam_null
+interaction_p <- res$interaction_p
+interaction_p_val <- if (!is.na(interaction_p)) signif(interaction_p, 3) else NA_character_ 
 
 
 ```
 
-```{r Tier 3B Reference Comparison}
-# Fit GAMs
-gam_model <- gam(Value ~ s(Length, by = region) + s(Locname.Fishbase, bs = "re") + s(Sample.Year, k = 10) + region,
-                 data = recent_data,
-                 method = "REML")
+```{r gam-validation, eval = FALSE}
 
-# Null GAM to test for significance of interaction term
-gam_null <- gam(Value ~ s(Length) + region,
-                data = recent_data,
-                method = "REML")
-
-interaction_test <- anova(gam_null, gam_model, test = "Chisq")
-interaction_p <- interaction_test$`Pr(>Chi)`[2]
-interaction_p_val <- signif(interaction_p, 3)
+# Run this chunk to evaluate GAMs
 
 gam.check(gam_model)
 
@@ -718,129 +790,382 @@ pacf(resid(gam_model), lag.max = 36, main = "pACF")
 plot(gam_model)
 
 summary(gam_model)
+
+
+gam_valid = validate_gam(gam_model, data = gam_df)
+
+
+
+
+knitr::kable(
+  gam_valid %>%
+    transmute(
+      family, link, n, r2 = round(r2, 3),
+      dev_expl = round(dev_expl, 3),
+      acf_flag, pacf_flag, lb_flag,
+      concurvity_max = round(concurvity_max, 3), concurvity_flag
+    ),
+  caption = "GAM validation summary"
+)
+
+# Expand the per-term tables when needed (e.g., in collapsible sections)
+smooth_terms   <- gam_valid$smooth_table[[1]]
+param_terms    <- gam_valid$param_table[[1]]
+k_diagnostics  <- gam_valid$k_table[[1]]
+lb_diagnostics <- gam_valid$lb_table[[1]]
+
+# Example: flag text you can drop into the report
+issue_msgs <- c(
+  if (gam_valid$acf_flag)  "Residual ACF shows significant autocorrelation." else NULL,
+  if (gam_valid$lb_flag)   "Ljung–Box test indicates autocorrelation at some lags." else NULL,
+  if (any(k_diagnostics$k_flag, na.rm = TRUE)) "Some smooths suggest k may be too low (k-index < 1)." else NULL,
+  if (gam_valid$concurvity_flag) "High concurvity detected (> 0.90). Consider simplifying terms." else NULL
+)
+if (length(issue_msgs) == 0) issue_msgs <- "No major validation flags detected."
+cat(paste0("**Validation notes:** ", paste(issue_msgs, collapse = " ")))
+
+
+concurvity(gam_model, full = T)
+
+
+region_levels <- levels(model.frame(gam_model)$region)
+exclude_re <- names(gam_model$smooth)[sapply(gam_model$smooth, function(s) s$bs == "re")]
+
 ```
 
-<caption>(#tab:tier-3b-summary-table) Predicted `r contaminant_label` concentrations (µg/g) in `r params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.</caption>
+<caption>(#tab:tier-3b-summary-table) Predicted `r contaminant_label` concentrations (µg/g) in `r params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.</caption>
 
 ```{r tier-3b-summary-table, echo=FALSE}
 
-generate_gam_prediction_table <- function(gam_model, recent_data, params) {
-  library(dplyr)
-  library(glue)
-  library(tidyr)
-  library(emmeans)
+generate_gam_prediction_table <- function(
+  gam_model,
+  recent_data,
+  compare_to = "Reference",
+  alpha = 0.05,
+  back_transform = TRUE
+) {
+  library(dplyr); library(glue); library(tidyr)
 
-  # 1. Round size range to nearest 5 cm (outward)
-  len_min <- floor(min(recent_data$Length, na.rm = TRUE) / 5) * 5
-  len_max <- ceiling(max(recent_data$Length, na.rm = TRUE) / 5) * 5
-  length_seq <- seq(len_min, len_max, by = 5)
+  mf <- model.frame(gam_model)
+  region_levels <- levels(mf$region)
 
-  # 2. Generate prediction grid
-  newdata_grid <- expand.grid(Length = length_seq, region = region_levels)
+  # ===== Guard 1: need at least 1 region; if only 1, skip sig tests later =====
+  has_compare <- (length(region_levels) >= 2) && (compare_to %in% region_levels)
+  aoc_name <- if ("AOC" %in% region_levels) "AOC" else setdiff(region_levels, compare_to)[1]
 
+  # ===== 1) Length grid (rounded to 5 cm) =====
+  qs <- recent_data %>%
+    group_by(region) %>%
+    summarise(lo = quantile(Length, .01, na.rm = TRUE),
+              hi = quantile(Length, .99, na.rm = TRUE), .groups = "drop")
 
-  # 3. Predict with SE from GAM
-  pred_out <- predict(gam_model, newdata = newdata_grid, se.fit = TRUE)
-  pred_df <- newdata_grid %>%
-    mutate(
-      fit = pred_out$fit,
-      se = pred_out$se.fit,
-      lower = fit - 1.96 * se,
-      upper = fit + 1.96 * se
-    )
+  lo5 <- ceiling(max(qs$lo, na.rm = TRUE) / 5) * 5
+  hi5 <- floor(min(qs$hi, na.rm = TRUE) / 5) * 5
+  if (!is.finite(lo5) || !is.finite(hi5) || lo5 > hi5) {
+    # Fallback: use overall recent_data range
+    lo5 <- ceiling(min(recent_data$Length, na.rm = TRUE) / 5) * 5
+    hi5 <- floor(max(recent_data$Length, na.rm = TRUE) / 5) * 5
+  }
+  length_seq <- seq(lo5, hi5, by = 5)
+  if (length(length_seq) == 0L) {
+    stop("No valid length sequence could be generated for predictions.")
+  }
 
-  # 4. Significance test using emmeans at each length
-  em <- emmeans(gam_model, ~ region | Length, at = list(Length = length_seq), type = "response")
-  em_contrasts <- contrast(em, method = "pairwise", adjust = "none") %>% as.data.frame()
+  # ===== 2) Newdata grid =====
+  newdata_grid <- expand.grid(
+    Length = length_seq,
+    region = region_levels,
+    KEEP.OUT.ATTRS = FALSE
+  )
+  newdata_grid$region <- factor(newdata_grid$region, levels = region_levels)
 
-  # 5. Extract lengths where AOC is significantly different
-  sig_lengths <- em_contrasts %>%
-    filter(grepl("AOC", contrast) & p.value < 0.05) %>%
-    pull(Length) %>%
-    unique()
+  if ("Waterbody.Code" %in% names(mf)) {
+    if (is.factor(mf$Waterbody.Code)) {
+      newdata_grid$Waterbody.Code <- factor(levels(mf$Waterbody.Code)[1],
+                                            levels = levels(mf$Waterbody.Code))
+    } else newdata_grid$Waterbody.Code <- mf$Waterbody.Code[1]
+  }
+  if ("Sample.Year" %in% names(mf)) {
+    if (is.factor(mf$Sample.Year)) {
+      newdata_grid$Sample.Year <- factor(levels(mf$Sample.Year)[1],
+                                         levels = levels(mf$Sample.Year))
+    } else newdata_grid$Sample.Year <- median(recent_data$Sample.Year, na.rm = TRUE)
+  }
 
-  # 6. Add prediction label + asterisk where significant
+  # ===== 3) Predictions excluding RE smooths =====
+  re_labels <- vapply(gam_model$smooth,
+                      function(s) if (!is.null(s$bs) && s$bs == "re") s$label else NA_character_,
+                      character(1))
+  re_labels <- stats::na.omit(re_labels)
+
+  Xp   <- predict(gam_model, newdata = newdata_grid, type = "lpmatrix", exclude = re_labels)
+  beta <- coef(gam_model)
+  V    <- vcov(gam_model, unconditional = FALSE)
+
+  fit   <- as.numeric(Xp %*% beta)
+  se    <- sqrt(rowSums((Xp %*% V) * Xp))
+  lower <- fit - 1.96 * se
+  upper <- fit + 1.96 * se
+
+  pred_df <- cbind(newdata_grid, fit = fit, se = se, lower = lower, upper = upper) |> as.data.frame()
+
+  if (back_transform) {
+    pred_df <- pred_df %>%
+      mutate(fit_bt = exp(fit), lower_bt = exp(lower), upper_bt = exp(upper))
+  } else {
+    pred_df <- pred_df %>%
+      mutate(fit_bt = fit, lower_bt = lower, upper_bt = upper)
+  }
+
+  # ===== 4) AOC vs Reference tests (only if both present) =====
+  sig_lengths <- integer(0)
+  if (has_compare && !is.na(aoc_name) && (aoc_name %in% region_levels)) {
+    row_idx <- function(r, L) which(pred_df$region == r & pred_df$Length == L)[1]
+    pvals <- lapply(length_seq, function(L) {
+      ia <- row_idx(aoc_name,   L)
+      ir <- row_idx(compare_to, L)
+      if (is.na(ia) || is.na(ir)) return(data.frame(Length = L, p = NA_real_))
+      Xa <- Xp[ia, , drop = FALSE]
+      Xr <- Xp[ir, , drop = FALSE]
+      d  <- Xa - Xr
+      est <- as.numeric(d %*% beta)
+      seD <- sqrt(as.numeric(d %*% V %*% t(d)))
+      p   <- if (seD > 0) 2 * pnorm(-abs(est / seD)) else NA_real_
+      data.frame(Length = L, p = p)
+    }) %>% bind_rows()
+    sig_lengths <- pvals %>% filter(is.finite(p), p < alpha) %>% pull(Length)
+  }
+
+  # ===== 5) Compose display =====
   pred_df <- pred_df %>%
     mutate(
-      sig_star = ifelse(region == "AOC" & Length %in% sig_lengths, "*", ""),
+      sig_star = ifelse(region %in% aoc_name & Length %in% sig_lengths, "*", ""),
       length_label = paste0(Length, " cm"),
-      pred_str = glue("{round(fit, 2)} ({round(lower, 2)}–{round(upper, 2)}){sig_star}")
+      pred_str = glue("{round(fit_bt, 2)} ({round(lower_bt, 2)}–{round(upper_bt, 2)}){sig_star}")
     )
 
-  # 7. Wide format output: Region × Length (fixed sizes)
   output_table <- pred_df %>%
     select(region, length_label, pred_str) %>%
-    pivot_wider(
-      names_from = length_label,
-      values_from = pred_str
-    ) %>%
+    pivot_wider(names_from = length_label, values_from = pred_str) %>%
     rename(Region = region)
 
-  return(output_table)
+  attr(output_table, "preds") <- pred_df
+  output_table
 }
 
 
-
-if (interaction_p < 0.05) {
-  gam_table <- generate_gam_prediction_table(gam_model, recent_data, params)
-
-  reactable(
-    gam_table,
-    bordered = TRUE,
-    highlight = TRUE,
-    striped = TRUE,
-    defaultColDef = colDef(align = "center"),
-    columns = list(
-      Region = colDef(name = "Region", sticky = "left", style = list(fontWeight = "bold"))
-    )
+if (isTRUE(interaction_p < 0.05)) {
+  gam_table <- generate_gam_prediction_table(
+    gam_model, recent_data, compare_to = "Reference", alpha = 0.05, back_transform = TRUE
   )
+
+  gam_reactable =  reactable(
+    gam_table,
+    bordered = TRUE, highlight = TRUE, striped = TRUE,
+    defaultColDef = colDef(align = "center"),
+    columns = list(Region = colDef(name = "Region", sticky = "left",
+                                   style = list(fontWeight = "bold")))
+  )
+
+  length_seq <- sort(unique(attr(gam_table, "preds")$Length))
 }
 
+gam_reactable
 
 
 ```
 
+```{r Tier-3B-Figure, echo = FALSE, message = FALSE, fig.cap='(ref:Tier-3B-Figure)'}
+# --- 1) minimal predictions (dense grid per region; REs dropped) ---
+mf <- model.frame(gam_model)
+
+has_region_in_model <- "region" %in% names(mf)
+region_levels_model <- if (has_region_in_model) levels(mf$region) else NULL
+
+# fall back to regions in the data if model has no region term
+region_levels_data <- sort(unique(as.character(recent_data$region)))
+region_levels <- if (!is.null(region_levels_model)) region_levels_model else region_levels_data
+
+# guard: if still empty, bail early
+stopifnot(length(region_levels) >= 1)
+
+# length grid
+len_seq_raw <- seq(min(recent_data$Length, na.rm = TRUE),
+                   max(recent_data$Length, na.rm = TRUE),
+                   length.out = 600)
+
+# build newdata grid with a region column no matter what
+preds_plot <- tidyr::crossing(
+  region = region_levels,
+  Length = len_seq_raw
+)
+
+# align region type for prediction: factor w/ model levels if model has region term
+if (has_region_in_model) {
+  preds_plot$region <- factor(preds_plot$region, levels = region_levels_model)
+} else {
+  # keep as character; predict.gam will ignore unknown cols anyway
+  preds_plot$region <- as.character(preds_plot$region)
+}
+
+# stubs for RE/other columns if they exist in the model frame
+if ("Waterbody.Code" %in% names(mf)) {
+  preds_plot$Waterbody.Code <-
+    if (is.factor(mf$Waterbody.Code)) factor(levels(mf$Waterbody.Code)[1], levels = levels(mf$Waterbody.Code))
+    else mf$Waterbody.Code[1]
+}
+if ("Sample.Year" %in% names(mf)) {
+  preds_plot$Sample.Year <-
+    if (is.factor(mf$Sample.Year)) factor(levels(mf$Sample.Year)[1], levels = levels(mf$Sample.Year))
+    else stats::median(recent_data$Sample.Year, na.rm = TRUE)
+}
+
+# collect labels for random-effect smooths safely
+exclude_re <- vapply(gam_model$smooth, function(s) {
+  bs <- tryCatch(s$bs, error = function(...) NULL)
+  if (!is.null(bs) && identical(bs, "re")) s$label else NA_character_
+}, character(1))
+exclude_re <- stats::na.omit(exclude_re)
+
+# predictions (model scale -> back-transform)
+pr <- predict(gam_model, newdata = preds_plot, type = "link", se.fit = TRUE,
+              exclude = exclude_re, unconditional = FALSE)
+
+preds_plot <- preds_plot |>
+  dplyr::mutate(
+    fit = as.numeric(pr$fit),
+    se  = as.numeric(pr$se.fit),
+    fit_bt   = exp(fit),
+    lower_bt = exp(fit - 1.96*se),
+    upper_bt = exp(fit + 1.96*se)
+  )
+
+# --- 2) clip to in-range lengths per region (works even if only one region) ---
+len_limits <- recent_data |>
+  dplyr::group_by(region) |>
+  dplyr::summarise(
+    Lmin = stats::quantile(Length, 0.01, na.rm = TRUE),
+    Lmax = stats::quantile(Length, 0.99, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  dplyr::mutate(region = as.character(region))  # ensure same type for join
+
+preds_plot <- preds_plot |>
+  dplyr::mutate(region = as.character(region)) |>
+  dplyr::inner_join(len_limits, by = "region") |>
+  dplyr::filter(Length >= Lmin, Length <= Lmax)
+
+# --- 3) plot (will show one curve if only one region) ---
+ggplot(recent_data, aes(Length, Value, color = region)) +
+  geom_point(alpha = 0.6) +
+  geom_ribbon(data = preds_plot, aes(ymin = lower_bt, ymax = upper_bt, x = Length, fill = region),
+              alpha = 0.15, inherit.aes = FALSE) +
+  geom_line(data = preds_plot, aes(y = fit_bt, x = Length, color = region), linewidth = 1.2) +
+  labs(
+       x = "Length (cm)", y = y_label) +
+  theme_minimal(base_size = 14) +
+  scale_colour_manual(values = region_colours, guide = "legend") +
+  scale_fill_manual(values = region_colours, guide = "legend")
+
+
+```
+
+
 ```{r tier-3b-summary-text}
+lpmatrix_contrasts <- function(gam_model, length_seq, recent_data,
+                               aoc_name = "AOC") {
+  mf   <- model.frame(gam_model)
+  regs <- levels(mf$region)
+  refs <- setdiff(regs, aoc_name)
+  stopifnot(length(refs) > 0)
 
-if (interaction_p < 0.05) {
-  # Table was generated, so use the same lengths
-  len_min <- floor(min(recent_data$Length, na.rm = TRUE) / 5) * 5
-  len_max <- ceiling(max(recent_data$Length, na.rm = TRUE) / 5) * 5
-  length_seq <- seq(len_min, len_max, by = 5)
+  # Prediction grid (region × chosen lengths) + placeholders for RE factors
+  newgrid <- expand.grid(region = regs, Length = length_seq, KEEP.OUT.ATTRS = FALSE)
+  newgrid$region <- factor(newgrid$region, levels = regs)
+  if ("Waterbody.Code" %in% names(mf)) {
+    newgrid$Waterbody.Code <- if (is.factor(mf$Waterbody.Code))
+      factor(levels(mf$Waterbody.Code)[1], levels = levels(mf$Waterbody.Code))
+    else mf$Waterbody.Code[1]
+  }
+  if ("Sample.Year" %in% names(mf)) {
+    newgrid$Sample.Year <- if (is.factor(mf$Sample.Year))
+      factor(levels(mf$Sample.Year)[1], levels = levels(mf$Sample.Year))
+    else median(recent_data$Sample.Year, na.rm = TRUE)
+  }
 
-  em <- emmeans(gam_model, ~ region | Length, at = list(Length = length_seq), type = "response")
-  em_contrasts <- contrast(em, method = "pairwise", adjust = "none") %>% as.data.frame()
+  # Region-level design (drop all bs='re')
+  Xp   <- predict(gam_model, newdata = newgrid, type = "lpmatrix",
+                  exclude = exclude_re, unconditional = FALSE)
+  beta <- coef(gam_model)
+  V    <- vcov(gam_model, unconditional = FALSE)
 
-  sig_lengths <- em_contrasts %>%
-    filter(grepl("AOC", contrast) & p.value < 0.05) %>%
-    pull(Length) %>%
-    unique()
+  idx <- function(r, L) which(newgrid$region == r & newgrid$Length == L)[1]
 
-  sig_count <- length(sig_lengths)
+  # AOC vs each reference at each length (on log scale)
+  out <- lapply(length_seq, function(L) {
+    ia <- idx(aoc_name, L)
+    do.call(rbind, lapply(refs, function(ref) {
+      ir <- idx(ref, L)
+      d  <- Xp[ia, , drop = FALSE] - Xp[ir, , drop = FALSE]
+      est <- as.numeric(d %*% beta)
+      se  <- sqrt(as.numeric(d %*% V %*% t(d)))
+      data.frame(Length = L, ref = ref, est = est, se = se,
+                 z = est / se, p = 2 * pnorm(-abs(est / se)))
+    }))
+  })
+  dplyr::bind_rows(out)
+}
+
+
+
+if (isTRUE(interaction_p < 0.05)) {
+  stopifnot(exists("length_seq"), length(length_seq) > 0)
+
+  contr <- lpmatrix_contrasts(gam_model, length_seq, recent_data, aoc_name = "AOC")
+
+  # Lengths where AOC differs from ANY reference at α=0.05
+  sig_lengths <- contr |>
+    dplyr::group_by(Length) |>
+    dplyr::summarise(any_sig = any(p < 0.05, na.rm = TRUE), .groups = "drop") |>
+    dplyr::filter(any_sig) |>
+    dplyr::pull(Length)
+
+  sig_count     <- length(sig_lengths)
   total_lengths <- length(length_seq)
 
+  # Count bins where AOC is significantly HIGHER than any reference
+  decision_summary_3b <- contr |>
+    dplyr::mutate(higher_aoc = est > 0 & p < 0.05)
+
+  total_bins <- dplyr::n_distinct(decision_summary_3b$Length)
+  n_fail_b   <- decision_summary_3b |>
+                  dplyr::group_by(Length) |>
+                  dplyr::summarise(any_higher = any(higher_aoc, na.rm = TRUE), .groups = "drop") |>
+                  dplyr::summarise(n = sum(any_higher)) |>
+                  dplyr::pull(n)
+  n_pass_b <- total_bins - n_fail_b
+
+  # (Optional) ratios on original scale for reporting, if you want them
+  contr <- contr |>
+    dplyr::mutate(ratio = exp(est),
+                  lcl_ratio = exp(est - 1.96 * se),
+                  ucl_ratio = exp(est + 1.96 * se))
+
+  # Narrative text (same as your template)
   t3b_summary_text <- glue::glue(
-    "Generalized Additive Models (GAMs) were used to model the relationship between fish length and {contaminant_label} concentrations for {params$species} in the AOC and reference site(s) ({paste(region_levels[-1], collapse = ', ')}). ",
-    "The length-contaminant relationship differed significantly between sites (interaction test p = {interaction_p_val}). ",
-    "Model-predicted concentrations were calculated across the observed size range (every 5 cm from {min(length_seq)} to {max(length_seq)} cm) and are presented in Table \\@ref(tab:tier-3b-summary-table). ",
+    "Generalized Additive Models (GAMs) were used to model the relationship between fish length and {contaminant_label} concentrations for {params$species} in the AOC and reference site(s) ({paste(setdiff(region_levels, 'AOC'), collapse = ', ')}). ",
+    "The length–contaminant relationship differed significantly between sites (interaction test p = {interaction_p_val}). ",
+    "Model-predicted concentrations were calculated across the observed size range for which observations existed for both regions (every 5 cm from {min(length_seq)} to {max(length_seq)} cm) and are presented in Table \\@ref(tab:tier-3b-summary-table). ",
     "Asterisks (*) denote sizes where the AOC differs significantly (p < 0.05) from one or more reference site(s); this occurred at {sig_count} of {total_lengths} lengths evaluated."
   )
-  
-  decision_summary_3b <- em_contrasts %>%
-    filter(grepl("AOC", contrast)) %>%
-    mutate(higher_aoc = estimate > 0 & p.value < 0.05)
-
-  total_bins <- n_distinct(decision_summary_3b$Length)
-  n_fail_b <- sum(decision_summary_3b$higher_aoc, na.rm = TRUE)
-  n_pass_b <- total_bins - n_fail_b
 
   tier3b_decision_text <- glue::glue(
     "Of {total_bins} fish lengths evaluated, {n_fail_b} had significantly higher predicted {contaminant_label} concentrations in the AOC compared to reference (p < 0.05). "
-    
   )
- tier3b_overall =  if (n_fail_b > total_bins/2) "Fail" else "Pass"
+  tier3b_overall <- if (n_fail_b > total_bins/2) "Unsupportive" else "Supportive"
 
 } else {
+
   # Use marginal means from the reduced model
   em_summary <- summary(emmeans(gam_null, ~ region))
   em_aoc <- em_summary %>% filter(region == "AOC")
@@ -867,13 +1192,14 @@ if (interaction_p < 0.05) {
     glue("The AOC does not exceed reference in marginal mean concentration, suggesting comparable contamination levels in this species.")
   }
   
-  tier3b_overall <- if (em_aoc$emmean > max(em_refs$emmean)) "Fail" else "Pass"
+  tier3b_overall <- if (em_aoc$emmean > max(em_refs$emmean)) "Unsupportive" else "Supportive"
 }
 
 
 
+
 # Construct the summary metric string
-if (interaction_p < 0.05) {
+if (isTRUE(interaction_p < 0.05)) {
   tier3b_metric_text <- glue(
     "Significantly different smooth terms (p = {signif(interaction_p)}); ",
     "{n_fail_b}/{total_bins} lengths with higher AOC concentration"
@@ -881,7 +1207,7 @@ if (interaction_p < 0.05) {
 } else {
   tier3b_metric_text <- glue(
     "No significant difference in smooth terms (p = {round(interaction_p, 3)}); ",
-    "AOC marginal mean {if (tier3b_overall == 'Fail') 'higher' else 'not higher'} than reference"
+    "AOC marginal mean {if (tier3b_overall == 'Unsupportive') 'higher' else 'not higher'} than reference"
   )
 }
 
@@ -920,7 +1246,7 @@ cat(tier3b_decision_text)
 Temporal trends in `r params$species` for `r contaminant_label` were assessed using linear models across all years of data. An initial model tested for a significant interaction between fish length and sampling year. If an interaction was detected, trends were evaluated separately for the three most frequently sampled length bins. Otherwise, annual mean contaminant concentrations were used. Trends help support Tier 3C by assessing if contaminant levels have declined, remained stable, or increased over time.
 
 ```{r temp-trends-setup, message = FALSE}
-trend_results <- plot_temporal_trends(include_reference = FALSE, include_aoc = TRUE)
+trend_results <- plot_temporal_trends(df = full_data,include_reference = FALSE, include_aoc = TRUE)
 
 
 temp_trends_caption <- {
@@ -1031,7 +1357,7 @@ if (trend_results$interaction_sig) {
     "In the AOC, {trend_sentences}. These trends were assessed using annual linear models by length bin."
   )
 
-  tier3c_overall <- if (any(tier3c_summary$trend == "Increasing")) "Fail" else "Pass"
+  tier3c_overall <- if (any(tier3c_summary$trend == "Increasing")) "Unsupportive" else "Supportive"
 
 } else {
   # ======= No interaction — summarize overall slope =======
@@ -1050,7 +1376,7 @@ if (trend_results$interaction_sig) {
     "This trend was assessed using an annual linear model of mean concentration."
   )
 
-  tier3c_overall <- if (aoc_slope > 0) "Fail" else "Pass"
+  tier3c_overall <- if (aoc_slope > 0) "Unsupportive" else "Supportive"
 }
 
 
@@ -1103,13 +1429,285 @@ cat(tier3c_result_text)
 
 **Tier 3C Overall Decision:** `r tier3c_overall`
 
+
+## Tier 3D: Half-life
+
+A half-life for `r contaminant_label` concentrations in `r params$species` was predicted for the AOC and reference sites using a generalized additive mixed model (GAMM). The log values of `r contaminant_label` concentration were estimated using year as a linear predictor by region, with smooth effects controlling for fish length. Sampling sites were used as random effects to account for repeated sampling. The slope (on log scale) represents the annual rate of change in `r contaminant_label` concentration, defined as k = -slope.
+
+```{r}
+g_gamm <- gamm(
+  log(Value) ~ Sample.Year + s(Length, k = 6) +Sample.Year*region,
+  random = list(Waterbody.Code = ~ 1),   
+  data = filtered_data
+)
+# Extract linear coefficients for Year and Year:region to get region-specific k
+
+t3d_gam = g_gamm$gam
+t3d_lme = g_gamm$lme
+
+# helper to get estimate/SE for a linear combo of coefficients
+lc_est <- function(coefs, vc, pick) {
+  # pick: named numeric vector whose names match coef names, values are weights
+  a <- numeric(length(coefs)); names(a) <- names(coefs)
+  a[names(pick)] <- pick
+  est <- sum(a * coefs)
+  se  <- sqrt(as.numeric(t(a) %*% vc %*% a))
+  list(est = est, se = se)
+}
+
+
+co <- coef(t3d_gam)
+vc <- vcov(t3d_gam)
+
+# find all region levels
+regs <- levels(filtered_data$region)
+
+
+# build results per region
+hl_tab <- map_dfr(regs, function(rg) {
+  # slope on log scale for region rg
+  # baseline: slope = coef["Sample.Year"]
+  # non-baseline: slope = coef["year_c"] + coef[paste0("Sample.Year:region", rg)]
+  pick <- c(`Sample.Year` = 1)
+  int_name <- paste0("Sample.Year:region", rg)
+  if (int_name %in% names(co)) pick[int_name] <- 1
+
+  est <- lc_est(co, vc, pick)
+  slope <- est$est
+  slope_se <- est$se
+
+  k <- -slope
+  # delta-method SE for t1/2 = ln2 / k = ln2 / (-slope)
+  # dt/dslope = ln2 / slope^2
+  ln2 <- log(2)
+  t12 <- ifelse(k > 0, ln2 / k, NA_real_)              # only for declining trends
+  t2  <- ifelse(k <= 0, ln2 / abs(k), NA_real_)        # if increasing, report doubling time
+
+  # SE via delta method
+  dtds <- ln2 / (slope^2)
+  t12_se <- ifelse(!is.na(t12), abs(dtds) * slope_se, NA_real_)
+  t2_se  <- ifelse(!is.na(t2),  abs(dtds) * slope_se, NA_real_)
+
+  tibble(
+    region = rg,
+    slope_log_per_year = slope,
+    slope_se = slope_se,
+    k = k,
+    half_life_years = t12,
+    half_life_lwr = ifelse(!is.na(t12), t12 - 1.96 * t12_se, NA_real_),
+    half_life_upr = ifelse(!is.na(t12), t12 + 1.96 * t12_se, NA_real_),
+    doubling_time_years = t2,
+    doubling_lwr = ifelse(!is.na(t2), t2 - 1.96 * t2_se, NA_real_),
+    doubling_upr = ifelse(!is.na(t2), t2 + 1.96 * t2_se, NA_real_)
+  )
+})
+
+
+
+
+```
+
+```{r half-life-time-to-unrestricted}
+library(mgcv)
+library(dplyr)
+library(glue)
+library(knitr)
+library(kableExtra)
+
+# Round to nearest 5 cm
+round5 <- function(x) round(x / 5) * 5
+
+# AOC-only years-to-threshold with 95% CI and simplified outputs
+compute_years_to_threshold_AOC <- function(
+  t3d_gam, hl_tab, thresholds_df, restrict_threshold, filtered_data,
+  aoc_level = "AOC"
+) {
+  # Ensure region levels match the model
+  region_levels <- levels(model.frame(t3d_gam)$region)
+  
+  # Representative length (median, rounded to 5 cm)
+  median_len <- round5(median(filtered_data$Length, na.rm = TRUE))
+  
+  # Baseline year for AOC (anchor to most recent observed)
+  year_anchor <- filtered_data %>%
+    filter(region == aoc_level) %>%
+    summarise(year_anchor = max(Sample.Year, na.rm = TRUE), .groups = "drop") %>%
+    pull(year_anchor)
+  
+  # Target concentration for the desired meals/month
+  target_conc <- thresholds_df %>%
+    filter(meals == restrict_threshold) %>%
+    pull(conc)
+  if (length(target_conc) == 0) stop("restrict_threshold not found in thresholds_df")
+  
+  # Predict baseline log-concentration for AOC at (median_len, year_anchor)
+  newdata <- tibble(
+    region = factor(aoc_level, levels = region_levels),
+    Sample.Year = year_anchor,
+    Length = median_len
+  )
+  pred <- predict(t3d_gam, newdata = newdata, type = "link", se.fit = TRUE)
+  pred_log <- as.numeric(pred$fit)         # log(c0)
+  se_log   <- as.numeric(pred$se.fit)      # SE on log-scale
+  pred_c0  <- exp(pred_log)                # c0 (current predicted conc)
+  
+  # Grab k and slope SE for AOC 
+  krow <- hl_tab %>% filter(region == aoc_level)
+  if (nrow(krow) != 1) stop("Could not find unique AOC row in hl_tab")
+  k        <- krow$k[1]                    # = -slope
+  slope_se <- krow$slope_se[1]             # SE of slope (same as SE of k)
+  
+  # Compute years to threshold and 95% CI (delta method)
+  log_target <- log(target_conc)
+  years_to_target <- dplyr::case_when(
+    pred_c0 <= target_conc ~ 0,
+    is.finite(k) & k > 0   ~ (pred_log - log_target) / k,
+    TRUE                   ~ NA_real_
+  )
+  
+  se_t <- if (is.finite(years_to_target) && !is.na(years_to_target) && k > 0) {
+    # dt/d(log c0) = 1/k ; dt/dk = -(log(c0)-log(c*))/k^2 = -t/k
+    term1 <- (1 / k)^2 * (se_log^2)
+    term2 <- (years_to_target / k)^2 * (slope_se^2)
+    sqrt(term1 + term2)
+  } else {
+    NA_real_
+  }
+  lwr <- if (is.na(se_t)) NA_real_ else years_to_target - 1.96 * se_t
+  upr <- if (is.na(se_t)) NA_real_ else years_to_target + 1.96 * se_t
+  
+  # Outcome logic (AOC-only)
+  outcome <- dplyr::case_when(
+    !is.na(years_to_target) && years_to_target == 0 ~ "Supportive",
+    is.na(years_to_target) | k <= 0                 ~ "Unsupportive",
+    years_to_target > 10                             ~ "Unsupportive",
+    TRUE                                             ~ "Supportive"
+  )
+  
+  # ---- Simplified TIDY TABLE  ----
+  results_tbl <- tibble(
+    median_len_cm   = median_len,
+    predicted_conc  = pred_c0,
+    target_conc     = target_conc,
+    years_to_target = years_to_target,
+    years_lwr       = lwr,
+    years_upr       = upr,
+    outcome         = outcome
+  )
+  
+  # ---- Pretty KABLE for reporting ----
+  results_kable <- results_tbl %>%
+    mutate(
+      predicted_conc  = sprintf("%.2f", predicted_conc),
+      target_conc     = sprintf("%.2f", target_conc),
+      years_to_target = ifelse(is.na(years_to_target), "—", sprintf("%.1f", years_to_target)),
+      ci_95 = dplyr::case_when(
+        is.na(years_lwr) | is.na(years_upr) ~ "—",
+        TRUE                                ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+      )
+    ) %>%
+    select(
+      `Median Length (cm)` = median_len_cm,
+      `Predicted Conc`     = predicted_conc,
+      `Target Conc`        = target_conc,
+      `Years to Threshold` = years_to_target,
+      `95% CI`             = ci_95,
+      `Outcome`            = outcome
+    ) %>%
+    kable(
+      format  = "html",
+      caption = glue("Tier 3D (AOC): Time to reach an unrestrictive advisory of {restrict_threshold} meals/month for median-length fish")
+    ) %>%
+    kable_styling(full_width = FALSE, position = "center")
+  
+  # ---- Human-friendly METRIC TEXT (short, one-liner) ----
+  metric_text <- dplyr::case_when(
+    is.na(years_to_target) ~ glue("Trend does not indicate a decline; target not reachable under current trend."),
+    years_to_target == 0   ~ glue("Already unrestrictive for median-length ({median_len} cm) fish."),
+    TRUE                   ~ {
+      if (!is.na(lwr) && !is.na(upr)) {
+        glue("Approximately {round(years_to_target, 1)} years (95% CI {round(lwr, 1)}–{round(upr, 1)}) to reach an unrestrictive meal allowance for median-length ({median_len} cm) fish.")
+      } else {
+        glue("Approximately {round(years_to_target, 1)} years to reach an unrestrictive meal allowance for median-length ({median_len} cm) fish.")
+      }
+    }
+  )
+  
+  # ---- REPORT TEXT ----
+
+  report_text <- dplyr::case_when(
+    is.na(years_to_target) ~ glue(
+      "For median-length ({median_len} cm) fish, the current trend does not indicate declining {tolower(contaminant)} concentrations. ",
+      "Under the present trend, reaching an unrestrictive monthly meal allowance of {restrict_threshold} meals/month for the Sensitive population is not expected."
+    ),
+    years_to_target == 0 ~ glue(
+      "For median-length ({median_len} cm) fish, predicted concentrations are already within the unrestrictive advisory range for the Sensitive population (≥ {restrict_threshold} meals/month)."
+    ),
+    TRUE ~ {
+      if (!is.na(lwr) && !is.na(upr)) {
+        glue(
+          "For median-length ({median_len} cm) fish, it is predicted to take about {round(years_to_target, 1)} years ",
+          "(95% CI {round(lwr, 1)}–{round(upr, 1)}) to reach an unrestrictive monthly meal allowance of {restrict_threshold} meals/month for the Sensitive population."
+        )
+      } else {
+        glue(
+          "For median-length ({median_len} cm) fish, it is predicted to take about {round(years_to_target, 1)} years ",
+          "to reach an unrestrictive monthly meal allowance of {restrict_threshold} meals/month for the Sensitive population."
+        )
+      }
+    }
+  )
+  
+  # Outcome string for your tier summary row
+  tier3d_overall <- outcome
+  
+  # Tier 3D summary tibble (mirrors your Tier 3A/3B pattern)
+  tier3d_summary_tibble <- tibble(
+    Tier = "Tier 3D",
+    Description = "Half-life / Time to Unrestrictive Advisory (AOC)",
+    Metric = metric_text,
+    Outcome = tier3d_overall
+  )
+  
+  list(
+    results_tbl           = results_tbl,     # programmatic table (simplified)
+    results_kable         = results_kable,   # report table
+    metric_text           = metric_text,     # short one-liner
+    report_text           = report_text,     # longer prose (tier-style)
+    tier3d_summary_tibble = tier3d_summary_tibble
+  )
+}
+
+
+
+```
+
+
+```{r Tier-3D-summary-text}
+
+aoc_out <- compute_years_to_threshold_AOC(
+  t3d_gam, hl_tab, thresholds_df, params$restrict_threshold, filtered_data,
+  aoc_level = "AOC" # adjust if your AOC factor level differs
+)
+
+aoc_out$results_kable
+
+```
+
+A model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the median fish length (rounded to the nearest 5 cm) for sensitive populations. A timeline of 10 years or fewer is considered supportive of delisting, whereas a timeline of 10 or more years is unsupportive.
+
+`r aoc_out$report_text` Therefore, Tier 3D is considered `r aoc_out$outcome`.
+
+**Tier 3D Overall Decision:** `r aoc_out$outcome`
+
 # Final summary
 
 ```{r}
 tier3_summary_table <- bind_rows(
   tier3a_summary_tibble,
   tier3b_summary_tibble,
-  tier3c_summary_tibble
+  tier3c_summary_tibble,
+  aoc_out$tier3d_summary_tibble,
 )
 
 knitr::kable(tier3_summary_table, caption = "Summary of Tier 3 Evidence Lines and Outcomes")

@@ -3,6 +3,7 @@ render_t1_table <- function(df,
                             contaminant_shapes,
                             contaminant_colours,
                             generate_shape_fn = generate_shape,
+                            shape_size = 12,
                             table_height = "1500px",
                             show_legend = TRUE,
                             use_pagination = FALSE,
@@ -26,6 +27,8 @@ render_t1_table <- function(df,
     columns_list[[col_name]] <- colDef(
       name = col_name,
       html = TRUE,
+      minWidth = 50,
+      maxWidth = 80,
       cell = function(value, index) {
         row <- df[index, ]
         row_type <- row$Row_Label
@@ -35,7 +38,7 @@ render_t1_table <- function(df,
           icons <- lapply(causes, function(cause) {
             shape <- contaminant_shapes[[cause]] %||% "circle"
             colour <- contaminant_colours[[cause]] %||% "gray"
-            generate_shape_fn(shape, colour, size = 12)
+            generate_shape_fn(shape, colour, size = shape_size)
           })
           return(do.call(htmltools::span, c(icons, list(style = "display:inline-flex;gap:6px;align-items:center;"))))
         }
@@ -68,32 +71,31 @@ render_t1_table <- function(df,
   
   columns_list$Row_Label <- colDef(
     name = "Population",
-    sticky = "left",
-    minWidth = 120,
+    minWidth = 90,
     style = function(value) {
-      base <- list(fontSize = "13px", fontWeight = "bold", fontFamily = "system-ui, sans-serif")
+      base <- list(fontSize = "12px", fontFamily = "system-ui, sans-serif")
       if (value == "Adv cause") base <- modifyList(base, list(fontSize = "10px", fontStyle = "italic"))
       base
-    },
-    headerStyle = list(whiteSpace = "nowrap")
+    }
   )
   
   columns_list$Species <- colDef(show = FALSE)
   columns_list$Species_display <- colDef(
     name = "Species",
-    sticky = "left",
     minWidth = 140,
-    style = list(fontWeight = "bold", fontSize = "15px", fontFamily = "system-ui, sans-serif")
+    maxWidth = 150,
+    style = list(fontWeight = "bold", fontSize = "12px", fontFamily = "system-ui, sans-serif")
   )
   
-  # NEW: visible threshold column, left-sticky, right of Species
   columns_list$Unrestrictive_Threshold <- colDef(
-    name = "Unrestrictive Threshold",
-    sticky = "left",
-    minWidth = 140,
+    name = "Desired Meals/Month",
+    minWidth = 80,
+    maxWidth = 100,
     align = "center",
-    style = list(fontSize = "13px", fontFamily = "system-ui, sans-serif")
+    style = list(fontSize = "12px", fontFamily = "system-ui, sans-serif")
   )
+  
+
   
   rowStyle_fn <- function(index) {
     row <- df[index, ]
@@ -132,6 +134,10 @@ render_t1_table <- function(df,
       reactable::reactable(
         df_render,
         columns = columns_list,
+        columnGroups = list(
+          colGroup(columns = c("Row_Label", "Species_display", "Unrestrictive_Threshold"),
+          sticky = "left")
+        ),
         pagination = isTRUE(use_pagination),
         defaultPageSize = if (isTRUE(use_pagination)) default_page_size else 10,
         showPageSizeOptions = isTRUE(use_pagination),
@@ -140,17 +146,17 @@ render_t1_table <- function(df,
         defaultColDef = colDef(
           sortable = FALSE,
           align = "center",
-          minWidth = 90,
+          minWidth = 50,
           style = list(
-            padding = "3px 6px",
+            padding = "0",
             margin  = "0",
             border  = "none",
             verticalAlign = "middle",
             fontFamily = "system-ui, sans-serif",
             fontSize   = "12px",
-            width      = "max-content"
+            width      = "100%"
           ),
-          headerStyle = list(padding = "6px 6px")
+          headerStyle = list(padding = "0px 0px", margin = "0")
         ),
         rowStyle = rowStyle_fn,
         bordered = FALSE,
@@ -162,7 +168,7 @@ render_t1_table <- function(df,
           borderCollapse = "collapse",
           borderSpacing  = "0",
           margin     = "0 auto",
-          width      = "max-content"
+          width      = "100%"
         )
       )
     )),
@@ -177,6 +183,7 @@ render_t1_table_any <- function(df,
                                 contaminant_shapes = NULL,   # ignored for flextable
                                 contaminant_colours = NULL,  # ignored for flextable
                                 generate_shape_fn = NULL,    # ignored for flextable
+                                shape_size = NULL, # ignored for flextable
                                 table_height = "1500px",
                                 show_legend = TRUE,
                                 use_pagination = FALSE,
@@ -195,6 +202,7 @@ render_t1_table_any <- function(df,
       contaminant_shapes = contaminant_shapes,
       contaminant_colours = contaminant_colours,
       generate_shape_fn = if (is.null(generate_shape_fn)) generate_shape else generate_shape_fn,
+      shape_size = if (is.null(shape_size)) 12 else shape_size,
       table_height = table_height,
       show_legend = show_legend,
       use_pagination = use_pagination,
@@ -209,3 +217,4 @@ render_t1_table_any <- function(df,
     ))
   }
 }
+

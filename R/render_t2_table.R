@@ -54,7 +54,7 @@ render_t2_table <- function(prep, table_height = "1500px") {
     rowStyle = rowStyle_fn,
     style = list(
       fontFamily = "system-ui, sans-serif",
-      fontSize = "13px",
+      fontSize = "12px",
       borderCollapse = "collapse",
       borderSpacing = "0",
       margin = "0 auto",
@@ -78,14 +78,13 @@ build_t2_reactable <- function(prep, table_height = "1500px") {
   ref_data     <- prep$ref_data
   size_cols    <- prep$size_cols
   
-  columns_list <- make_common_column_defs()  # your existing helper
+  columns_list <- make_common_column_defs()  #  existing helper
   
   rowStyle_fn <- function(index) {
     row <- display_data[index, ]
     prev_row <- if (index > 1) display_data[index - 1, ] else NULL
     next_row <- if (index < nrow(display_data)) display_data[index + 1, ] else NULL
     style <- list()
-    if (row$Site == "Reference Median") style$fontWeight <- "bold"
     if (is.null(prev_row) || prev_row$Species != row$Species) style$borderTop <- "2px solid #666"
     if (is.null(next_row) || next_row$Species != row$Species) style$borderBottom <- "2px solid #666"
     style
@@ -95,6 +94,8 @@ build_t2_reactable <- function(prep, table_height = "1500px") {
   for (col in size_cols) {
     columns_list[[col]] <- reactable::colDef(
       name = col, align = "center", sortable = FALSE,
+      minWidth = 50,
+      maxWidth = 80,
       style = reactable::JS(sprintf(
         "function(rowInfo, colInfo, state) {
           const row = rowInfo.row;
@@ -103,14 +104,14 @@ build_t2_reactable <- function(prep, table_height = "1500px") {
           const ref = state.meta.medians[id];
           const n = state.meta.ns[id];
 
-          if (row.Site === 'n') { return { fontSize: '11px', color: '#666', fontStyle: 'italic', fontFamily: 'system-ui, sans-serif' }; }
+          if (row.Site === 'n') { return { fontSize: '10px', color: '#666', fontStyle: 'italic', fontFamily: 'system-ui, sans-serif' }; }
           if (row.site_type === 'AOC') {
-            if (val === null) { return { background: '#eeeeee', color: '#000000', fontWeight: 'bold', fontSize: '15px', fontFamily: 'system-ui, sans-serif' }; }
+            if (val === null) { return { background: '#eeeeee', color: '#000000', fontWeight: 'bold', fontSize: '12px', fontFamily: 'system-ui, sans-serif' }; }
             if (n === undefined || n < 3 || ref === undefined || ref === null) {
-              return { background: '#999999', color: '#ffffff', fontWeight: 'bold', fontSize: '15px', fontFamily: 'system-ui, sans-serif' }; }
+              return { background: '#999999', color: '#ffffff', fontWeight: 'bold', fontSize: '11px', fontFamily: 'system-ui, sans-serif' }; }
             if (val < ref) {
-              return { background: '#d80032', color: '#ffffff', fontWeight: 'bold', fontSize: '15px', fontFamily: 'system-ui, sans-serif' }; }
-            return { background: '#4CAF50', color: '#ffffff', fontWeight: 'bold', fontSize: '15px', fontFamily: 'system-ui, sans-serif' }; }
+              return { background: '#d80032', color: '#ffffff', fontWeight: 'bold', fontSize: '11px', fontFamily: 'system-ui, sans-serif' }; }
+            return { background: '#4CAF50', color: '#ffffff', fontWeight: 'bold', fontSize: '11px', fontFamily: 'system-ui, sans-serif' }; }
           return { fontWeight: 'normal', fontSize: '13px', fontFamily: 'system-ui, sans-serif' }; }",
         col))
     )
@@ -129,7 +130,7 @@ build_t2_reactable <- function(prep, table_height = "1500px") {
     rowStyle = rowStyle_fn,
     style = list(
       fontFamily = "system-ui, sans-serif",
-      fontSize = "13px",
+      fontSize = "11px",
       borderCollapse = "collapse",
       borderSpacing = "0",
       margin = "0 auto",

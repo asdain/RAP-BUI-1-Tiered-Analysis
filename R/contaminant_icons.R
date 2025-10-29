@@ -11,7 +11,7 @@ generate_shape <- function(shape, colour = "gray", size = 12, border_width = 2) 
     "width:", size, "px;",
     " height:", size, "px;",
     " display: inline-block;",
-    " margin-right: 5px;",
+    " margin: 0px;",
     " vertical-align: middle;"
   )
   

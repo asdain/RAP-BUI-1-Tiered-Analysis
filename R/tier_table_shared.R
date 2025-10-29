@@ -80,12 +80,12 @@ add_row_order_labels <- function(df, length_levels = NULL) {
 make_common_column_defs <- function() {
   list(
     Species_display = colDef(
-      name = "Species", minWidth = 150, sortable = FALSE, sticky = "left",
-      style = JS("function(rowInfo) { return { fontWeight: 'bold', fontSize: '15px' }; }")
+      name = "Species", minWidth = 110, sortable = FALSE, sticky = "left",
+      style = JS("function(rowInfo) { return { fontWeight: 'bold', fontSize: '12px' }; }")
     ),
     Population_display = colDef(
-      name = "Population", minWidth = 100, sortable = FALSE, sticky = "left",
-      style = JS("function(rowInfo) { return { fontWeight: 'bold', fontSize: '15px' }; }")
+      name = "Population", minWidth = 80, sortable = FALSE, sticky = "left",
+      style = JS("function(rowInfo) { return {  fontSize: '12px' }; }")
     ),
     site_type = colDef(show = FALSE),
     id = colDef(show = FALSE),
@@ -96,7 +96,7 @@ make_common_column_defs <- function() {
 }
 
 
-# Table utility to figure out which columns are the "size bins"
+# Table utility to figure out which columns are the size bins
 t1_size_cols <- function(df, length_levels = NULL) {
   if (!is.null(length_levels)) return(intersect(length_levels, names(df)))
   sc <- attr(df, "size_cols")
