@@ -54,7 +54,7 @@ t2_prep_display <- function(df,
   aoc_data <- base_data %>%
     filter(site_type == "AOC") %>%
     tidyr::pivot_wider(names_from = Size, values_from = advisory) %>%
-    mutate(site_order = 1)
+    mutate(Site = "AOC", site_order = 1)
   
   # Reference long
   ref_long <- base_data %>% filter(site_type == "Reference")

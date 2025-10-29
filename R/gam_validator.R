@@ -108,4 +108,3 @@ validate_gam <- function(fit,
   )
 }
 
-`%||%` <- function(x, y) if (is.null(x)) y else x

@@ -31,7 +31,15 @@ packages_list = c("dplyr",
                   "flextable",
                   "here",
                   "readr",
-                  "fs")
+                  "fs",
+                  "bookdown",
+                  "maptiles",
+                  "ggspatial",
+                  "servr",
+                  "officer")
+
+
+
 
 
 installed_packages <- packages_list %in% rownames(installed.packages())
@@ -51,6 +59,7 @@ length_levels <- c("15-20cm", "20-25cm", "25-30cm", "30-35cm", "35-40cm", "40-45
 
 
 
+`%||%` <- function(x, y) if (is.null(x)) y else x
 
 # Visualization constants ------------------
 # Custom ggplot theme

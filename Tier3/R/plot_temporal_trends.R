@@ -123,10 +123,25 @@ plot_temporal_trends <- function(df, include_reference = TRUE, include_aoc = TRU
     }
   }
   
+  # Decide legend behavior based on whether we actually have a legend
+  has_legend <- isTRUE(interaction_sig) && length(plot_list) > 0
+  legend_pos <- if (has_legend) "bottom" else "none"
+  
+  # Safely handle "no plots" edge-case too
+  arranged_plot <- if (length(plot_list) > 0) {
+    ggpubr::ggarrange(
+      plotlist = plot_list,
+      ncol = 1, nrow = length(plot_list),
+      align = "h",
+      common.legend = has_legend,
+      legend = legend_pos
+    )
+  } else {
+    ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::ggtitle("No eligible plots")
+  }
+  
   return(list(
-    plot = ggarrange(plotlist = plot_list,
-                     ncol = 1, nrow = length(plot_list),
-                     align = "h", common.legend = TRUE, legend = "bottom"),
+    plot = arranged_plot,
     interaction_p = interaction_p,
     interaction_sig = interaction_sig,
     top_bins = top_bins,
@@ -134,4 +149,5 @@ plot_temporal_trends <- function(df, include_reference = TRUE, include_aoc = TRU
     include_reference = include_reference,
     trend_bins = trend_bins_all
   ))
+  
 }
