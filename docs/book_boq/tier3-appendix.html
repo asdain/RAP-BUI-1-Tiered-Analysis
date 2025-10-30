@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>A Tier 3 Supplementary Figures for Bay of Quinte AOC | BOQ BUI 1 Report Text</title>
+  <meta name="description" content="A Tier 3 Supplementary Figures for Bay of Quinte AOC | BOQ BUI 1 Report Text" />
+  <meta name="generator" content="bookdown 0.45 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="A Tier 3 Supplementary Figures for Bay of Quinte AOC | BOQ BUI 1 Report Text" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="A Tier 3 Supplementary Figures for Bay of Quinte AOC | BOQ BUI 1 Report Text" />
+  
+  
+  
+
+<meta name="author" content="Aaron Dain" />
+
+
+<meta name="date" content="2025-10-30" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="references.html"/>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/tabwid-1.1.3/tabwid.css" rel="stylesheet" />
+<script src="libs/tabwid-1.1.3/tabwid.js"></script>
+<script src="libs/core-js-2.5.3/shim.min.js"></script>
+<script src="libs/react-18.2.0/react.min.js"></script>
+<script src="libs/react-18.2.0/react-dom.min.js"></script>
+<script src="libs/reactwidget-2.0.0/react-tools.js"></script>
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="libs/reactable-0.4.4/reactable.css" rel="stylesheet" />
+<script src="libs/reactable-binding-0.4.4/reactable.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<script>
+(function () {
+  function wrapTableCaption(el) {
+    if (!el || el.querySelector('.caption-number')) return;
+    var txt = (el.textContent || '').trim();
+    // "Table 3" / "Table 3.1" / "Table S1" (optional colon)
+    var m = txt.match(/^(Table|Tab)\s+([A-Za-z]?\d+(?:\.\d+)*)(?:\s*:)?\s*(.*)$/i);
+    if (!m) return;
+    var label = 'Table ' + m[2];
+    var rest  = m[3] || '';
+    el.innerHTML =
+      '<span class="caption-number">' + label + '</span>' +
+      (rest ? ': <span class="caption-text">' + rest + '</span>' : '');
+  }
+
+  function wrapFigureCaption(el) {
+    if (!el || el.querySelector('.caption-number')) return;
+    var txt = (el.textContent || '').trim();
+    // "Figure 2" / "Fig 2" (optional colon)
+    var m = txt.match(/^(Figure|Fig)\.?\s+(\d+(?:\.\d+)*)(?:\s*:)?\s*(.*)$/i);
+    if (!m) return;
+    var label = (m[1].toLowerCase().startsWith('fig') ? 'Fig ' : 'Figure ') + m[2];
+    var rest  = m[3] || '';
+    el.innerHTML =
+      '<span class="caption-number">' + label + '</span>' +
+      (rest ? ': <span class="caption-text">' + rest + '</span>' : '');
+  }
+
+  function processAll(root) {
+    // Captions inside <table>
+    root.querySelectorAll('table > caption, caption.table-caption, .lightable-caption, .kable-caption')
+        .forEach(wrapTableCaption);
+
+    // Unified handler for <p class="caption"> produced by bookdown
+    root.querySelectorAll('p.caption').forEach(function (el) {
+      var t = (el.textContent || '').trim();
+      if (/^(Table|Tab)\b/i.test(t)) wrapTableCaption(el);
+      else if (/^(Figure|Fig)\b/i.test(t)) wrapFigureCaption(el);
+      // else leave it alone
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    processAll(document);
+
+    // Catch late-rendered widgets (reactable, flextable, DT, etc.)
+    var obs = new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        m.addedNodes && m.addedNodes.forEach(function (node) {
+          if (node.nodeType !== 1) return;
+          if (node.matches && (
+              node.matches('caption, p.caption, .lightable-caption, .kable-caption') ||
+              node.querySelector('caption, p.caption, .lightable-caption, .kable-caption')
+          )) {
+            processAll(node.matches ? node : document);
+          }
+        });
+      });
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  });
+})();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Tag bookdown-style table captions that look like:
+    // <caption><span id="tab:...">Table 3.5: </span><span>Caption text...</span></caption>
+    document.querySelectorAll('table > caption').forEach(function (cap) {
+      var first = cap.querySelector('span[id^="tab:"]');
+      if (first && !first.classList.contains('caption-number')) {
+        first.classList.add('caption-number');
+        var next = first.nextElementSibling;
+        if (next && next.tagName.toLowerCase() === 'span') {
+          next.classList.add('caption-text');
+        }
+      }
+    });
+  });
+</script>
+
+
+
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#brief-history-of-bui-in-aoc-and-previous-actions"><i class="fa fa-check"></i><b>1.1</b> Brief history of BUI in AOC and previous actions</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#actions-since-previous-report"><i class="fa fa-check"></i><b>1.2</b> Actions since previous report</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#delisting-criteria-change"><i class="fa fa-check"></i><b>1.3</b> Delisting criteria change</a></li>
+<li class="chapter" data-level="1.4" data-path="index.html"><a href="index.html#section"><i class="fa fa-check"></i><b>1.4</b> </a></li>
+</ul></li>
+<li class="part"><span><b>Tiered Assessment Approach for Criterion 1.1</b></span></li>
+<li class="chapter" data-level="2" data-path="methods.html"><a href="methods.html"><i class="fa fa-check"></i><b>2</b> Methods</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="methods.html"><a href="methods.html#methods-criteria"><i class="fa fa-check"></i><b>2.1</b> Generic criteria</a></li>
+<li class="chapter" data-level="2.2" data-path="methods.html"><a href="methods.html#methods-tiered-framework"><i class="fa fa-check"></i><b>2.2</b> Tiered assessment framework</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="methods.html"><a href="methods.html#methods-tier1"><i class="fa fa-check"></i><b>2.2.1</b> Tier 1</a></li>
+<li class="chapter" data-level="2.2.2" data-path="methods.html"><a href="methods.html#tier-2"><i class="fa fa-check"></i><b>2.2.2</b> Tier 2</a></li>
+<li class="chapter" data-level="2.2.3" data-path="methods.html"><a href="methods.html#methods-tier3"><i class="fa fa-check"></i><b>2.2.3</b> Tier 3</a></li>
+<li class="chapter" data-level="2.2.4" data-path="methods.html"><a href="methods.html#tier-4"><i class="fa fa-check"></i><b>2.2.4</b> Tier 4</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="methods.html"><a href="methods.html#methods-survey"><i class="fa fa-check"></i><b>2.3</b> Community fish consumption survey</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="methods.html"><a href="methods.html#note-this-section-is-copied-from-the-slr-version-of-the-report-and-may-serve-as-a-template-for-ltca-and-mbq-to-fill-in-their-version."><i class="fa fa-check"></i><b>2.3.1</b> NOTE: This section is copied from the SLR version of the report, and may serve as a template for LTCA and MBQ to fill in their version.</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="methods.html"><a href="methods.html#methods-data"><i class="fa fa-check"></i><b>2.4</b> Data Sources</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>3</b> Results</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="results.html"><a href="results.html#species-of-interest-and-desired-consumption-rate"><i class="fa fa-check"></i><b>3.1</b> Species of Interest and Desired Consumption Rate</a></li>
+<li class="chapter" data-level="3.2" data-path="results.html"><a href="results.html#tier-1-assessment-for-the-bay-of-quinte-aoc"><i class="fa fa-check"></i><b>3.2</b> Tier 1 Assessment for the Bay of Quinte AOC</a></li>
+<li class="chapter" data-level="3.3" data-path="results.html"><a href="results.html#tier-2-assessment-for-the-bay-of-quinte-aoc"><i class="fa fa-check"></i><b>3.3</b> Tier 2 Assessment for the Bay of Quinte AOC</a></li>
+<li class="chapter" data-level="3.4" data-path="results.html"><a href="results.html#tier3-results"><i class="fa fa-check"></i><b>3.4</b> Tier 3 Assessment for the Bay of Quinte AOC</a>
+<ul>
+<li class="chapter" data-level="3.4.1" data-path="results.html"><a href="results.html#tier3-results-walleye"><i class="fa fa-check"></i><b>3.4.1</b> Walleye</a></li>
+<li class="chapter" data-level="3.4.2" data-path="results.html"><a href="results.html#brown-bullhead"><i class="fa fa-check"></i><b>3.4.2</b> Brown Bullhead</a></li>
+<li class="chapter" data-level="3.4.3" data-path="results.html"><a href="results.html#lake-whitefish"><i class="fa fa-check"></i><b>3.4.3</b> Lake Whitefish</a></li>
+<li class="chapter" data-level="3.4.4" data-path="results.html"><a href="results.html#northern-pike"><i class="fa fa-check"></i><b>3.4.4</b> Northern Pike</a></li>
+<li class="chapter" data-level="3.4.5" data-path="results.html"><a href="results.html#smallmouth-bass"><i class="fa fa-check"></i><b>3.4.5</b> Smallmouth Bass</a></li>
+<li class="chapter" data-level="3.4.6" data-path="results.html"><a href="results.html#chinook-salmon-and-rainbow-smelt"><i class="fa fa-check"></i><b>3.4.6</b> Chinook Salmon and Rainbow Smelt</a></li>
+<li class="chapter" data-level="3.4.7" data-path="results.html"><a href="results.html#tier-3-summary-4"><i class="fa fa-check"></i><b>3.4.7</b> Tier 3 Summary</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="results.html"><a href="results.html#tier-4-1"><i class="fa fa-check"></i><b>3.5</b> Tier 4</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="discussion-and-recommendations.html"><a href="discussion-and-recommendations.html"><i class="fa fa-check"></i><b>4</b> Discussion and Recommendations</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="tier3-appendix.html"><a href="tier3-appendix.html"><i class="fa fa-check"></i><b>A</b> Tier 3 Supplementary Figures for Bay of Quinte AOC</a>
+<ul>
+<li class="chapter" data-level="A.0.1" data-path="tier3-appendix.html"><a href="tier3-appendix.html#brown-bullhead-1"><i class="fa fa-check"></i><b>A.0.1</b> Brown Bullhead</a></li>
+<li class="chapter" data-level="A.0.2" data-path="tier3-appendix.html"><a href="tier3-appendix.html#lake-whitefish-1"><i class="fa fa-check"></i><b>A.0.2</b> Lake Whitefish</a></li>
+<li class="chapter" data-level="A.0.3" data-path="tier3-appendix.html"><a href="tier3-appendix.html#northern-pike-1"><i class="fa fa-check"></i><b>A.0.3</b> Northern Pike</a></li>
+<li class="chapter" data-level="A.0.4" data-path="tier3-appendix.html"><a href="tier3-appendix.html#smallmouth-bass-1"><i class="fa fa-check"></i><b>A.0.4</b> Smallmouth Bass</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">BOQ BUI 1 Report Text</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="tier3-appendix" class="section level1 hasAnchor" number="5">
+<h1><span class="header-section-number">A</span> Tier 3 Supplementary Figures for Bay of Quinte AOC<a href="tier3-appendix.html#tier3-appendix" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="brown-bullhead-1" class="section level3 hasAnchor" number="5.0.1">
+<h3><span class="header-section-number">A.0.1</span> Brown Bullhead<a href="tier3-appendix.html#brown-bullhead-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3a-bb-fig"></span>
+<img src="Derived/BOQ/Tier3/Brown%20Bullhead__PCBs/figs/t3a_virtual_advisory.png" alt="Virtual PCB advisories in brown bullhead. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines)." width="50%" height="50%" />
+<p class="caption">
+Figure A.1: Virtual PCB advisories in brown bullhead. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines).
+</p>
+</div>
+
+<div class="tabwid"><style>.cl-314b2c24{}.cl-314542a0{font-family:'Arial';font-size:9pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-314542aa{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-314542ab{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(255, 255, 255, 1.00);background-color:transparent;}.cl-3147a414{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3147bb48{width:0.876in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb49{width:0.89in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb52{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb53{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb5c{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb66{width:0.605in;background-color:rgba(76, 175, 80, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb67{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb70{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3147bb71{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing='true' class='cl-314b2c24'>
+<caption style="display:table-caption;"><span id="tab:apdx-t3a-bb-table">Table A.1: </span><span>Virtual advisory levels for PCB in brown bullhead across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of 8 meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.</span></caption>
+<thead><tr style="overflow-wrap:break-word;"><th class="cl-3147bb48"><p class="cl-3147a414"><span class="cl-314542a0">Population</span></p></th><th class="cl-3147bb49"><p class="cl-3147a414"><span class="cl-314542a0">Region</span></p></th><th class="cl-3147bb52"><p class="cl-3147a414"><span class="cl-314542a0">15-20</span></p></th><th class="cl-3147bb52"><p class="cl-3147a414"><span class="cl-314542a0">20-25</span></p></th><th class="cl-3147bb52"><p class="cl-3147a414"><span class="cl-314542a0">25-30</span></p></th><th class="cl-3147bb52"><p class="cl-3147a414"><span class="cl-314542a0">30-35</span></p></th><th class="cl-3147bb52"><p class="cl-3147a414"><span class="cl-314542a0">35-40</span></p></th><th class="cl-3147bb52"><p class="cl-3147a414"><span class="cl-314542a0">40-45</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-3147bb53"><p class="cl-3147a414"><span class="cl-314542aa">General</span></p></td><td class="cl-3147bb5c"><p class="cl-3147a414"><span class="cl-314542aa">AOC</span></p></td><td class="cl-3147bb66"><p class="cl-3147a414"><span class="cl-314542ab">32</span></p></td><td class="cl-3147bb66"><p class="cl-3147a414"><span class="cl-314542ab">32</span></p></td><td class="cl-3147bb66"><p class="cl-3147a414"><span class="cl-314542ab">16</span></p></td><td class="cl-3147bb66"><p class="cl-3147a414"><span class="cl-314542ab">16</span></p></td><td class="cl-3147bb66"><p class="cl-3147a414"><span class="cl-314542ab">16</span></p></td><td class="cl-3147bb66"><p class="cl-3147a414"><span class="cl-314542ab">12</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3147bb67"><p class="cl-3147a414"><span class="cl-314542aa">General</span></p></td><td class="cl-3147bb70"><p class="cl-3147a414"><span class="cl-314542aa">Reference</span></p></td><td class="cl-3147bb71"><p class="cl-3147a414"><span class="cl-314542a0">32</span></p></td><td class="cl-3147bb71"><p class="cl-3147a414"><span class="cl-314542a0">16</span></p></td><td class="cl-3147bb71"><p class="cl-3147a414"><span class="cl-314542a0">16</span></p></td><td class="cl-3147bb71"><p class="cl-3147a414"><span class="cl-314542a0">12</span></p></td><td class="cl-3147bb71"><p class="cl-3147a414"><span class="cl-314542a0">8</span></p></td><td class="cl-3147bb71"><p class="cl-3147a414"><span class="cl-314542a0">8</span></p></td></tr></tbody></table></div>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3b-bb-fig"></span>
+<img src="Derived/BOQ/Tier3/Brown%20Bullhead__PCBs/figs/t3b_gam_plot.png" alt="PCBs concentration in Brown Bullhead by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval." width="50%" height="50%" />
+<p class="caption">
+Figure A.2: PCBs concentration in Brown Bullhead by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval.
+</p>
+</div>
+
+
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:apdx-t3c-bb-table">Table A.2: </span>Estimated time to unrestrictive PCB threshold for an upper-quartile-sized brown bullhead in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an “unrestrictive” advisory for the Sensitive population of 8, based on survey results and MECP advisory thresholds.
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+Upper Quartile Length (cm)
+</th>
+<th style="text-align:left;">
+Predicted Conc. (Current Year)
+</th>
+<th style="text-align:left;">
+Unrestrictive Conc.
+</th>
+<th style="text-align:left;">
+Years to Threshold
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:left;">
+Outcome
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:left;">
+52.40
+</td>
+<td style="text-align:left;">
+70.00
+</td>
+<td style="text-align:left;">
+0.0
+</td>
+<td style="text-align:left;">
+-2032.3–2032.3
+</td>
+<td style="text-align:left;">
+Supportive
+</td>
+</tr>
+</tbody>
+</table>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3c-bb-fig"></span>
+<img src="Derived/BOQ/Tier3/Brown%20Bullhead__PCBs/figs/t3c_projected.png" alt="Projected PCBs concentration in upper-quartile-length Brown Bullhead in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds." width="50%" height="50%" />
+<p class="caption">
+Figure A.3: Projected PCBs concentration in upper-quartile-length Brown Bullhead in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+</p>
+</div>
+</div>
+<div id="lake-whitefish-1" class="section level3 hasAnchor" number="5.0.2">
+<h3><span class="header-section-number">A.0.2</span> Lake Whitefish<a href="tier3-appendix.html#lake-whitefish-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3a-lw-fig"></span>
+<img src="Derived/BOQ/Tier3/Lake%20Whitefish__PCBs/figs/t3a_virtual_advisory.png" alt="Virtual PCB advisories in lake whitefish. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines)." width="50%" height="50%" />
+<p class="caption">
+Figure A.4: Virtual PCB advisories in lake whitefish. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines).
+</p>
+</div>
+
+<div class="tabwid"><style>.cl-318cb69e{}.cl-3181b76c{font-family:'Arial';font-size:9pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-3181b776{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-3181b780{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(255, 255, 255, 1.00);background-color:transparent;}.cl-3187e3f8{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3187ffe6{width:0.876in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3187ffe7{width:0.89in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3187fff0{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3187fff1{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3187fffa{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31880004{width:0.605in;background-color:rgba(76, 175, 80, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31880005{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3188000e{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3188000f{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing='true' class='cl-318cb69e'>
+<caption style="display:table-caption;"><span id="tab:apdx-t3a-lw-table">Table A.3: </span><span>Virtual advisory levels for PCB in lake whitefish across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of 8 meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.</span></caption>
+<thead><tr style="overflow-wrap:break-word;"><th class="cl-3187ffe6"><p class="cl-3187e3f8"><span class="cl-3181b76c">Population</span></p></th><th class="cl-3187ffe7"><p class="cl-3187e3f8"><span class="cl-3181b76c">Region</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">15-20</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">20-25</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">25-30</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">30-35</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">35-40</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">40-45</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">45-50</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">50-55</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">55-60</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">60-65</span></p></th><th class="cl-3187fff0"><p class="cl-3187e3f8"><span class="cl-3181b76c">65-70</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-3187fff1"><p class="cl-3187e3f8"><span class="cl-3181b776">General</span></p></td><td class="cl-3187fffa"><p class="cl-3187e3f8"><span class="cl-3181b776">AOC</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">32</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">32</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">32</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">16</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">16</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">16</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">12</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">12</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">8</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">8</span></p></td><td class="cl-31880004"><p class="cl-3187e3f8"><span class="cl-3181b780">8</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-31880005"><p class="cl-3187e3f8"><span class="cl-3181b776">General</span></p></td><td class="cl-3188000e"><p class="cl-3187e3f8"><span class="cl-3181b776">Reference</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">16</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">16</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">16</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">16</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">12</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">12</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">8</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">8</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">8</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">8</span></p></td><td class="cl-3188000f"><p class="cl-3187e3f8"><span class="cl-3181b76c">4</span></p></td></tr></tbody></table></div>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3b-lw-fig"></span>
+<img src="Derived/BOQ/Tier3/Lake%20Whitefish__PCBs/figs/t3b_gam_plot.png" alt="PCBs concentration in Lake Whitefish by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), rilwons represent 95% confidence interval." width="50%" height="50%" />
+<p class="caption">
+Figure A.5: PCBs concentration in Lake Whitefish by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), rilwons represent 95% confidence interval.
+</p>
+</div>
+
+
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:apdx-t3c-lw-table">Table A.4: </span>Estimated time to unrestrictive PCB threshold for an upper-quartile-sized lake whitefish in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an “unrestrictive” advisory for the Sensitive population of 8, based on survey results and MECP advisory thresholds.
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+Upper Quartile Length (cm)
+</th>
+<th style="text-align:left;">
+Predicted Conc. (Current Year)
+</th>
+<th style="text-align:left;">
+Unrestrictive Conc.
+</th>
+<th style="text-align:left;">
+Years to Threshold
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:left;">
+Outcome
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+55
+</td>
+<td style="text-align:left;">
+53.25
+</td>
+<td style="text-align:left;">
+70.00
+</td>
+<td style="text-align:left;">
+0.0
+</td>
+<td style="text-align:left;">
+-5.5–5.5
+</td>
+<td style="text-align:left;">
+Supportive
+</td>
+</tr>
+</tbody>
+</table>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3c-lw-fig"></span>
+<img src="Derived/BOQ/Tier3/Lake%20Whitefish__PCBs/figs/t3c_projected.png" alt="Projected PCBs concentration in upper-quartile-length Lake Whitefish in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds." width="50%" height="50%" />
+<p class="caption">
+Figure A.6: Projected PCBs concentration in upper-quartile-length Lake Whitefish in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+</p>
+</div>
+</div>
+<div id="northern-pike-1" class="section level3 hasAnchor" number="5.0.3">
+<h3><span class="header-section-number">A.0.3</span> Northern Pike<a href="tier3-appendix.html#northern-pike-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3a-np-fig"></span>
+<img src="Derived/BOQ/Tier3/Northern%20Pike__PCBs/figs/t3a_virtual_advisory.png" alt="Virtual PCB advisories in northern pike. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines)." width="50%" height="50%" />
+<p class="caption">
+Figure A.7: Virtual PCB advisories in northern pike. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines).
+</p>
+</div>
+
+<div class="tabwid"><style>.cl-31d24772{}.cl-31cb2b36{font-family:'Arial';font-size:9pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-31cb2b40{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-31cb2b41{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(255, 255, 255, 1.00);background-color:transparent;}.cl-31ce9e7e{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-31cec11a{width:0.876in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec11b{width:0.89in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec124{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec12e{width:0.497in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec12f{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec138{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec139{width:0.605in;background-color:rgba(76, 175, 80, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec142{width:0.497in;background-color:rgba(76, 175, 80, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec143{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec144{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec14c{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-31cec14d{width:0.497in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing='true' class='cl-31d24772'>
+<caption style="display:table-caption;"><span id="tab:apdx-t3a-np-table">Table A.5: </span><span>Virtual advisory levels for PCB in northern pike across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of 4 meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.</span></caption>
+<thead><tr style="overflow-wrap:break-word;"><th class="cl-31cec11a"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">Population</span></p></th><th class="cl-31cec11b"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">Region</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">35-40</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">40-45</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">45-50</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">50-55</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">55-60</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">60-65</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">65-70</span></p></th><th class="cl-31cec124"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">70-75</span></p></th><th class="cl-31cec12e"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">75+</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-31cec12f"><p class="cl-31ce9e7e"><span class="cl-31cb2b40">General</span></p></td><td class="cl-31cec138"><p class="cl-31ce9e7e"><span class="cl-31cb2b40">AOC</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">32</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">32</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">32</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">16</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">32</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">16</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">16</span></p></td><td class="cl-31cec139"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">16</span></p></td><td class="cl-31cec142"><p class="cl-31ce9e7e"><span class="cl-31cb2b41">16</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-31cec143"><p class="cl-31ce9e7e"><span class="cl-31cb2b40">General</span></p></td><td class="cl-31cec144"><p class="cl-31ce9e7e"><span class="cl-31cb2b40">Reference</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">16</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">16</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">16</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">16</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">12</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">8</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">12</span></p></td><td class="cl-31cec14c"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">16</span></p></td><td class="cl-31cec14d"><p class="cl-31ce9e7e"><span class="cl-31cb2b36">16</span></p></td></tr></tbody></table></div>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3b-np-fig"></span>
+<img src="Derived/BOQ/Tier3/Northern%20Pike__PCBs/figs/t3b_gam_plot.png" alt="PCBs concentration in Northern Pike by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval." width="50%" height="50%" />
+<p class="caption">
+Figure A.8: PCBs concentration in Northern Pike by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval.
+</p>
+</div>
+
+
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:apdx-t3c-np-table">Table A.6: </span>Estimated time to unrestrictive PCB threshold for an upper-quartile-sized northern pike in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an “unrestrictive” advisory for the Sensitive population of 4, based on survey results and MECP advisory thresholds.
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+Upper Quartile Length (cm)
+</th>
+<th style="text-align:left;">
+Predicted Conc. (Current Year)
+</th>
+<th style="text-align:left;">
+Unrestrictive Conc.
+</th>
+<th style="text-align:left;">
+Years to Threshold
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:left;">
+Outcome
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+80
+</td>
+<td style="text-align:left;">
+12.13
+</td>
+<td style="text-align:left;">
+70.00
+</td>
+<td style="text-align:left;">
+0.0
+</td>
+<td style="text-align:left;">
+-10.7–10.7
+</td>
+<td style="text-align:left;">
+Supportive
+</td>
+</tr>
+</tbody>
+</table>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3c-np-fig"></span>
+<img src="Derived/BOQ/Tier3/Northern%20Pike__PCBs/figs/t3c_projected.png" alt="Projected PCBs concentration in upper-quartile-length Northern Pike in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds." width="50%" height="50%" />
+<p class="caption">
+Figure A.9: Projected PCBs concentration in upper-quartile-length Northern Pike in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+</p>
+</div>
+</div>
+<div id="smallmouth-bass-1" class="section level3 hasAnchor" number="5.0.4">
+<h3><span class="header-section-number">A.0.4</span> Smallmouth Bass<a href="tier3-appendix.html#smallmouth-bass-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3a-smb-fig"></span>
+<img src="Derived/BOQ/Tier3/Smallmouth%20Bass__PCBs/figs/t3a_virtual_advisory.png" alt="Virtual PCB advisories in smallmouth bass. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines)." width="50%" height="50%" />
+<p class="caption">
+Figure A.10: Virtual PCB advisories in smallmouth bass. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCB for the Sensititve population (dashed lines).
+</p>
+</div>
+
+<div class="tabwid"><style>.cl-320fe082{}.cl-32090e4c{font-family:'Arial';font-size:9pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-32090e56{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-32090e60{font-family:'Arial';font-size:9pt;font-weight:bold;font-style:normal;text-decoration:none;color:rgba(255, 255, 255, 1.00);background-color:transparent;}.cl-320bdee2{margin:0;text-align:center;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-320c0034{width:0.876in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c003e{width:0.89in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c0048{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 1.5pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c0049{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c0052{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c0053{width:0.605in;background-color:rgba(76, 175, 80, 1.00);vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c0054{width:0.876in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c005c{width:0.89in;background-color:rgba(245, 245, 245, 1.00);vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 2pt solid rgba(102, 102, 102, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-320c0066{width:0.605in;background-color:transparent;vertical-align: middle;border-bottom: 1.5pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table data-quarto-disable-processing='true' class='cl-320fe082'>
+<caption style="display:table-caption;"><span id="tab:apdx-t3a-smb-table">Table A.7: </span><span>Virtual advisory levels for PCB in smallmouth bass across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of 8 meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.</span></caption>
+<thead><tr style="overflow-wrap:break-word;"><th class="cl-320c0034"><p class="cl-320bdee2"><span class="cl-32090e4c">Population</span></p></th><th class="cl-320c003e"><p class="cl-320bdee2"><span class="cl-32090e4c">Region</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">15-20</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">20-25</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">25-30</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">30-35</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">35-40</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">40-45</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">45-50</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">50-55</span></p></th><th class="cl-320c0048"><p class="cl-320bdee2"><span class="cl-32090e4c">55-60</span></p></th></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-320c0049"><p class="cl-320bdee2"><span class="cl-32090e56">General</span></p></td><td class="cl-320c0052"><p class="cl-320bdee2"><span class="cl-32090e56">AOC</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">12</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">32</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">16</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">16</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">8</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">16</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">8</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">32</span></p></td><td class="cl-320c0053"><p class="cl-320bdee2"><span class="cl-32090e60">32</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-320c0054"><p class="cl-320bdee2"><span class="cl-32090e56">General</span></p></td><td class="cl-320c005c"><p class="cl-320bdee2"><span class="cl-32090e56">Reference</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">16</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">16</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">16</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">16</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">12</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">12</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">8</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">8</span></p></td><td class="cl-320c0066"><p class="cl-320bdee2"><span class="cl-32090e4c">8</span></p></td></tr></tbody></table></div>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3b-smb-fig"></span>
+<img src="Derived/BOQ/Tier3/Smallmouth%20Bass__PCBs/figs/t3b_gam_plot.png" alt="PCBs concentration in Smallmouth Bass by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval." width="50%" height="50%" />
+<p class="caption">
+Figure A.11: PCBs concentration in Smallmouth Bass by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval.
+</p>
+</div>
+
+
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:apdx-t3c-smb-table">Table A.8: </span>Estimated time to unrestrictive PCB threshold for an upper-quartile-sized smallmouth bass in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an “unrestrictive” advisory for the Sensitive population of 8, based on survey results and MECP advisory thresholds.
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+Upper Quartile Length (cm)
+</th>
+<th style="text-align:left;">
+Predicted Conc. (Current Year)
+</th>
+<th style="text-align:left;">
+Unrestrictive Conc.
+</th>
+<th style="text-align:left;">
+Years to Threshold
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:left;">
+Outcome
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+40
+</td>
+<td style="text-align:left;">
+38.79
+</td>
+<td style="text-align:left;">
+70.00
+</td>
+<td style="text-align:left;">
+0.0
+</td>
+<td style="text-align:left;">
+-8.7–8.7
+</td>
+<td style="text-align:left;">
+Supportive
+</td>
+</tr>
+</tbody>
+</table>
+<p><br/></p>
+
+<div class="figure"><span style="display:block;" id="fig:apdx-t3c-smb-fig"></span>
+<img src="Derived/BOQ/Tier3/Smallmouth%20Bass__PCBs/figs/t3c_projected.png" alt="Projected PCBs concentration in upper-quartile-length Smallmouth Bass in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds." width="50%" height="50%" />
+<p class="caption">
+Figure A.12: Projected PCBs concentration in upper-quartile-length Smallmouth Bass in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+</p>
+</div>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="references.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+</body>
+
+</html>
