@@ -1,0 +1,1 @@
+**General** population: Of 9 size bins, 3 were below the desired consumption rate of 8 meals/month. Of these, 3 were more restrictive than reference. **Sensitive** population: Of 9 size bins, 7 were below the desired consumption rate of 8 meals/month. Of these, 7 were more restrictive than reference.

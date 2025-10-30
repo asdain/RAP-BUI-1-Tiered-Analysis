@@ -1,0 +1,1 @@
+(ref:temp-trends-fig) Temporal Mercury concentration (µg/g) trends for Walleye, grouped by region and top 3 sampled size bins. The most frequently sampled size bins were 45-49, 40-44 and 50-54 cm. Lines represent linear model fits. Results shown for: AOC.

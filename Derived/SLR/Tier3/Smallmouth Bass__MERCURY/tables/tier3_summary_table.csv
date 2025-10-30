@@ -1,0 +1,5 @@
+Tier,Description,Metric,Outcome
+Tier 3A,Virtual Advisory,General: 2/9 size bins restrictive or more restrictive than reference; Sensitive: 5/9 size bins restrictive or more restrictive than reference,Unsupportive
+Tier 3B,Contaminant Concentration vs Reference,No significant difference in smooth terms (p = 0.427); AOC marginal mean higher than reference,Unsupportive
+Tier 3C,Temporal Trends,"Significant length × year interaction (p = < 0.001); 2 declining, 1 stable, 0 increasing bins",Supportive
+Tier 3D,Half-life / Time to Unrestrictive Advisory (AOC),Approximately 33.1 years (95% CI 12–54.3) to reach an unrestrictive meal allowance for median-length (35 cm) fish.,Unsupportive

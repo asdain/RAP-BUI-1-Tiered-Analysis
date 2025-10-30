@@ -1,0 +1,1 @@
+(ref:temp-trends-fig) Temporal Mercury concentration (µg/g) trends for Largemouth Bass, grouped by region. Lines represent linear model fits to annual mean concentrations. Results shown for: AOC.

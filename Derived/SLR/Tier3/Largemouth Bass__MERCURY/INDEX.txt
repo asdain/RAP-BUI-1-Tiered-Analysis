@@ -1,0 +1,4 @@
+species: Largemouth Bass
+contaminant: MERCURY
+output_dir: Derived/SLR/Tier3/Largemouth Bass__MERCURY
+index_rds: Derived/SLR/Tier3/Largemouth Bass__MERCURY/index.rds

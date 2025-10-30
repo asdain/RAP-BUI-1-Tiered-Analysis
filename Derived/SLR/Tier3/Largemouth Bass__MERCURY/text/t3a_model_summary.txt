@@ -1,0 +1,5 @@
+Model Summary by Region
+
+**Reference**: There is a statistically significant relationship between fish length and contaminant concentration. The power model used was: concentration = 0.000474 × Length<sup>1.724</sup> (R² = 0.591, p = < 0.001).
+
+**AOC**: There is a statistically significant relationship between fish length and contaminant concentration. The power model used was: concentration = 0.00188 × Length<sup>1.502</sup> (R² = 0.616, p = < 0.001).

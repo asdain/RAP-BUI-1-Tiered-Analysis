@@ -4,18 +4,18 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>SLR BUI 1 Report Text</title>
-  <meta name="description" content="SLR BUI 1 Report Text" />
+  <title>Chapter 2 Introduction | SLR BUI 1 Report Text</title>
+  <meta name="description" content="Chapter 2 Introduction | SLR BUI 1 Report Text" />
   <meta name="generator" content="bookdown 0.45 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="SLR BUI 1 Report Text" />
+  <meta property="og:title" content="Chapter 2 Introduction | SLR BUI 1 Report Text" />
   <meta property="og:type" content="book" />
   
   
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="SLR BUI 1 Report Text" />
+  <meta name="twitter:title" content="Chapter 2 Introduction | SLR BUI 1 Report Text" />
   
   
   
@@ -30,7 +30,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-
+<link rel="prev" href="index.html"/>
 <link rel="next" href="methods.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
@@ -63,6 +63,85 @@
 <script src="libs/reactable-binding-0.4.4/reactable.js"></script>
 <script src="libs/kePrint-0.0.1/kePrint.js"></script>
 <link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<script>
+(function () {
+  function wrapTableCaption(el) {
+    if (!el || el.querySelector('.caption-number')) return;
+    var txt = (el.textContent || '').trim();
+    // "Table 3" / "Table 3.1" / "Table S1" (optional colon)
+    var m = txt.match(/^(Table|Tab)\s+([A-Za-z]?\d+(?:\.\d+)*)(?:\s*:)?\s*(.*)$/i);
+    if (!m) return;
+    var label = 'Table ' + m[2];
+    var rest  = m[3] || '';
+    el.innerHTML =
+      '<span class="caption-number">' + label + '</span>' +
+      (rest ? ': <span class="caption-text">' + rest + '</span>' : '');
+  }
+
+  function wrapFigureCaption(el) {
+    if (!el || el.querySelector('.caption-number')) return;
+    var txt = (el.textContent || '').trim();
+    // "Figure 2" / "Fig 2" (optional colon)
+    var m = txt.match(/^(Figure|Fig)\.?\s+(\d+(?:\.\d+)*)(?:\s*:)?\s*(.*)$/i);
+    if (!m) return;
+    var label = (m[1].toLowerCase().startsWith('fig') ? 'Fig ' : 'Figure ') + m[2];
+    var rest  = m[3] || '';
+    el.innerHTML =
+      '<span class="caption-number">' + label + '</span>' +
+      (rest ? ': <span class="caption-text">' + rest + '</span>' : '');
+  }
+
+  function processAll(root) {
+    // Captions inside <table>
+    root.querySelectorAll('table > caption, caption.table-caption, .lightable-caption, .kable-caption')
+        .forEach(wrapTableCaption);
+
+    // Unified handler for <p class="caption"> produced by bookdown
+    root.querySelectorAll('p.caption').forEach(function (el) {
+      var t = (el.textContent || '').trim();
+      if (/^(Table|Tab)\b/i.test(t)) wrapTableCaption(el);
+      else if (/^(Figure|Fig)\b/i.test(t)) wrapFigureCaption(el);
+      // else leave it alone
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    processAll(document);
+
+    // Catch late-rendered widgets (reactable, flextable, DT, etc.)
+    var obs = new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        m.addedNodes && m.addedNodes.forEach(function (node) {
+          if (node.nodeType !== 1) return;
+          if (node.matches && (
+              node.matches('caption, p.caption, .lightable-caption, .kable-caption') ||
+              node.querySelector('caption, p.caption, .lightable-caption, .kable-caption')
+          )) {
+            processAll(node.matches ? node : document);
+          }
+        });
+      });
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  });
+})();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Tag bookdown-style table captions that look like:
+    // <caption><span id="tab:...">Table 3.5: </span><span>Caption text...</span></caption>
+    document.querySelectorAll('table > caption').forEach(function (cap) {
+      var first = cap.querySelector('span[id^="tab:"]');
+      if (first && !first.classList.contains('caption-number')) {
+        first.classList.add('caption-number');
+        var next = first.nextElementSibling;
+        if (next && next.tagName.toLowerCase() === 'span') {
+          next.classList.add('caption-text');
+        }
+      }
+    });
+  });
+</script>
+
 
 
 
@@ -71,6 +150,7 @@
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 </style>
 
+<link rel="stylesheet" href="style.css" type="text/css" />
 </head>
 
 <body>
@@ -83,45 +163,46 @@
       <nav role="navigation">
 
 <ul class="summary">
-<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> St. Lawrence River BUI 1 Report</a></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a>
 <ul>
-<li class="chapter" data-level="1.1" data-path="introduction.html"><a href="introduction.html#brief-history-of-bui-in-aoc-and-previous-actions"><i class="fa fa-check"></i><b>1.1</b> Brief history of BUI in AOC and previous actions</a></li>
-<li class="chapter" data-level="1.2" data-path="introduction.html"><a href="introduction.html#actions-since-2017-report"><i class="fa fa-check"></i><b>1.2</b> Actions since 2017 report</a></li>
-<li class="chapter" data-level="1.3" data-path="introduction.html"><a href="introduction.html#delisting-criteria"><i class="fa fa-check"></i><b>1.3</b> Delisting criteria</a></li>
-<li class="chapter" data-level="1.4" data-path="introduction.html"><a href="introduction.html#section"><i class="fa fa-check"></i><b>1.4</b> </a></li>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#brief-history-of-bui-in-aoc-and-previous-actions"><i class="fa fa-check"></i><b>2.1</b> Brief history of BUI in AOC and previous actions</a></li>
+<li class="chapter" data-level="2.2" data-path="introduction.html"><a href="introduction.html#actions-since-2017-report"><i class="fa fa-check"></i><b>2.2</b> Actions since 2017 report</a></li>
+<li class="chapter" data-level="2.3" data-path="introduction.html"><a href="introduction.html#delisting-criteria"><i class="fa fa-check"></i><b>2.3</b> Delisting criteria</a></li>
+<li class="chapter" data-level="2.4" data-path="introduction.html"><a href="introduction.html#section"><i class="fa fa-check"></i><b>2.4</b> </a></li>
 </ul></li>
 <li class="part"><span><b>Tiered Assessment Approach for Criterion 1.1</b></span></li>
-<li class="chapter" data-level="2" data-path="methods.html"><a href="methods.html"><i class="fa fa-check"></i><b>2</b> Methods</a>
+<li class="chapter" data-level="3" data-path="methods.html"><a href="methods.html"><i class="fa fa-check"></i><b>3</b> Methods</a>
 <ul>
-<li class="chapter" data-level="2.1" data-path="methods.html"><a href="methods.html#methods-criteria"><i class="fa fa-check"></i><b>2.1</b> Generic criteria</a></li>
-<li class="chapter" data-level="2.2" data-path="methods.html"><a href="methods.html#methods-tiered-framework"><i class="fa fa-check"></i><b>2.2</b> Tiered assessment framework</a>
+<li class="chapter" data-level="3.1" data-path="methods.html"><a href="methods.html#methods-criteria"><i class="fa fa-check"></i><b>3.1</b> Generic criteria</a></li>
+<li class="chapter" data-level="3.2" data-path="methods.html"><a href="methods.html#methods-tiered-framework"><i class="fa fa-check"></i><b>3.2</b> Tiered assessment framework</a>
 <ul>
-<li class="chapter" data-level="2.2.1" data-path="methods.html"><a href="methods.html#methods-tier1"><i class="fa fa-check"></i><b>2.2.1</b> Tier 1</a></li>
-<li class="chapter" data-level="2.2.2" data-path="methods.html"><a href="methods.html#tier-2"><i class="fa fa-check"></i><b>2.2.2</b> Tier 2</a></li>
-<li class="chapter" data-level="2.2.3" data-path="methods.html"><a href="methods.html#methods-tier3"><i class="fa fa-check"></i><b>2.2.3</b> Tier 3</a></li>
-<li class="chapter" data-level="2.2.4" data-path="methods.html"><a href="methods.html#tier-4"><i class="fa fa-check"></i><b>2.2.4</b> Tier 4</a></li>
+<li class="chapter" data-level="3.2.1" data-path="methods.html"><a href="methods.html#methods-tier1"><i class="fa fa-check"></i><b>3.2.1</b> Tier 1</a></li>
+<li class="chapter" data-level="3.2.2" data-path="methods.html"><a href="methods.html#tier-2"><i class="fa fa-check"></i><b>3.2.2</b> Tier 2</a></li>
+<li class="chapter" data-level="3.2.3" data-path="methods.html"><a href="methods.html#methods-tier3"><i class="fa fa-check"></i><b>3.2.3</b> Tier 3</a></li>
+<li class="chapter" data-level="3.2.4" data-path="methods.html"><a href="methods.html#tier-4"><i class="fa fa-check"></i><b>3.2.4</b> Tier 4</a></li>
 </ul></li>
-<li class="chapter" data-level="2.3" data-path="methods.html"><a href="methods.html#methods-survey"><i class="fa fa-check"></i><b>2.3</b> Community fish consumption survey</a></li>
-<li class="chapter" data-level="2.4" data-path="methods.html"><a href="methods.html#methods-data"><i class="fa fa-check"></i><b>2.4</b> Data Sources</a></li>
+<li class="chapter" data-level="3.3" data-path="methods.html"><a href="methods.html#methods-survey"><i class="fa fa-check"></i><b>3.3</b> Community fish consumption survey</a></li>
+<li class="chapter" data-level="3.4" data-path="methods.html"><a href="methods.html#methods-data"><i class="fa fa-check"></i><b>3.4</b> Data Sources</a></li>
 </ul></li>
-<li class="chapter" data-level="3" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>3</b> Results</a>
+<li class="chapter" data-level="4" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>4</b> Results</a>
 <ul>
-<li class="chapter" data-level="3.1" data-path="results.html"><a href="results.html#species-of-interest-and-desired-consumption-rate"><i class="fa fa-check"></i><b>3.1</b> Species of Interest and Desired Consumption Rate</a></li>
-<li class="chapter" data-level="3.2" data-path="results.html"><a href="results.html#tier-1-assessment-for-the-st.-lawrence-river-cornwallakwesasne-aoc"><i class="fa fa-check"></i><b>3.2</b> Tier 1 Assessment for the St. Lawrence River (Cornwall/Akwesasne) AOC</a></li>
-<li class="chapter" data-level="3.3" data-path="results.html"><a href="results.html#tier-2-assessment-for-the-st.-lawrence-river-cornwallakwesasne-aoc"><i class="fa fa-check"></i><b>3.3</b> Tier 2 Assessment for the St. Lawrence River (Cornwall/Akwesasne) AOC</a></li>
-<li class="chapter" data-level="3.4" data-path="results.html"><a href="results.html#tier3-results"><i class="fa fa-check"></i><b>3.4</b> Tier 3 Assessment for the St. Lawrence River (Cornwall/Akwesasne) AOC</a>
+<li class="chapter" data-level="4.1" data-path="results.html"><a href="results.html#species-of-interest-and-desired-consumption-rate"><i class="fa fa-check"></i><b>4.1</b> Species of Interest and Desired Consumption Rate</a></li>
+<li class="chapter" data-level="4.2" data-path="results.html"><a href="results.html#tier-1-assessment-for-the-st.-lawrence-river-cornwallakwesasne-aoc"><i class="fa fa-check"></i><b>4.2</b> Tier 1 Assessment for the St. Lawrence River (Cornwall/Akwesasne) AOC</a></li>
+<li class="chapter" data-level="4.3" data-path="results.html"><a href="results.html#tier-2-assessment-for-the-st.-lawrence-river-cornwallakwesasne-aoc"><i class="fa fa-check"></i><b>4.3</b> Tier 2 Assessment for the St. Lawrence River (Cornwall/Akwesasne) AOC</a></li>
+<li class="chapter" data-level="4.4" data-path="results.html"><a href="results.html#tier3-results"><i class="fa fa-check"></i><b>4.4</b> Tier 3 Assessment for the St. Lawrence River (Cornwall/Akwesasne) AOC</a>
 <ul>
-<li class="chapter" data-level="3.4.1" data-path="results.html"><a href="results.html#tier3-results-walleye"><i class="fa fa-check"></i><b>3.4.1</b> Walleye</a></li>
-<li class="chapter" data-level="3.4.2" data-path="results.html"><a href="results.html#largemouth-bass"><i class="fa fa-check"></i><b>3.4.2</b> Largemouth Bass</a></li>
-<li class="chapter" data-level="3.4.3" data-path="results.html"><a href="results.html#northern-pike"><i class="fa fa-check"></i><b>3.4.3</b> Northern Pike</a></li>
-<li class="chapter" data-level="3.4.4" data-path="results.html"><a href="results.html#smallmouth-bass"><i class="fa fa-check"></i><b>3.4.4</b> Smallmouth Bass</a></li>
-<li class="chapter" data-level="3.4.5" data-path="results.html"><a href="results.html#yellow-perch"><i class="fa fa-check"></i><b>3.4.5</b> Yellow Perch</a></li>
-<li class="chapter" data-level="3.4.6" data-path="results.html"><a href="results.html#bluegill-channel-catfish-and-rock-bass"><i class="fa fa-check"></i><b>3.4.6</b> Bluegill, Channel Catfish, and Rock Bass</a></li>
-<li class="chapter" data-level="3.4.7" data-path="results.html"><a href="results.html#tier-3-summary-4"><i class="fa fa-check"></i><b>3.4.7</b> Tier 3 Summary</a></li>
+<li class="chapter" data-level="4.4.1" data-path="results.html"><a href="results.html#tier3-results-walleye"><i class="fa fa-check"></i><b>4.4.1</b> Walleye</a></li>
+<li class="chapter" data-level="4.4.2" data-path="results.html"><a href="results.html#largemouth-bass"><i class="fa fa-check"></i><b>4.4.2</b> Largemouth Bass</a></li>
+<li class="chapter" data-level="4.4.3" data-path="results.html"><a href="results.html#northern-pike"><i class="fa fa-check"></i><b>4.4.3</b> Northern Pike</a></li>
+<li class="chapter" data-level="4.4.4" data-path="results.html"><a href="results.html#smallmouth-bass"><i class="fa fa-check"></i><b>4.4.4</b> Smallmouth Bass</a></li>
+<li class="chapter" data-level="4.4.5" data-path="results.html"><a href="results.html#yellow-perch"><i class="fa fa-check"></i><b>4.4.5</b> Yellow Perch</a></li>
+<li class="chapter" data-level="4.4.6" data-path="results.html"><a href="results.html#bluegill-channel-catfish-and-rock-bass"><i class="fa fa-check"></i><b>4.4.6</b> Bluegill, Channel Catfish, and Rock Bass</a></li>
+<li class="chapter" data-level="4.4.7" data-path="results.html"><a href="results.html#tier-3-summary-4"><i class="fa fa-check"></i><b>4.4.7</b> Tier 3 Summary</a></li>
 </ul></li>
-<li class="chapter" data-level="3.5" data-path="results.html"><a href="results.html#tier-4-1"><i class="fa fa-check"></i><b>3.5</b> Tier 4</a></li>
+<li class="chapter" data-level="4.5" data-path="results.html"><a href="results.html#tier-4-1"><i class="fa fa-check"></i><b>4.5</b> Tier 4</a></li>
 </ul></li>
-<li class="chapter" data-level="4" data-path="discussion-and-recommendations.html"><a href="discussion-and-recommendations.html"><i class="fa fa-check"></i><b>4</b> Discussion and Recommendations</a></li>
+<li class="chapter" data-level="5" data-path="discussion-and-recommendations.html"><a href="discussion-and-recommendations.html"><i class="fa fa-check"></i><b>5</b> Discussion and Recommendations</a></li>
 <li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
 <li class="appendix"><span><b>Appendix</b></span></li>
 <li class="chapter" data-level="A" data-path="tier3-appendix.html"><a href="tier3-appendix.html"><i class="fa fa-check"></i><b>A</b> Tier 3 Supplementary Figures for St. Lawrence River (Cornwall/Akwesasne) AOC</a>
@@ -148,24 +229,19 @@
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="header">
-<h1 class="title">SLR BUI 1 Report Text</h1>
-<p class="author"><em>Aaron Dain</em></p>
-<p class="date"><em>2025-09-26</em></p>
+<div id="introduction" class="section level1 hasAnchor" number="2">
+<h1><span class="header-section-number">Chapter 2</span> Introduction<a href="introduction.html#introduction" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="brief-history-of-bui-in-aoc-and-previous-actions" class="section level2 hasAnchor" number="2.1">
+<h2><span class="header-section-number">2.1</span> Brief history of BUI in AOC and previous actions<a href="introduction.html#brief-history-of-bui-in-aoc-and-previous-actions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 </div>
-<div id="introduction" class="section level1 hasAnchor" number="1">
-<h1><span class="header-section-number">Chapter 1</span> Introduction<a href="introduction.html#introduction" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<div id="brief-history-of-bui-in-aoc-and-previous-actions" class="section level2 hasAnchor" number="1.1">
-<h2><span class="header-section-number">1.1</span> Brief history of BUI in AOC and previous actions<a href="introduction.html#brief-history-of-bui-in-aoc-and-previous-actions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="actions-since-2017-report" class="section level2 hasAnchor" number="2.2">
+<h2><span class="header-section-number">2.2</span> Actions since 2017 report<a href="introduction.html#actions-since-2017-report" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 </div>
-<div id="actions-since-2017-report" class="section level2 hasAnchor" number="1.2">
-<h2><span class="header-section-number">1.2</span> Actions since 2017 report<a href="introduction.html#actions-since-2017-report" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="delisting-criteria" class="section level2 hasAnchor" number="2.3">
+<h2><span class="header-section-number">2.3</span> Delisting criteria<a href="introduction.html#delisting-criteria" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 </div>
-<div id="delisting-criteria" class="section level2 hasAnchor" number="1.3">
-<h2><span class="header-section-number">1.3</span> Delisting criteria<a href="introduction.html#delisting-criteria" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-</div>
-<div id="section" class="section level2" number="1.4">
-<h2><span class="header-section-number">1.4</span> </h2>
+<div id="section" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> </h2>
 
 </div>
 </div>
@@ -177,8 +253,8 @@
           </div>
         </div>
       </div>
-
-<a href="methods.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="methods.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
