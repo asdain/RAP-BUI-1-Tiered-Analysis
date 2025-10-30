@@ -1,0 +1,1 @@
+In the AOC, Mercury concentrations were decreasing over time. This trend was assessed using an annual linear model of mean concentration.
