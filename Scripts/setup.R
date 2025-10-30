@@ -36,7 +36,8 @@ packages_list = c("dplyr",
                   "maptiles",
                   "ggspatial",
                   "servr",
-                  "officer")
+                  "officer",
+                  "officedown")
 
 
 

@@ -1,5 +1,5 @@
 ---
-title: "SLR BUI 1 Tier 3 Analysis"
+title: "BOQ BUI 1 Tier 3 Analysis"
 author: "Aaron Dain"
 always_allow_html: true
 output:
@@ -19,15 +19,16 @@ output:
   bookdown::pdf_document2:
     toc: true
 params:
-  AOC_name: St. Lawrence River (Cornwall/Akwesasne)
-  species: Northern Pike
-  contaminant: MERCURY
-  aoc_shapefile: Tier3/Data/SLR_AOC
+  AOC_name: Bay of Quinte
+  species: Smallmouth Bass
+  contaminant: PCBs
+  aoc_shapefile: null
   raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
   ref_1: Lake Ontario
-  ref_2: St. Lawrence River
+  ref_2: St. Lawrence River 12 - Lower Thousand Island
   combine_ref: TRUE
-  add_AOC: St Regis Island
+  add_AOC: 
+  - Quinte
   exclude_site:
   - Hamilton Harbour
   - Trent River
@@ -36,8 +37,23 @@ params:
   restrict_threshold: 8
   exclude_missing: FALSE
   save_artifacts: TRUE
-  out_dir_base: "Output/Full-SLR-Report/Derived/SLR/Tier3"
+  out_dir_base: "Output/Full-BOQ-Report/Derived/BOQ/Tier3"
 ---
+
+```{r self-ref, eval = F}
+# Self reference of species of interest for boq that failed t2
+
+# Brown Bullhead	❌
+# Chinook Salmon	❌ ⚠️
+# Lake Whitefish	— ⚠️
+# Northern Pike	❌
+# Rainbow Smelt	❌ ⚠️
+# Smallmouth Bass	❌
+# Walleye	❌
+
+
+```
+
 
 ```{r Setup, include = FALSE}
 
@@ -84,7 +100,7 @@ ARTIFACTS <- list(
 
 
 # Restrict threshold override
-thr_path <- "Data/consumption_threshold_slr.csv"
+thr_path <- "Data/consumption_threshold_boq.csv"
 thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
 
 new_thr = thr_df %>%
