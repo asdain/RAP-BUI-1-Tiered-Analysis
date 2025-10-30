@@ -1,0 +1,296 @@
+---
+title: "SLR BUI 1 Report Text"
+author: "Aaron Dain"
+date: "2025-09-26"
+output: 
+  bookdown::gitbook: default
+site: bookdown::bookdown_site
+always_allow_html: true
+params:
+  AOC_name: St. Lawrence River (Cornwall/Akwesasne)
+  AOC_short: SLR
+---
+
+<!--chapter:end:Output/Full-SLR-Report/index.Rmd-->
+
+# Hello bookdown 
+
+All chapters start with a first-level heading followed by your chapter title, like the line above. There should be only one first-level heading (`#`) per .Rmd file.
+
+## A section
+
+All chapter sections start with a second-level (`##`) or higher heading followed by your section title, like the sections above and below here. You can have as many as you want within a chapter.
+
+### An unnumbered section {-}
+
+Chapters and sections are numbered by default. To un-number a heading, add a `{.unnumbered}` or the shorter `{-}` at the end of the heading, like in this section.
+
+<!--chapter:end:Output/Full-SLR-Report/01-intro.Rmd-->
+
+# Cross-references {#cross}
+
+Cross-references make it easier for your readers to find and link to elements in your book.
+
+## Chapters and sub-chapters
+
+There are two steps to cross-reference any heading:
+
+1. Label the heading: `# Hello world {#nice-label}`. 
+    - Leave the label off if you like the automated heading generated based on your heading title: for example, `# Hello world` = `# Hello world {#hello-world}`.
+    - To label an un-numbered heading, use: `# Hello world {-#nice-label}` or `{# Hello world .unnumbered}`.
+
+1. Next, reference the labeled heading anywhere in the text using `\@ref(nice-label)`; for example, please see Chapter \@ref(cross). 
+    - If you prefer text as the link instead of a numbered reference use: [any text you want can go here](#cross).
+
+## Captioned figures and tables
+
+Figures and tables *with captions* can also be cross-referenced from elsewhere in your book using `\@ref(fig:chunk-label)` and `\@ref(tab:chunk-label)`, respectively.
+
+See Figure \@ref(fig:nice-fig).
+
+```{r nice-fig, fig.cap='Here is a nice figure!', out.width='80%', fig.asp=.75, fig.align='center', fig.alt='Plot with connected points showing that vapor pressure of mercury increases exponentially as temperature increases.'}
+par(mar = c(4, 4, .1, .1))
+plot(pressure, type = 'b', pch = 19)
+```
+
+Don't miss Table \@ref(tab:nice-tab).
+
+```{r nice-tab, tidy=FALSE}
+knitr::kable(
+  head(pressure, 10), caption = 'Here is a nice table!',
+  booktabs = TRUE
+)
+```
+
+<!--chapter:end:Output/Full-SLR-Report/02-methods.Rmd-->
+
+source(here:here)
+# (PART) Results {-}
+
+# Tier 1 Assessment for `r AOC_name`
+
+Tier 1 assessment compares the official MECP consumption advisory information for each fish of interest to the desired consumption rate (in meals per month) as indicated by community survey. (#tab:tier-1-table) summarizes the MECP advisory values for fish of interest in the `r AOC_name` AOC for both General and Sensitive, compared to each species'  community desired consumption rate. In total, just `r n_pass$t1_pass_n` of `r n_pass$t1_total` species (brown bullhead) passed Tier 1 assessment, with the rest failing and moving to Tier 2 ((#tab:tier-1-pass-fail)).
+
+<caption>(#tab:tier-1-table) Results of Tier 1 assessment for `r AOC_name`. The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the "Restrictive" meals/month threshold (indicated by community survey), and green cells indicate advisories levels equal to or above this threshold. The contaminants driving the advisories are displayed below each cells.</caption>
+```{r tier-1-table}
+# Load contaminant mappings
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+
+# Render the t1 table using the pared-down RDS table provided from analysis script
+t1_table = render_t1_table_any(
+  df = t1_df,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  table_height = "800px",
+  show_legend = TRUE
+)
+
+
+t1_table
+```
+
+
+
+
+## The following species pass/fail Tier 1:
+
+<caption>(#tab:tier-1-pass-fail) Results of Tier 1 assessment for `r AOC_name`. The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Species for which the consumption advisory is equal to or above the desired consumption rate pass Tier 1 and are excluded from further analysis; otherwise the species fails and moves forward to Tier 2.</caption>
+```{r tier-1-pass-fail, results = 'asis'}
+  
+t1_pass = report_pass_fail_species(flags, tier = "t1", output = "table")
+
+
+
+```
+
+
+
+
+<!--chapter:end:Output/Full-SLR-Report/03-tier1.Rmd-->
+
+
+
+
+# Tier 2 Assessment for `r aoc_name`
+
+
+### The following reference sites will be used for the Tier 2 analysis of SLR:
+
+`r knitr::asis_output(paste0("- ", ref_names, collapse = "\n"))`
+
+
+```{r Tier 2 Table}
+prep <- readr::read_rds(here::here("Derived", "SLR", "t2_prep.rds"))
+
+# Auto: HTML → reactable; Word/PDF → flextable
+render_t2_table_any(prep = prep, table_height = "800px")
+
+
+```
+Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC, alongside the median advisory level of suitable reference sites. n values indicate the number of reference sites with advisories for this species, size class, and population type. Red cells indicate an advisory in the AOC lower than the median of reference sites, and green cells indicate advisories levels equal to or above the reference median. Grey cells are advisories in the AOC with no suitable reference sites. The drop-down menus display the advisory levels in each reference site for that species and population type.
+
+
+
+## The following species pass/fail Tier 2:
+```{r Tier 2 Pass/Fail, results = 'asis'}
+report_pass_fail_species(flags, tier = "t2", output = "table", filter_t1_pass = TRUE)
+```
+
+⚠️ - Species has low reference site count (<3) at more than 50% of size classes.
+
+<!--chapter:end:Output/Full-SLR-Report/04-tier2.Rmd-->
+
+# Results
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(inline_output = TRUE)
+
+# Base setup
+source("Scripts/setup.R")
+
+
+
+aoc_name = get_waterbody_names(cons_data, site_id = params$AOC)
+ref_names = get_waterbody_names(cons_data, site_id = params$reference_sites)
+
+# This is a csv file with consumption thresholds for each species (ie, how many meals/month is considered unrestrictive in the AOC?). It is located in the Data folder,  and you can change it yourself based on your species of interest and consumption thresholds. When calling the T1 table, you can set restrict_thresholds = NULL  and restrict_threshold = (some number) to use the same number for all species (default 8)
+thr_path <- "Data/consumption_threshold_slr.csv"
+thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
+
+
+# Make table
+t1_df <- make_restrict_table(
+  df = cons_data,
+  aoc_id = params$AOC,
+  length_levels = length_levels,
+  restrict_threshold = thr_df,     # single value, named vector, or df
+  interest_species = params$interest_species  
+)
+
+# Set contaminant mappings
+unique_contaminants <- extract_unique_adv_causes(t1_df)
+mappings <- assign_contaminant_mappings(unique_contaminants)
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+```
+
+# BUI 1 Results
+
+## Tier 1 {#sec-tier-1-tabset .tabset .tabset-pills}
+
+In Tier 1, we assessed whether fish consumption advisories for fish of interest within the AOC were more restrictive than the established thresholds for beneficial use, determined by community survey. A total of `nrow(thr_df)` species were evaluated across both general and sesnsitive population groups. Tables 1 and 2 summarize the Tier 1 results for all species of interest in the St. Lawrence River (Cornwall/Akwesasne) AOC across all size bins and population types.
+
+<br />
+
+<caption>(#tab:tier1-table) Tier 1 results for the St. Lawrence River (Cornwall/Akwesasne) AOC. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the restrictive meal/month threshold determined by community survey, and green cells indicate unrestrictive advisories levels above this threshold. The contaminants driving the advisories are displayed below each cell with an indicated colour and shape.</caption>
+
+```{r tier1-table, echo=FALSE}
+slr_t1_table = render_t1_table_any(
+  df = t1_df,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  table_height = "800px",
+  show_legend = TRUE
+)
+
+slr_t1_table
+
+```
+
+<br />
+
+<caption>(#tab:tier1-pass-fail) Summary of species that pass/fail Tier 1 assessment.</caption>
+
+```{r tier1-pass-fail, echo = F, asis = TRUE}
+flags = get_species_pass_flags(cons_data, params$AOC, params$reference_sites, length_levels, interest_species = params$interest_species, restrict_threshold = thr_df)
+
+
+  
+t1_pass = report_pass_fail_species(flags, tier = "t1", output = "table")
+
+t1_pass
+```
+
+Tier 1 results indicate that all species of interest in the AOC, save for brown bullhead, have at least one size class with restrictive consumption advisories. For most species, all size categories have restrictive consumption advisories compared the the community desired consumption rate. Northern pike are unrestrictive at smaller size categories, but fail Tier 1 at 65 cm and above for the general population, and 45 cm and above for the sensitive population.
+
+<!--chapter:end:Output/Full-SLR-Report/05-tier3.Rmd-->
+
+# Sharing your book
+
+## Publishing
+
+HTML books can be published online, see: https://bookdown.org/yihui/bookdown/publishing.html
+
+## 404 pages
+
+By default, users will be directed to a 404 page if they try to access a webpage that cannot be found. If you'd like to customize your 404 page instead of using the default, you may add either a `_404.Rmd` or `_404.md` file to your project root and use code and/or Markdown syntax.
+
+## Metadata for sharing
+
+Bookdown HTML books will provide HTML metadata for social sharing on platforms like Twitter, Facebook, and LinkedIn, using information you provide in the `index.Rmd` YAML. To setup, set the `url` for your book and the path to your `cover-image` file. Your book's `title` and `description` are also used.
+
+
+
+This `gitbook` uses the same social sharing data across all chapters in your book- all links shared will look the same.
+
+Specify your book's source repository on GitHub using the `edit` key under the configuration options in the `_output.yml` file, which allows users to suggest an edit by linking to a chapter's source file. 
+
+Read more about the features of this output format here:
+
+https://pkgs.rstudio.com/bookdown/reference/gitbook.html
+
+Or use:
+
+```{r eval=FALSE}
+?bookdown::gitbook
+```
+
+
+
+<!--chapter:end:Output/Full-SLR-Report/06-tier4.Rmd-->
+
+# Blocks
+
+## Equations
+
+Here is an equation.
+
+\begin{equation} 
+  f\left(k\right) = \binom{n}{k} p^k\left(1-p\right)^{n-k}
+  (\#eq:binom)
+\end{equation} 
+
+You may refer to using `\@ref(eq:binom)`, like see Equation \@ref(eq:binom).
+
+
+## Theorems and proofs
+
+Labeled theorems can be referenced in text using `\@ref(thm:tri)`, for example, check out this smart theorem \@ref(thm:tri).
+
+::: {.theorem #tri}
+For a right triangle, if $c$ denotes the *length* of the hypotenuse
+and $a$ and $b$ denote the lengths of the **other** two sides, we have
+$$a^2 + b^2 = c^2$$
+:::
+
+Read more here <https://bookdown.org/yihui/bookdown/markdown-extensions-by-bookdown.html>.
+
+## Callout blocks
+
+
+The R Markdown Cookbook provides more help on how to use custom blocks to design your own callouts: https://bookdown.org/yihui/rmarkdown-cookbook/custom-blocks.html
+
+<!--chapter:end:Output/Full-SLR-Report/05-blocks.Rmd-->
+
+`r if (knitr::is_html_output()) '
+# References {-}
+'`
+
+<!--chapter:end:Output/Full-SLR-Report/07-references.Rmd-->
+
+# (APPENDIX) Appendix {-}
+
+<!--chapter:end:Output/Full-SLR-Report/08-appendix.Rmd-->
+
