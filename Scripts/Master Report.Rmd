@@ -1,0 +1,95 @@
+---
+title: "Master BUI 1 Report"
+output:
+  html_notebook
+params:
+  AOC: '45087425'
+  reference_sites: ['44007727',
+  '43557712',
+  '43497905',
+  '43117922',
+  '43397900',
+  '43517847',
+  '43527851',
+  '44397535',
+  '43557717',
+  '43527856']
+  restrict_threshold: 8
+  interest_species: NULL
+---
+
+```{r Setup, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(inline_output = TRUE)
+
+# Base setup
+source("Scripts/setup.R")
+
+
+
+aoc_name = get_waterbody_names(cons_data, site_id = params$AOC)
+ref_names = get_waterbody_names(cons_data, site_id = ref_sites)
+
+# Make table
+t1_df = make_restrict_table(cons_data,
+                                params$AOC,
+                                length_levels)
+# Set contaminant mappings
+unique_contaminants <- extract_unique_adv_causes(t1_df)
+mappings <- assign_contaminant_mappings(unique_contaminants)
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+
+
+
+```
+
+```{r, Waterbody Lookup, include=FALSE, echo=FALSE}
+# As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
+
+get_waterbody_ids(cons_data, site_name = "St. Lawrence River (Lake St. Francis)")
+
+```
+
+
+
+# Tier 1 Assessment for `r aoc_name`
+```{r Tier 1 Table}
+render_t1_table(
+  df = t1_df,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  table_height = "1500px",
+  show_legend = TRUE,
+  interest_species = params$interest_species,
+)
+```
+Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the "Restrictive" threshold of `r params$restrict_threshold` meals/month, and green cells indicate advisories levels above this threshold. The contaminants driving the advisories are displayed below each cell with an indicated colour and shape.
+
+
+
+## The following species pass/fail Tier 1:
+```{r Tier 1 Pass/Fail}
+report_pass_fail_species(flags, tier = "t1", output = "table")
+```
+
+### The following reference sites will be used for the Tier 2 analysis of `r aoc_name`:
+
+`r ref_names`
+
+
+# Tier 2 Assessment for `r aoc_name`
+```{r Tier 2 Table}
+t2_table <- render_t2_table()
+
+t2_table
+
+```
+Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC, alongside the median advisory level of suitable reference sites. n values indicate the number of reference sites with advisories for this species, size class, and population type. Red cells indicate an advisory in the AOC lower than the median of reference sites, and green cells indicate advisories levels equal to or above the reference median. Grey cells are advisories in the AOC with no suitable reference sites. The drop-down menus display the advisory levels in each reference site for that species and population type.
+
+
+
+## The following species pass/fail Tier 2:
+```{r Tier 2 Pass/Fail}
+report_pass_fail_species(flags, tier = "t2", output = "table")
+```

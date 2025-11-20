@@ -1,1 +1,0 @@
-A linear model detected a significant interaction between year and fish length (p = < 0.001). Trends were therefore assessed separately for the top 3 most sampled length bins: 45-49, 40-44 and 50-54 cm. Overall model R² = 0.66.

@@ -1,6 +1,6 @@
 
 
-t3_fig <- function(idx, which = c("map","t3a_virtual","t3b_gam_plot","t3c_temporal", "t3c_projected"),
+t3_fig <- function(idx, which = c("map","t3a_virtual","t3b_gam_plot","t3c_temporal", "t3c_projected", "t3c_projected_multi"),
                    as_path = TRUE) {
   which <- match.arg(which)
   # We saved figure paths under idx$figs[[name]]

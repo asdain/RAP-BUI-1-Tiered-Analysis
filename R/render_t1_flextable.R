@@ -57,20 +57,20 @@ build_t1_flextable <- function(df,
   for (col in size_cols) {
     vals <- suppressWarnings(as.numeric(dfw[[col]]))
     
-    idx_restrict <- which(is_adv_row & !is.na(vals) & !is.na(thr_vec) & vals <= thr_vec)
-    idx_ok       <- which(is_adv_row & !is.na(vals) & !is.na(thr_vec) & vals >  thr_vec)
+    idx_restrict <- which(is_adv_row & !is.na(vals) & !is.na(thr_vec) & vals < thr_vec)
+    idx_ok       <- which(is_adv_row & !is.na(vals) & !is.na(thr_vec) & vals >=  thr_vec)
     idx_missing  <- which(is_adv_row &  is.na(vals))
     
     if (length(idx_restrict)) {
-      ft <- flextable::bg(ft, i = idx_restrict, j = col, bg = "#d80032")
+      ft <- flextable::bg(ft, i = idx_restrict, j = col, bg = adv_palette$fail)
       ft <- flextable::color(ft, i = idx_restrict, j = col, color = "white")
     }
     if (length(idx_ok)) {
-      ft <- flextable::bg(ft, i = idx_ok, j = col, bg = "#4CAF50")
+      ft <- flextable::bg(ft, i = idx_ok, j = col, bg = adv_palette$pass)
       ft <- flextable::color(ft, i = idx_ok, j = col, color = "white")
     }
     if (length(idx_missing)) {
-      ft <- flextable::bg(ft, i = idx_missing, j = col, bg = "#eeeeee")
+      ft <- flextable::bg(ft, i = idx_missing, j = col, bg = adv_palette$nodata)
       ft <- flextable::color(ft, i = idx_missing, j = col, color = "#000000")
     }
   }

@@ -1,4 +1,0 @@
-species: Walleye
-contaminant: MERCURY
-output_dir: Derived/SLR/Tier3/Walleye__MERCURY
-index_rds: Derived/SLR/Tier3/Walleye__MERCURY/index.rds
