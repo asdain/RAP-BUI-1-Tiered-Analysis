@@ -1,1 +1,0 @@
-Of 11 fish lengths evaluated, 11 had significantly higher predicted Mercury concentrations in the AOC compared to reference (p < 0.05). 

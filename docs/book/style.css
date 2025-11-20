@@ -128,3 +128,8 @@ table > caption > span:not([id^="tab:"]) {
 .book .book-body table > caption > span[id^="tab:"] { font-weight: 700; }
 .book .book-body table > caption > span[id^="tab:"] + span { font-weight: 400; }
 
+.book .book-body span.tbl-anchor {
+  display: none;
+}
+
+
