@@ -58,7 +58,7 @@ render_t1_table <- function(df,
           val <- as.numeric(value)
           thr <- as.numeric(row$Unrestrictive_Threshold)
           # match your backend logic: restrictive = adv_level <= threshold
-          styles$background <- if (!is.na(val) && !is.na(thr) && val <= thr) "#d80032" else "#4CAF50"
+          styles$background <- if (!is.na(val) && !is.na(thr) && val < thr) adv_palette$fail else adv_palette$pass
           styles$color <- "#ffffff"
         } else if ((is.na(value) || value == "") && row_type %in% c("General", "Sensitive")) {
           styles$background <- "#eeeeee"

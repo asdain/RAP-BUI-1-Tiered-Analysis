@@ -1,10 +1,13 @@
 build_t2_flextable <- function(prep) {
   stopifnot(!is.null(prep$display_data), length(prep$size_cols) > 0)
   
-  dfw <- prep$display_data
+  dfw       <- prep$display_data
   size_cols <- prep$size_cols
-  hdr_cols  <- c("Species_display", "Population", "Site")   # <-- use Species_display
+  hdr_cols  <- c("Species_display", "Population", "Site")
   show_cols <- c(hdr_cols, size_cols)
+  
+  # thresholds from prep (named by Species)
+  thresholds <- if (!is.null(prep$threshold_map)) prep$threshold_map else list()
   
   # Keep raw keys BEFORE display tweaks
   dfw$Species_raw    <- dfw$Species
@@ -52,13 +55,14 @@ build_t2_flextable <- function(prep) {
     ft <- flextable::color(ft,   i = idx_n, j = NULL, color = "#444444", part = "body")
   }
   
-  # ---- Coloring (unchanged logic; uses raw keys) ----
+  # ---- Coloring logic (Tier 2 + Tier 1 threshold) ----
   n_map   <- prep$n_map
   med_map <- prep$medians_map
   key_id  <- function(i, col) paste(dfw$Species_raw[i], dfw$Population_raw[i], col, sep = "||")
   
   idx_aoc <- which(dfw$site_type == "AOC")
   
+  # For mirroring AOC colours onto "Reference Median" rows
   med_row_for <- function(i) {
     which(
       dfw$Species_raw    == dfw$Species_raw[i] &
@@ -70,7 +74,11 @@ build_t2_flextable <- function(prep) {
   for (col in size_cols) {
     vals <- suppressWarnings(as.numeric(dfw[[col]]))
     
-    aoc_missing <- aoc_badref <- aoc_restrict <- aoc_ok <- integer(0)
+    aoc_missing  <- integer(0)
+    aoc_badref   <- integer(0)
+    aoc_restrict <- integer(0)
+    aoc_ok       <- integer(0)
+    aoc_t1_pass  <- integer(0)  # Tier 1 pass based on threshold
     
     for (i in idx_aoc) {
       v   <- vals[i]
@@ -78,8 +86,15 @@ build_t2_flextable <- function(prep) {
       n   <- n_map[[id]]
       ref <- med_map[[id]]
       
+      # per-species threshold (if available)
+      sp  <- dfw$Species_raw[i]
+      thr <- thresholds[[sp]]
+      
       if (is.na(v)) {
         aoc_missing <- c(aoc_missing, i)
+      } else if (!is.null(thr) && !is.na(thr) && v >= thr) {
+        # Tier 1 pass (unrestrictive size class)
+        aoc_t1_pass <- c(aoc_t1_pass, i)
       } else if (is.null(n) || is.null(ref) || is.na(n) || n < 3 || is.na(ref)) {
         aoc_badref <- c(aoc_badref, i)
       } else if (v < ref) {
@@ -91,9 +106,10 @@ build_t2_flextable <- function(prep) {
     
     paint <- function(rows, bg, fg) {
       if (!length(rows)) return()
-      ft <<- flextable::bg(ft, i = rows, j = col, bg = bg)
-      ft <<- flextable::color(ft, i = rows, j = col, color = fg)
+      ft <<- flextable::bg(ft, i = rows, j = col, bg = bg, part = "body")
+      ft <<- flextable::color(ft, i = rows, j = col, color = fg, part = "body")
     }
+    
     mirror <- function(src_rows, bg, fg) {
       if (!length(src_rows)) return()
       trg <- vapply(src_rows, med_row_for, integer(1))
@@ -101,10 +117,26 @@ build_t2_flextable <- function(prep) {
       if (length(trg)) paint(trg, bg, fg)
     }
     
-    paint(aoc_missing,  "#eeeeee", "#000000"); mirror(aoc_missing,  "#eeeeee", "#000000")
-    paint(aoc_badref,   "#999999", "#ffffff"); mirror(aoc_badref,   "#999999", "#ffffff")
-    paint(aoc_restrict, "#d80032", "#ffffff"); mirror(aoc_restrict, "#d80032", "#ffffff")
-    paint(aoc_ok,       "#4CAF50", "#ffffff"); mirror(aoc_ok,       "#4CAF50", "#ffffff")
+    # Core categories using the palette
+    paint(aoc_missing,  adv_palette$nodata,       adv_palette$text_dark);  mirror(aoc_missing,  adv_palette$nodata,       adv_palette$text_dark)
+    paint(aoc_badref,   adv_palette$insufficient, adv_palette$text_light); mirror(aoc_badref,   adv_palette$insufficient, adv_palette$text_light)
+    paint(aoc_restrict, adv_palette$fail,         adv_palette$text_light); mirror(aoc_restrict, adv_palette$fail,         adv_palette$text_light)
+    paint(aoc_ok,       adv_palette$pass,         adv_palette$text_light); mirror(aoc_ok,       adv_palette$pass,         adv_palette$text_light)
+    
+    # Tier 1 pass (v >= threshold): ghosted/excluded pass colour
+    if (length(aoc_t1_pass)) {
+      # AOC cells: lighter pass + white text + italics
+      paint(aoc_t1_pass, adv_palette$pass_excl, adv_palette$text_light)
+      ft <<- flextable::italic(ft, i = aoc_t1_pass, j = col, italic = TRUE, part = "body")
+      
+      # Mirror onto Reference Median row
+      trg <- vapply(aoc_t1_pass, med_row_for, integer(1))
+      trg <- trg[!is.na(trg)]
+      if (length(trg)) {
+        paint(trg, adv_palette$pass_excl, adv_palette$text_light)
+        ft <<- flextable::italic(ft, i = trg, j = col, italic = TRUE, part = "body")
+      }
+    }
   }
   
   flextable::fix_border_issues(ft)

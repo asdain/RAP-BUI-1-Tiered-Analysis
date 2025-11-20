@@ -1,5 +1,5 @@
 ---
-title: "BOQ BUI 1 Tier 3 Analysis"
+title: "SLR BUI 1 Tier 3 Analysis"
 author: "Aaron Dain"
 always_allow_html: true
 output:
@@ -19,16 +19,16 @@ output:
   bookdown::pdf_document2:
     toc: true
 params:
-  AOC_name: Bay of Quinte
-  species: Smallmouth Bass
-  contaminant: PCBs
-  aoc_shapefile: null
+  AOC_name: St. Lawrence River (Cornwall/Akwesasne)
+  species: Walleye
+  contaminant: MERCURY
+  aoc_shapefile: "~/RAP BUI 1 Analysis/RAP-BUI-1-Tiered-Analysis/Data/tier3/shapefile/SLR_AOC"
   raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
   ref_1: Lake Ontario
-  ref_2: St. Lawrence River 12 - Lower Thousand Island
+  ref_2: St. Lawrence River
   combine_ref: TRUE
   add_AOC: 
-  - Quinte
+  - St Regis Island S
   exclude_site:
   - Hamilton Harbour
   - Trent River
@@ -37,7 +37,7 @@ params:
   restrict_threshold: 8
   exclude_missing: FALSE
   save_artifacts: TRUE
-  out_dir_base: "Output/Full-BOQ-Report/Derived/BOQ/Tier3"
+  out_dir_base: "Output/Full-SLR-Report/Derived/SLR/Tier3"
 ---
 
 ```{r self-ref, eval = F}
@@ -100,7 +100,7 @@ ARTIFACTS <- list(
 
 
 # Restrict threshold override
-thr_path <- "Data/consumption_threshold_boq.csv"
+thr_path <- "Data/consumption_threshold_slr.csv"
 thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
 
 new_thr = thr_df %>%
@@ -717,7 +717,7 @@ cat(paste0("**Model Summary by Region:** {-} \n\n ",
 
 ```
 
-<caption>(#tab:virtual-advisory-table) Virtual advisory levels for `r contaminant_label` in `r params$species` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory falling below the desired consumption rate of `r params$restrict_threshold` meals/month; green cells indicate unrestrictive virtual advisory equal to or above the desired consumption rate.</caption>
+<caption>(#tab:virtual-advisory-table) Virtual advisory levels for `r contaminant_label` in `r params$species` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory falling below the desired consumption rate of `r new_thr` meals/month; green cells indicate unrestrictive virtual advisory equal to or above the desired consumption rate.</caption>
 
 ```{r virtual-advisory-table, results='asis', warning = TRUE}
 
@@ -745,12 +745,12 @@ predictions_binned <- virtual_advisory$predictions %>%
 
 
 
-color_advisory_cell <- function(value, threshold = params$restrict_threshold) {
+color_advisory_cell <- function(value, threshold = new_thr) {
   if (is.na(value)) return("")
   if (value < threshold) {
-    return(list(background = "red", color = "white", fontWeight = "bold"))
+    return(list(background = adv_palette$fail, color = "white", fontWeight = "bold"))
   } else {
-    return(list(background = "forestgreen", color = "black", fontWeight = "bold"))
+    return(list(background = adv_palette$pass, color = "black", fontWeight = "bold"))
   }
 }
 
@@ -827,7 +827,7 @@ reference_advisories <- virtual_long %>%
 tier3a_joined <- aoc_advisories %>%
   left_join(reference_advisories, by = c("length_bin", "Population")) %>%
   mutate(
-    restrict_pass = AOC_Advisory >= params$restrict_threshold,
+    restrict_pass = AOC_Advisory >= new_thr,
     restrict_fail = !restrict_pass,
     more_restrictive_than_ref = AOC_Advisory < Ref_Advisory,
     final_decision = case_when(
@@ -1984,7 +1984,7 @@ p_t3c_tv <- plot_t3c_future_timevary(
   m_timevary = m_timevary,
   t3c_data   = t3c_data,
   thresholds_df = thresholds_df,
-  restrict_threshold = params$restrict_threshold,
+  restrict_threshold = new_thr,
   contaminant_label = contaminant_label,
   horizon_years = 20,
   pad_years = 5,
@@ -2010,5 +2010,382 @@ ggplot(der, aes(data, k_t)) +
   labs(x = "Year", y = "Instantaneous decline rate k(t)",
        title = "Time-varying rate of decline (k(t))") +
   theme_minimal()
+
+```
+
+
+```{r new-t3c-method}
+# Round to nearest 5 cm (reuse your existing helper if already defined)
+round5 <- function(x) round(x / 5) * 5
+
+# Vectorized AOC-only years-to-threshold over multiple representative lengths
+compute_years_to_threshold_lengths <- function(
+  t3c_gam,
+  hl_tab,
+  thresholds_df,
+  restrict_threshold,
+  t3c_data,
+  rep_lengths_cm,
+  contaminant_label = "Contaminant"
+) {
+  # Anchor to most recent observed year in AOC data
+  year_anchor <- max(t3c_data$Sample.Year, na.rm = TRUE)
+  
+  # Target concentration for desired meals/month
+  target_conc <- thresholds_df %>%
+    dplyr::filter(meals == restrict_threshold) %>%
+    dplyr::pull(conc)
+  if (length(target_conc) == 0) stop("restrict_threshold not found in thresholds_df")
+  if (length(target_conc) > 1) stop("thresholds_df must yield a single target_conc.")
+  
+  # Grab k and slope SE (AOC-only)
+  if (nrow(hl_tab) != 1) stop("hl_tab should contain a single AOC row.")
+  k        <- hl_tab$k[1]          # = -slope
+  slope_se <- hl_tab$slope_se[1]   # SE of slope (same as SE of k)
+  
+  log_target <- log(target_conc)
+  
+  purrr::map_dfr(rep_lengths_cm, function(len_cm) {
+    newdata <- tibble::tibble(
+      Sample.Year = year_anchor,
+      Length      = len_cm
+    )
+    pred <- predict(t3c_gam, newdata = newdata, type = "link", se.fit = TRUE)
+    pred_log <- as.numeric(pred$fit)
+    se_log   <- as.numeric(pred$se.fit)
+    pred_c0  <- exp(pred_log)
+    
+    years_to_target <- dplyr::case_when(
+      pred_c0 <= target_conc ~ 0,
+      is.finite(k) & k > 0   ~ (pred_log - log_target) / k,
+      TRUE                   ~ NA_real_
+    )
+    
+    se_t <- if (is.finite(years_to_target) && !is.na(years_to_target) && k > 0) {
+      # dt/d(log c0) = 1/k; dt/dk = -(log(c0) - log(c*))/k^2 = -t/k
+      term1 <- (1 / k)^2        * (se_log^2)
+      term2 <- (years_to_target / k)^2 * (slope_se^2)
+      sqrt(term1 + term2)
+    } else {
+      NA_real_
+    }
+    
+    lwr <- if (is.na(se_t)) NA_real_ else years_to_target - 1.96 * se_t
+    upr <- if (is.na(se_t)) NA_real_ else years_to_target + 1.96 * se_t
+    
+    outcome <- dplyr::case_when(
+      !is.na(years_to_target) && years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target) | k <= 0                 ~ "Unsupportive",
+      years_to_target > 10                             ~ "Unsupportive",
+      TRUE                                             ~ "Supportive"
+    )
+    
+    tibble::tibble(
+      length_cm       = len_cm,
+      predicted_conc  = pred_c0,
+      target_conc     = target_conc,
+      years_to_target = years_to_target,
+      years_lwr       = lwr,
+      years_upr       = upr,
+      outcome         = outcome
+    )
+  })
+}
+
+
+
+
+
+# Build a tibble of representative lengths (quartiles by default)
+get_rep_lengths_quartiles <- function(
+  t3c_data,
+  probs = c(0.25, 0.5, 0.75),
+  round_fun = round5
+) {
+  qs <- stats::quantile(t3c_data$Length, probs = probs, na.rm = TRUE)
+  tibble::tibble(
+    role      = c("Lower quartile", "Median", "Upper quartile")[seq_along(qs)],
+    prob      = probs,
+    length_cm = round_fun(as.numeric(qs))
+  )
+}
+
+# Example alternative for survey-based sizes
+# rep_info <- tibble::tibble(
+#   role      = c("Survey P50", "Survey P75"),
+#   prob      = c(NA_real_, NA_real_),
+#   length_cm = c(45, 55)
+# )
+
+
+
+
+
+# Choose your configuration:
+# 1) All three quartiles:
+rep_info <- get_rep_lengths_quartiles(t3c_data)
+
+# 2) Only upper quartile:
+# rep_info <- get_rep_lengths_quartiles(t3c_data) %>%
+#   dplyr::filter(role == "Upper quartile")
+
+# 3) Survey-based:
+# rep_info <- tibble::tibble(
+#   role      = "Survey representative size",
+#   prob      = NA_real_,
+#   length_cm = 52  # for example
+# )
+
+t3c_sensitivity_tbl <- compute_years_to_threshold_lengths(
+  t3c_gam          = t3c_gam,
+  hl_tab           = hl_tab,
+  thresholds_df    = thresholds_df,
+  restrict_threshold = new_thr,
+  t3c_data         = t3c_data,
+  rep_lengths_cm   = rep_info$length_cm,
+  contaminant_label = contaminant_label
+) %>%
+  dplyr::left_join(rep_info, by = "length_cm") %>%
+  dplyr::relocate(role, .before = length_cm)
+
+
+
+
+
+t3c_sensitivity_kable <- t3c_sensitivity_tbl %>%
+  dplyr::mutate(
+    predicted_conc  = sprintf("%.2f", predicted_conc),
+    target_conc     = sprintf("%.2f", target_conc),
+    years_to_target = dplyr::if_else(
+      is.na(years_to_target),
+      "—",
+      sprintf("%.1f", years_to_target)
+    ),
+    ci_95 = dplyr::case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  dplyr::select(
+    `Representative group`     = role,
+    `Length (cm)`              = length_cm,
+    `Predicted Conc. (Current Year)` = predicted_conc,
+    `Unrestrictive Conc.`      = target_conc,
+    `Years to Threshold`       = years_to_target,
+    `95% CI`                   = ci_95,
+    `Outcome`                  = outcome
+  ) %>%
+  kableExtra::kable(
+    format  = "html",
+    caption = glue::glue(
+      "Time to reach an unrestrictive advisory of {params$restrict_threshold} ",
+      "meals/month for different representative fish lengths"
+    )
+  ) %>%
+  kableExtra::kable_styling(full_width = FALSE, position = "center")
+
+# Optionally cache
+ARTIFACTS$tables$t3c_sensitivity <- save_df(t3c_sensitivity_tbl, "t3c_sensitivity")
+ARTIFACTS$html$t3c_sensitivity   <- save_kable_html(t3c_sensitivity_kable, "t3c_sensitivity")
+
+t3c_sensitivity_kable
+
+
+
+
+
+
+plot_t3c_future_multi <- function(
+  t3c_gam,
+  t3c_data,
+  thresholds_df,
+  restrict_threshold,
+  rep_info,              # tibble with at least `role` and `length_cm`
+  contaminant_label = contaminant_label,
+  unit = unit_label,
+  horizon_years = 20,
+  primary_role = "Median",   # which length gets full opacity & CI ribbon
+  shade = c("primary", "all", "none"),  # CI shading behavior
+  cut_info = NULL,           # tibble with `role` and `years_to_target`
+  cut_role = "Upper quartile",
+  pad_years = 0              # extend a bit beyond intersect, if desired
+) {
+  shade <- match.arg(shade)
+  
+  # Custom colour palette for representative lengths
+colour_vals <- c(
+  "Lower quartile" = "#696969",
+  "Median"         = "black",
+  "Upper quartile" = "#ADADAD"
+)
+
+
+  # ---- Basic time range ----
+  min_year   <- min(t3c_data$Sample.Year, na.rm = TRUE)
+  max_year   <- max(t3c_data$Sample.Year, na.rm = TRUE)
+  anchor_year <- max_year   # same anchor you use in the years-to-threshold calc
+
+  # ---- Compute cut_year from most restrictive length (if available) ----
+  cut_year <- NA_real_
+  if (!is.null(cut_info)) {
+    ytt <- cut_info %>%
+      dplyr::filter(.data$role == cut_role) %>%
+      dplyr::pull(.data$years_to_target)
+
+    if (length(ytt) == 1 && is.finite(ytt) && !is.na(ytt) && ytt > 0) {
+      cut_year <- anchor_year + ytt
+    }
+  }
+
+  # If no valid cut_year, just use horizon_years beyond observed
+  end_year <- if (is.finite(cut_year)) {
+    cut_year + pad_years
+  } else {
+    max_year + horizon_years
+  }
+
+  proj_years <- seq(min_year, ceiling(end_year), by = 1)
+
+  # ---- Target concentration for unrestrictive meals/month ----
+  target_conc <- thresholds_df %>%
+    dplyr::filter(.data$meals == restrict_threshold) %>%
+    dplyr::pull(.data$conc)
+
+  if (length(target_conc) != 1) {
+    stop("Could not identify a single target concentration from thresholds_df.")
+  }
+
+  # ---- Predict for each representative length ----
+  pred_df <- purrr::map_dfr(seq_len(nrow(rep_info)), function(i) {
+    len_cm <- rep_info$length_cm[i]
+    role   <- rep_info$role[i]
+
+    newdata <- tibble::tibble(
+      Sample.Year = proj_years,
+      Length      = len_cm,
+      role        = role
+    )
+
+    pr <- predict(t3c_gam, newdata = newdata, type = "link", se.fit = TRUE)
+
+    newdata %>%
+      dplyr::mutate(
+        fit_log = as.numeric(pr$fit),
+        se_log  = as.numeric(pr$se.fit),
+        conc    = exp(fit_log),
+        lwr     = exp(fit_log - 1.96 * se_log),
+        upr     = exp(fit_log + 1.96 * se_log),
+        period  = dplyr::if_else(.data$Sample.Year <= max_year, "Observed", "Projected")
+      )
+  })
+
+  # ---- Alpha mapping: primary fully opaque, others lighter ----
+  roles <- unique(pred_df$role)
+  alpha_vals <- rep(0.5, length(roles))
+  names(alpha_vals) <- roles
+  if (primary_role %in% roles) alpha_vals[primary_role] <- 1
+
+  # ---- Base plot ----
+  p <- ggplot(pred_df, aes(x = Sample.Year, y = conc, colour = role)) +
+     scale_colour_manual(values = colour_vals)
+
+
+  # ---- Optional CI shading ----
+  if (shade != "none") {
+    if (shade == "primary") {
+      ribbon_data <- dplyr::filter(pred_df, role == primary_role)
+    } else {  # "all"
+      ribbon_data <- pred_df
+    }
+
+    p <- p +
+      geom_ribbon(
+        data = ribbon_data,
+        aes(
+          x    = Sample.Year,
+          ymin = lwr,
+          ymax = upr,
+          group = role
+        ),
+        inherit.aes = FALSE,
+        alpha       = 0.12,
+        linewidth   = 0
+      )
+  }
+
+  # ---- Lines for each representative length ----
+  p <- p +
+    geom_line(
+      aes(alpha = role, linetype = period),
+      linewidth = 1
+    ) +
+    geom_hline(yintercept = target_conc, linetype = "dotted")
+
+  thr_lab <- paste0("Unrestrictive threshold (", restrict_threshold, " meals/mo)")
+
+  p <- p +
+    annotate(
+      "text",
+      x      = min_year + 0.02 * (max(proj_years) - min_year),
+      y      = target_conc,
+      label  = thr_lab,
+      vjust  = -0.6,
+      hjust  = 0,
+      size   = 3.4
+    ) +
+    scale_alpha_manual(values = alpha_vals, guide = "none") +
+    scale_linetype_manual(values = c(Observed = "solid", Projected = "22")) +
+    scale_y_continuous(labels = scales::label_number(accuracy = 0.1)) +
+    scale_x_continuous(breaks = pretty(proj_years, n = 8)) +
+    labs(
+      x        = "Year",
+      y        = paste0(contaminant_label, " concentration (", unit, ")"),
+      colour   = "Representative length",
+      linetype = "",
+      caption = paste(
+        "Representative fish lengths:",
+        paste0(rep_info$role, " (", rep_info$length_cm, " cm)", collapse = "; ")
+      )
+    ) +
+    theme_classic(base_size = 12) +
+    theme(
+      plot.title      = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
+
+  p
+
+  }
+
+
+# Same data from table
+cut_info <- t3c_sensitivity_tbl %>%
+  dplyr::select(role, years_to_target)
+
+# Use the same rep_info as in the table
+rep_info <- get_rep_lengths_quartiles(t3c_data)
+# or any custom tibble with `role` + `length_cm`
+
+p_t3c_multi <- plot_t3c_future_multi(
+  t3c_gam            = t3c_gam,
+  t3c_data           = t3c_data,
+  thresholds_df      = thresholds_df,
+  restrict_threshold = params$restrict_threshold,
+  rep_info           = rep_info,          # e.g. quartiles tibble
+  contaminant_label  = contaminant_label,
+  unit               = unit_label,
+  horizon_years      = 20,                # used if no valid cut_year
+  primary_role       = "Median",
+  shade              = "all",
+  cut_info           = cut_info,
+  cut_role           = "Upper quartile",  # "most restrictive"
+  pad_years          = 0                  # or 1–2 if you want a tiny bit past
+)
+
+
+p_t3c_multi
+
+ARTIFACTS$figs$t3c_projected_multi <- save_gg(p_t3c_multi, "t3c_projected_multi")
+
 
 ```

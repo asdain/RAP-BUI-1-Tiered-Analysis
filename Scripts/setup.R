@@ -37,7 +37,8 @@ packages_list = c("dplyr",
                   "ggspatial",
                   "servr",
                   "officer",
-                  "officedown")
+                  "officedown",
+                  "gratia")
 
 
 
@@ -82,4 +83,14 @@ theme_aaron = function(){
 # Loading all custom script
 tool_files = list.files(path = here::here("R"), pattern = "\\.R$", full.names = TRUE)
 invisible(lapply(tool_files, source))
+
+adv_palette <- list(
+  pass        = "#27C48F",
+  pass_excl   = "#9DECD1",
+  fail        = "#C4275B",
+  insufficient = "#BDBABB",
+  nodata      = "#EEEEEE",
+  text_light  = "#E9FCF5",
+  text_dark   = "#1F2933"
+)
 

@@ -21,7 +21,8 @@ t2_prep_display <- function(df,
                             length_levels = NULL,
                             interest_species = NULL,
                             exclude_t1_passed = TRUE,
-                            flags_df = NULL) {
+                            flags_df = NULL,
+                            threshold_df = NULL) {
   if (is.null(length_levels)) {
     length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
                               error = function(...) intersect(names(df), names(df)))
@@ -48,6 +49,32 @@ t2_prep_display <- function(df,
     passed_species <- flags_df %>% filter(t1_pass) %>% pull(Species)
     filtered_data <- filtered_data %>% filter(!Species %in% passed_species)
     base_data <- base_data %>% filter(!Species %in% passed_species)
+  }
+  
+  # T1 threshold mapping
+  if (!is.null(threshold_df)) {
+    thr_df <- threshold_df
+    
+    # Normalise column names
+    if (!"Species" %in% names(thr_df)) {
+      if ("spec" %in% names(thr_df))     thr_df <- dplyr::rename(thr_df, Species = spec)
+      if ("specname" %in% names(thr_df)) thr_df <- dplyr::rename(thr_df, Species = specname)
+    }
+    if (!"Unrestrictive_Threshold" %in% names(thr_df)) {
+      if ("threshold" %in% names(thr_df)) {
+        thr_df <- dplyr::rename(thr_df, Unrestrictive_Threshold = threshold)
+      }
+    }
+    
+    thr_df <- thr_df %>%
+      dplyr::select(Species, Unrestrictive_Threshold) %>%
+      dplyr::distinct() %>%
+      dplyr::filter(Species %in% base_data$Species)
+    
+    threshold_map <- as.list(thr_df$Unrestrictive_Threshold)
+    names(threshold_map) <- thr_df$Species
+  } else {
+    threshold_map <- list()
   }
   
   # AOC row (wide)
@@ -100,12 +127,19 @@ t2_prep_display <- function(df,
     tidyr::pivot_longer(cols = all_of(size_cols), names_to = "Size", values_to = "n") %>%
     mutate(id = paste(Species, Population, Size, sep = "||"))
   
+  aoc_lookup <- base_data %>%
+    dplyr::filter(site_type == "AOC") %>%
+    dplyr::select(Species, Population, Size, advisory) %>%
+    dplyr::mutate(id = paste(Species, Population, Size, sep = "||"))
+  
   list(
-    display_data = display_data,
-    ref_data     = ref_data,
-    size_cols    = size_cols,
-    medians_map  = setNames(as.list(comparison_lookup$Median), comparison_lookup$id),
-    n_map        = setNames(as.list(n_lookup$n), comparison_lookup$id) # same ids
+    display_data   = display_data,
+    ref_data       = ref_data,
+    size_cols      = size_cols,
+    medians_map    = setNames(as.list(comparison_lookup$Median), comparison_lookup$id),
+    n_map          = setNames(as.list(n_lookup$n), n_lookup$id),
+    threshold_map  = threshold_map,
+    aoc_map        = setNames(as.list(aoc_lookup$advisory), aoc_lookup$id)
   )
 }
 

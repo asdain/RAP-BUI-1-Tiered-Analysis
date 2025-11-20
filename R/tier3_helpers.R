@@ -231,45 +231,91 @@ widget_to_png <- function(htmlwidget, out_png, browser = Sys.getenv("CHROMOTE_CH
   size_cols <- prep$size_cols
   ref_map   <- prep$ref_map
   
+  # columns for Population + Region
   cols <- list(
     Population = reactable::colDef(name = "Population", sticky = "left"),
     Region     = reactable::colDef(name = "Site",       sticky = "left")
   )
+  
   # per-bin cell coloring
   for (bin in size_cols) {
     cols[[bin]] <- reactable::colDef(
       name = bin, align = "center", sortable = FALSE, minWidth = 70,
       style = reactable::JS(sprintf(
         "function(rowInfo, colInfo, state) {
-           const row = rowInfo.row;
-           const val = row[colInfo.id];
-           if (row.Region === 'Reference') {
-             return { fontWeight: 'bold', background: '#f5f5f5',
-                      fontFamily: 'system-ui, sans-serif', fontSize: '13px' };
-           }
-           if (row.Region !== 'AOC') return { fontFamily: 'system-ui, sans-serif', fontSize: '13px' };
+  const row = rowInfo.row;
+  const val = row[colInfo.id];
+  const pal = state.meta.palette;
+  const thr = %f;  // numeric threshold baked in from R
 
-           const key = row.Population + '||' + '%s';
-           const ref = state.meta.ref_map[key];
+  // Reference rows: header-like style
+  if (row.Region === 'Reference') {
+    return {
+      fontWeight: 'bold',
+      background: pal.nodata || '#f5f5f5',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '13px'
+    };
+  }
 
-           if (val === null) { return { background: '#eeeeee', color: '#000',
-                                        fontWeight: 'bold', fontSize: '15px',
-                                        fontFamily: 'system-ui, sans-serif' }; }
-           if (ref === undefined || ref === null || Number.isNaN(ref)) {
-             return { background: '#999999', color: '#fff', fontWeight: 'bold',
-                      fontSize: '15px', fontFamily: 'system-ui, sans-serif' };
-           }
-           if (val < restrict_threshold && val < ref) {
-             return { background: '#d80032', color: '#fff', fontWeight: 'bold',
-                      fontSize: '15px', fontFamily: 'system-ui, sans-serif' };
-           }
-           return { background: '#4CAF50', color: '#fff', fontWeight: 'bold',
-                    fontSize: '15px', fontFamily: 'system-ui, sans-serif' };
-         }", bin))
+  // Non-AOC, non-Reference rows: plain
+  if (row.Region !== 'AOC') {
+    return {
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '13px'
+    };
+  }
+
+  // AOC row logic
+  const key = row.Population + '||' + '%s';
+  const ref = state.meta.ref_map[key];
+
+  // no predicted advisory
+  if (val === null) {
+    return {
+      background: pal.nodata || '#eeeeee',
+      color: pal.text_dark || '#000000',
+      fontWeight: 'bold',
+      fontSize: '15px',
+      fontFamily: 'system-ui, sans-serif'
+    };
+  }
+
+  // no valid reference value
+  if (ref === undefined || ref === null || Number.isNaN(ref)) {
+    return {
+      background: pal.insufficient || '#999999',
+      color: pal.text_light || '#ffffff',
+      fontWeight: 'bold',
+      fontSize: '15px',
+      fontFamily: 'system-ui, sans-serif'
+    };
+  }
+
+  // FAIL: more restrictive than both the unrestrictive threshold and reference
+  if (val < thr && val < ref) {
+    return {
+      background: pal.fail || '#E53935',
+      color: pal.text_light || '#ffffff',
+      fontWeight: 'bold',
+      fontSize: '15px',
+      fontFamily: 'system-ui, sans-serif'
+    };
+  }
+
+  // PASS: meets or exceeds threshold or reference
+  return {
+    background: pal.pass || '#43C66F',
+    color: pal.text_light || '#ffffff',
+    fontWeight: 'bold',
+    fontSize: '15px',
+    fontFamily: 'system-ui, sans-serif'
+  };
+}", restrict_threshold, bin))
     )
   }
   
-  # bold AOC
+  # bold AOC rows
   rowStyle <- function(index) {
     r <- df[index, ]
     style <- list(fontFamily = "system-ui, sans-serif", fontSize = "13px")
@@ -279,22 +325,25 @@ widget_to_png <- function(htmlwidget, out_png, browser = Sys.getenv("CHROMOTE_CH
   
   reactable::reactable(
     df,
-    columns = cols,
+    columns   = cols,
     pagination = FALSE,
-    sortable = FALSE,
-    highlight = TRUE,
-    bordered = FALSE,
-    striped  = FALSE,
-    height = table_height,
-    rowStyle = rowStyle,
+    sortable   = FALSE,
+    highlight  = TRUE,
+    bordered   = FALSE,
+    striped    = FALSE,
+    height     = table_height,
+    rowStyle   = rowStyle,
     style = list(
       fontFamily = "system-ui, sans-serif",
-      fontSize = "13px",
+      fontSize   = "13px",
       borderCollapse = "collapse",
-      margin = "0 auto",
-      width = "auto"
+      margin     = "0 auto",
+      width      = "auto"
     ),
-    meta = list(ref_map = ref_map)
+    meta = list(
+      ref_map  = ref_map,
+      palette  = adv_palette   # <- this is the same R list you used elsewhere
+    )
   )
 }
 
@@ -308,6 +357,7 @@ widget_to_png <- function(htmlwidget, out_png, browser = Sys.getenv("CHROMOTE_CH
   show_cols <- c(hdr_cols, size_cols)
   
   ft <- flextable::flextable(df[, show_cols, drop = FALSE])
+  
   # “Tier-2” feel
   ft <- flextable::bg(ft, j = hdr_cols, bg = "#f5f5f5", part = "body")
   ft <- flextable::bold(ft, j = hdr_cols, bold = TRUE, part = "body")
@@ -320,19 +370,25 @@ widget_to_png <- function(htmlwidget, out_png, browser = Sys.getenv("CHROMOTE_CH
   ft <- flextable::fontsize(ft, size = 9, part = "all")
   ft <- flextable::autofit(ft)
   
-  # bold Reference row
-  idx_ref <- which(df$Region == "AOC")
-  if (length(idx_ref)) ft <- flextable::bold(ft, i = idx_ref, bold = TRUE, part = "body")
-  
-  # color AOC cells
+  # bold AOC rows
   idx_aoc <- which(df$Region == "AOC")
+  if (length(idx_aoc)) {
+    ft <- flextable::bold(ft, i = idx_aoc, bold = TRUE, part = "body")
+  }
+  
+  # color AOC cells with same logic as reactable
   for (bin in size_cols) {
     vals <- df[[bin]]
-    aoc_missing <- aoc_badref <- aoc_restrict <- aoc_ok <- integer(0)
+    aoc_missing  <- integer(0)
+    aoc_badref   <- integer(0)
+    aoc_restrict <- integer(0)
+    aoc_ok       <- integer(0)
+    
     for (i in idx_aoc) {
       v   <- vals[i]
       key <- paste0(df$Population[i], "||", bin)
       ref <- ref_map[[key]]
+      
       if (is.na(v)) {
         aoc_missing <- c(aoc_missing, i)
       } else if (is.null(ref) || is.na(ref)) {
@@ -343,16 +399,19 @@ widget_to_png <- function(htmlwidget, out_png, browser = Sys.getenv("CHROMOTE_CH
         aoc_ok <- c(aoc_ok, i)
       }
     }
+    
     paint <- function(rows, bg, fg) {
       if (!length(rows)) return()
-      ft <<- flextable::bg(ft, i = rows, j = bin, bg = bg)
-      ft <<- flextable::color(ft, i = rows, j = bin, color = fg)
-      ft <<- flextable::bold(ft, i = rows, j = bin, bold = TRUE)
+      ft <<- flextable::bg(ft,    i = rows, j = bin, bg = bg, part = "body")
+      ft <<- flextable::color(ft, i = rows, j = bin, color = fg, part = "body")
+      ft <<- flextable::bold(ft,  i = rows, j = bin, bold = TRUE, part = "body")
     }
-    paint(aoc_missing,  "#eeeeee", "#000000")
-    paint(aoc_badref,   "#999999", "#ffffff")
-    paint(aoc_restrict, "#d80032", "#ffffff")
-    paint(aoc_ok,       "#4CAF50", "#ffffff")
+    
+    # use shared palette
+    paint(aoc_missing,  adv_palette$nodata,       adv_palette$text_dark)
+    paint(aoc_badref,   adv_palette$insufficient, adv_palette$text_light)
+    paint(aoc_restrict, adv_palette$fail,         adv_palette$text_light)
+    paint(aoc_ok,       adv_palette$pass,         adv_palette$text_light)
   }
   
   if (!is.null(caption)) {
@@ -360,6 +419,7 @@ widget_to_png <- function(htmlwidget, out_png, browser = Sys.getenv("CHROMOTE_CH
   }
   flextable::fix_border_issues(ft)
 }
+
 
 # --- 4) one entry point: auto-chooses output type ---
 render_t3_virtual_any <- function(x,

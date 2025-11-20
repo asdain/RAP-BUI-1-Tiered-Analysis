@@ -1,0 +1,175 @@
+---
+title: "SLR BUI 1 - Tier 1/2"
+always_allow_html: true
+output:
+  html_document:
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+params:
+  AOC: '45087425'
+  AOC_short: "SLR"
+  reference_sites:
+  - '44007727'
+  - '43557712'
+  - '43497905'
+  - '43117922'
+  - '43397900'
+  - '43517847'
+  - '43527851'
+  - '44397535'
+  - '43557717'
+  - '43527856'
+  restrict_threshold: 8
+  thr_path: "Data/consumption_threshold_slr.csv"
+  interest_species:
+  - Bluegill
+  - Brown Bullhead
+  - Largemouth Bass
+  - Northern Pike
+  - Rock Bass
+  - Smallmouth Bass
+  - Walleye
+  - White Perch
+  - Yellow Perch
+---
+
+
+---
+title: "BOQ BUI 1 - Tier 1/2 - Lake Ontario"
+always_allow_html: true
+output:
+  html_document:
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+params:
+  AOC: '43457711'
+  AOC_shorthand: "BOQ"
+  reference_sites:
+  - '44007727'
+  - '43557712'
+  - '43497905'
+  - '43117922'
+  - '43397900'
+  - '43517847'
+  - '43527851'
+  - '44397535'
+  - '43557717'
+  - '43527856'
+  restrict_threshold: 8
+  thr_path: "Data/consumption_threshold_boq.csv"
+  interest_species:
+  - Black Crappie
+  - Bluegill
+  - Brown Bullhead
+  - Channel Catfish
+  - Pumpkinseed
+  - Freshwater Drum
+  - Largemouth Bass
+  - Northern Pike
+  - Rock Bass
+  - Smallmouth Bass
+  - Walleye
+  - White Perch
+  - Yellow Perch
+  - Chinook Salmon
+  - White Bass
+  - White Sucker
+  - Lake Whitefish
+  - Rainbow Smelt
+---
+
+
+## T3 Yaml BOQ
+---
+title: "SLR BUI 1 Tier 3 Analysis"
+author: "Aaron Dain"
+always_allow_html: true
+output:
+  bookdown::html_document2:
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  html_document:
+    toc: true
+    df_print: paged
+  pdf_document:
+    toc: true
+    latex_engine: wkhtmltopdf
+  html_notebook:
+    self_contained: true
+  bookdown::pdf_document2:
+    toc: true
+params:
+  AOC_name: Bay of Quinte
+  species: Smallmouth Bass
+  contaminant: PCBs
+  aoc_shapefile: null
+  raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
+  ref_1: Lake Ontario
+  ref_2: St. Lawrence River 12 - Lower Thousand Island
+  combine_ref: TRUE
+  add_AOC: 
+  - Quinte
+  exclude_site:
+  - Hamilton Harbour
+  - Trent River
+  - Niagara River
+  target_sr: 4326
+  restrict_threshold: 8
+  exclude_missing: FALSE
+  save_artifacts: TRUE
+  out_dir_base: "Output/Full-BOQ-Report/Derived/BOQ/Tier3"
+---
+
+
+## T3 Yaml SLR
+---
+title: "SLR BUI 1 Tier 3 Analysis"
+author: "Aaron Dain"
+always_allow_html: true
+output:
+  bookdown::html_document2:
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  html_document:
+    toc: true
+    df_print: paged
+  pdf_document:
+    toc: true
+    latex_engine: wkhtmltopdf
+  html_notebook:
+    self_contained: true
+  bookdown::pdf_document2:
+    toc: true
+params:
+  AOC_name: St. Lawrence River (Cornwall/Akwesasne)
+  species: Smallmouth Bass
+  contaminant: MERCURY
+  aoc_shapefile: null
+  raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
+  ref_1: Lake Ontario
+  ref_2: St. Lawrence River - Lower Thousand Islands
+  combine_ref: TRUE
+  add_AOC: 
+  - St. Lawrence River
+  exclude_site:
+  - Hamilton Harbour
+  - Trent River
+  - Niagara River
+  target_sr: 4326
+  restrict_threshold: 8
+  exclude_missing: FALSE
+  save_artifacts: TRUE
+  out_dir_base: "Output/Full-SLR-Report/Derived/SLR/Tier3"
+---
