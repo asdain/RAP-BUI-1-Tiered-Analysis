@@ -1,0 +1,2 @@
+quantile_len_cm,predicted_conc,target_conc,years_to_target,years_lwr,years_upr,outcome
+60,34.27259457619193,70,0,-6.919688077630768,6.919688077630768,Supportive

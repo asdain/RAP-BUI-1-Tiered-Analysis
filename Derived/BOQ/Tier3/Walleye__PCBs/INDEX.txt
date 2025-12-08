@@ -1,0 +1,4 @@
+species: Walleye
+contaminant: PCBs
+output_dir_rel: Output/Full-BOQ-Report/Derived/BOQ/Tier3/Walleye__PCBs
+index_rds_rel: index.rds
