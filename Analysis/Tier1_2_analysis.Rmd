@@ -1,5 +1,5 @@
 ---
-title: "SLR BUI 1 - Tier 1/2"
+title: "BOQ BUI 1 - Tier 1/2 - Lake Ontario"
 always_allow_html: true
 output:
   html_document:
@@ -10,8 +10,8 @@ output:
   pdf_document:
     toc: true
 params:
-  AOC: '45087425'
-  aoc_short: "SLR"
+  AOC: '43457711'
+  AOC_shorthand: "BOQ-LO"
   reference_sites:
   - '44007727'
   - '43557712'
@@ -24,10 +24,14 @@ params:
   - '43557717'
   - '43527856'
   restrict_threshold: 8
-  thr_path: "Data/consumption_threshold_slr.csv"
+  thr_path: "Data/consumption_threshold_boq.csv"
   interest_species:
+  - Black Crappie
   - Bluegill
   - Brown Bullhead
+  - Channel Catfish
+  - Pumpkinseed
+  - Freshwater Drum
   - Largemouth Bass
   - Northern Pike
   - Rock Bass
@@ -35,6 +39,11 @@ params:
   - Walleye
   - White Perch
   - Yellow Perch
+  - Chinook Salmon
+  - White Bass
+  - White Sucker
+  - Lake Whitefish
+  - Rainbow Smelt
 ---
 
 ```{r Setup, echo=FALSE, include = FALSE}
@@ -42,11 +51,12 @@ knitr::opts_chunk$set(echo = FALSE)
 options(inline_output = TRUE)
 
 # Base setup
+library(here)
 source(here("Scripts","setup.R"))
 aoc_short = params$AOC_shorthand
 
-dir_derived = here("Derived", params$aoc_short)
-dir_figs    <- here("Derived", params$aoc_short, "figs")
+dir_derived = here("Derived", aoc_short)
+dir_figs    <- here("Derived", aoc_short, "figs")
 dir_create(c(dir_derived, dir_figs))
 
 
@@ -93,7 +103,7 @@ contaminant_colours <- mappings$colours
 
 
 
-flags_SLR <- get_species_pass_flags(
+flags <- get_species_pass_flags(
   df = cons_data,
   aoc_id = params$AOC,
   reference_sites = params$reference_sites,
@@ -103,7 +113,7 @@ flags_SLR <- get_species_pass_flags(
 )
 
 
-readr::write_rds(flags_SLR, here::here("Derived", "SLR", "flags.rds"))
+readr::write_rds(flags, file = path(dir_derived, "flags.rds"))
 
 
 ```
@@ -111,7 +121,7 @@ readr::write_rds(flags_SLR, here::here("Derived", "SLR", "flags.rds"))
 ```{r, Waterbody Lookup, include=FALSE, echo=FALSE}
 # As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
 
-get_waterbody_ids(cons_data, site_name = "St. Lawrence River (Lake St. Francis)")
+get_waterbody_ids(cons_data, site_name = "Lake Ontario (Eastern Basin)")
 
 ```
 

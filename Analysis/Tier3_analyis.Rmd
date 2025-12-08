@@ -19,16 +19,18 @@ output:
   bookdown::pdf_document2:
     toc: true
 params:
-  AOC_name: St. Lawrence River (Cornwall/Akwesasne)
-  species: Walleye
-  contaminant: MERCURY
-  aoc_shapefile: "~/RAP BUI 1 Analysis/RAP-BUI-1-Tiered-Analysis/Data/tier3/shapefile/SLR_AOC"
-  raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
+  AOC_name: Bay of Quinte
+  species: Rainbow Smelt
+  contaminant: TEQWH4
+  aoc_shapefile: null
+  raw_csv: "Data/LO_dioxin_data_2025-10.csv"
   ref_1: Lake Ontario
-  ref_2: St. Lawrence River
+  ref_2: St. Lawrence River 12 - Lower Thousand Island
   combine_ref: TRUE
   add_AOC: 
-  - St Regis Island S
+  - Quinte
+  - Trenton
+  - Belleville
   exclude_site:
   - Hamilton Harbour
   - Trent River
@@ -37,7 +39,7 @@ params:
   restrict_threshold: 8
   exclude_missing: FALSE
   save_artifacts: TRUE
-  out_dir_base: "Output/Full-SLR-Report/Derived/SLR/Tier3"
+  out_dir_base: "Output/Full-BOQ-Report/Derived/BOQ/Tier3"
 ---
 
 ```{r self-ref, eval = F}
@@ -183,6 +185,8 @@ get_unit_label <- function(contaminant) {
     return("µg/g")
   } else if (contaminant_upper == "PCBs") {
     return("ng/g")
+  } else if (contaminant_upper == "TEQWH4") {
+    return("pg/g") 
   } else {
     return("units")
   }
@@ -624,6 +628,8 @@ y_label <- if (contaminant == "MERCURY") {
   "Mercury Concentration (µg/g)"
 } else if (contaminant == "PCBs") {
   "PCBs Concentration (ng/g)"
+} else if (contaminant == "TEQWH4"){
+  "Dioxin/Furans TEQ (TEQWH, pg/g)"
 } else {
   paste(contaminant_label, "(unknown units)")
 }
@@ -643,11 +649,16 @@ get_thresholds <- function(contaminant = "MERCURY", population = "Sensitive") {
     }
   } else if (contaminant == "PCBs") {
     return(tibble(
-      meals = c(16, 12, 8, 4, 2, 1, 0),
-      conc = c(26, 53, 70, 105, 211, 422, 844)
+      meals = c(32, 16, 12, 8, 4, 2, 1, 0),
+      conc = c(26,  26, 53, 70, 105, 211, 422, 844)
     ))
   
-} else {
+} else if (contaminant == "TEQWH4") {
+    return(tibble(
+    meals = c(32, 16, 12, 8, 4, 2, 1, 0),
+    conc = c(0.7, 0.7, 1.3, 1.8, 2.7, 5.4, 10.8, 21.6)
+      ))
+  } else {
     
   return(NULL)
 }
@@ -917,7 +928,10 @@ fit_gam <- function(gam_df, k_len = 10, method = "REML", verbose = TRUE) {
       region = factor(region),
       Waterbody.Code = factor(Waterbody.Code)
     ) %>%
-    droplevels()
+    droplevels() %>%
+    mutate(
+      Value = if_else(Value <= 0, 0.001, Value) # GAM breaks on values <= 0, this ensures it works when below detection limits
+    )
 
   n_region <- nlevels(gam_df$region)
   n_site   <- nlevels(gam_df$Waterbody.Code)
@@ -990,7 +1004,7 @@ fit_gam <- function(gam_df, k_len = 10, method = "REML", verbose = TRUE) {
 
 
 # Fit GAMs
-res <- fit_gam(gam_df, k_len = 10, method = "REML", verbose = TRUE)
+res <- fit_gam(gam_df, k_len = 5, method = "REML", verbose = TRUE)
 
 gam_model <- res$gam_full
 gam_null <- res$gam_null
@@ -1483,7 +1497,10 @@ Temporal trends in `r params$species` for `r contaminant_label` were assessed us
 
 ```{r temp-trends-setup, message = FALSE}
 t3c_data <- filtered_data %>%
-  filter(Sample.Year >= 1975, region == "AOC")
+  filter(Sample.Year >= 1975, region == "AOC") %>%
+  mutate(
+      Value = if_else(Value <= 0, 0.001, Value) # GAM breaks on values <= 0, this ensures it works when below detection limits
+    )
 
 ```
 
@@ -1834,186 +1851,6 @@ A model test was performed to estimate the time required to reach a nonrestricti
 `r aoc_out$report_text` Therefore, Tier 3C is considered `r aoc_out$outcome`.
 
 **Tier 3C Overall Decision:** `r aoc_out$outcome`
-
-# Final summary
-
-```{r}
-tier3_summary_table <- bind_rows(
-  tier3a_summary_tibble,
-  tier3b_summary_tibble,
-  aoc_out$tier3c_summary_tibble
-)
-
-knitr::kable(tier3_summary_table, caption = "Summary of Tier 3 Evidence Lines and Outcomes")
-
-ARTIFACTS$tables$summary <- save_df(tier3_summary_table, "tier3_summary_table")
-ARTIFACTS$summary <- tier3_summary_table
-
-# Write a compact index.rds pointing to everything you saved
-idx_file <- file.path(out_dir, "index.rds")
-# … after populating ARTIFACTS …
-saveRDS(ARTIFACTS, file.path(out_dir_abs, "index.rds"))
-writeLines(c(
-  glue("species: {params$species}"),
-  glue("contaminant: {params$contaminant}"),
-  glue("output_dir_rel: {out_dir_rel}"),       # useful for debugging
-  glue("index_rds_rel: index.rds")
-), file.path(out_dir_abs, "INDEX.txt"))
-
-
-```
-
-
-```{r t3c-smooth, eval = FALSE}
-library(mgcv)
-
-m_timevary <- gam(
-  log(Value) ~ 
-    s(Sample.Year, k = 8) +         # flexible, but modest k; increase if needed
-    s(Length, k = 6) + 
-    s(Waterbody.Code, bs = "re"),   # random intercept = GAMM-like
-  data = t3c_data,
-  method = "REML"
-)
-summary(m_timevary)
-
-# Instantaneous rate k(t) and half-life over time
-# Rate on log scale is negative derivative of time smooth
-library(gratia)
-
-der <- derivatives(m_timevary, select = "s(Sample.Year)", order = 1)
-# k(t) = - d/dt E[log(Value)]
-der$k_t <- -der$.derivative
-der$k_se <- der$.se
-der$half_life <- ifelse(der$k_t > 0, log(2) / der$k_t, NA_real_)
-
-round5 <- function(x) round(x/5)*5
-median_len <- round5(median(t3c_data$Length, na.rm = TRUE))
-
-target_conc <- thresholds_df$conc[match(params$restrict_threshold, thresholds_df$meals)]
-eta_minus_logtarget <- function(y) {
-  predict(m_timevary,
-          newdata = data.frame(Sample.Year = y, Length = median_len),
-          type = "link") - log(target_conc)
-}
-
-anchor <- max(t3c_data$Sample.Year, na.rm = TRUE)
-# extend far enough; adjust upper bound if needed
-root <- try(uniroot(eta_minus_logtarget, lower = anchor, upper = anchor + 150), silent = TRUE)
-
-years_to_target <- if (inherits(root, "try-error")) NA_real_ else (root$root - anchor)
-
-
-
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(scales)
-
-round5 <- function(x) round(x/5)*5
-
-plot_t3c_future_timevary <- function(
-  m_timevary, t3c_data, thresholds_df, restrict_threshold,
-  contaminant_label = "Contaminant",
-  horizon_years = 20, pad_years = 5,
-  aoc_out = NULL  # optional: to extend to threshold year
-) {
-  median_len <- round5(median(t3c_data$Length, na.rm = TRUE))
-  min_year   <- min(t3c_data$Sample.Year, na.rm = TRUE)
-  max_year   <- max(t3c_data$Sample.Year, na.rm = TRUE)
-  anchor     <- max_year
-
-  # Compute threshold year from aoc_out if available
-  vt_year <- NA_real_
-  if (!is.null(aoc_out) && is.data.frame(aoc_out$results_tbl)) {
-    ytt <- aoc_out$results_tbl$years_to_target[1]
-    if (is.finite(ytt) && !is.na(ytt)) vt_year <- anchor + ytt
-  }
-
-  end_year <- max(max_year + horizon_years, if (is.finite(vt_year)) vt_year + pad_years else -Inf)
-  proj_years <- seq(min_year, ceiling(end_year), by = 1)
-
-  newdata <- tibble(Sample.Year = proj_years, Length = median_len)
-  pr <- predict(m_timevary, newdata = newdata, type = "link", se.fit = TRUE)
-  pred_df <- newdata %>%
-    mutate(
-      fit_log = as.numeric(pr$fit),
-      se_log  = as.numeric(pr$se.fit),
-      conc    = exp(fit_log),
-      lwr     = exp(fit_log - 1.96 * se_log),
-      upr     = exp(fit_log + 1.96 * se_log),
-      period  = ifelse(Sample.Year <= max_year, "Observed", "Projected")
-    )
-
-  target_conc <- thresholds_df %>% filter(meals == restrict_threshold) %>% pull(conc)
-  stopifnot(length(target_conc) == 1)
-
-  vt_df <- if (is.finite(vt_year)) tibble(vline_x = vt_year) else NULL
-  thr_lab <- paste0("Unrestrictive threshold (", restrict_threshold, " meals/mo)")
-
-  ggplot(pred_df, aes(Sample.Year, conc)) +
-    geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.15, linewidth = 0) +
-    geom_line(data = filter(pred_df, period == "Observed"),  linewidth = 1) +
-    geom_line(data = filter(pred_df, period == "Projected"), linewidth = 1, linetype = "22") +
-    geom_hline(yintercept = target_conc, linetype = "dotted") +
-    { if (!is.null(vt_df)) geom_vline(data = vt_df, aes(xintercept = vline_x),
-                                      linetype = "dotdash", linewidth = 0.6, colour = "grey30") } +
-    annotate("text",
-             x = min_year + 0.02 * (max(proj_years) - min_year),
-             y = target_conc, label = thr_lab, vjust = -0.6, hjust = 0, size = 3.4) +
-    { if (!is.null(vt_df)) annotate("text",
-                                    x = vt_df$vline_x, y = max(pred_df$conc, na.rm = TRUE),
-                                    label = "Reach threshold (est.)",
-                                    vjust = 1.2, hjust = 0.5, size = 3.2, colour = "grey30") } +
-    scale_y_continuous(labels = label_number(accuracy = 0.1)) +
-    labs(
-      x = "Year",
-      y = paste0(contaminant_label, " concentration"),
-      title = paste0("Tier 3c: Projected ", contaminant_label, " (AOC, time-varying trend)"),
-      subtitle = paste0("Representative fish length = ", median_len, " cm; ribbons = 95% CI"),
-      caption = "Solid = observed; Dashed = projection; Dotted = unrestrictive threshold"
-    ) +
-    theme_minimal(base_size = 12) +
-    theme(plot.title = element_text(face = "bold"),
-          legend.position = "none")
-}
-
-# Example call
-p_t3c_tv <- plot_t3c_future_timevary(
-  m_timevary = m_timevary,
-  t3c_data   = t3c_data,
-  thresholds_df = thresholds_df,
-  restrict_threshold = new_thr,
-  contaminant_label = contaminant_label,
-  horizon_years = 20,
-  pad_years = 5,
-  aoc_out = aoc_out
-)
-p_t3c_tv
-
-
-
-library(gratia)
-
-# Smooth plot
-draw(m_timevary, select = "s(Sample.Year)")
-
-# Derivative = d/dt log(Value); rate k(t) = -derivative
-der <- derivatives(m_timevary, term = "s(Sample.Year)", order = 1)
-der$k_t <- -der$derivative
-
-ggplot(der, aes(data, k_t)) +
-  geom_hline(yintercept = 0, linetype = "dotted") +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.15) +
-  geom_line() +
-  labs(x = "Year", y = "Instantaneous decline rate k(t)",
-       title = "Time-varying rate of decline (k(t))") +
-  theme_minimal()
-
-```
-
-
 ```{r new-t3c-method}
 # Round to nearest 5 cm (reuse your existing helper if already defined)
 round5 <- function(x) round(x / 5) * 5
@@ -2350,7 +2187,7 @@ colour_vals <- c(
     theme_classic(base_size = 12) +
     theme(
       plot.title      = element_text(face = "bold"),
-      legend.position = "bottom"
+      legend.position = "right"
     )
 
   p
@@ -2389,3 +2226,182 @@ ARTIFACTS$figs$t3c_projected_multi <- save_gg(p_t3c_multi, "t3c_projected_multi"
 
 
 ```
+# Final summary
+
+```{r}
+tier3_summary_table <- bind_rows(
+  tier3a_summary_tibble,
+  tier3b_summary_tibble,
+  aoc_out$tier3c_summary_tibble
+)
+
+knitr::kable(tier3_summary_table, caption = "Summary of Tier 3 Evidence Lines and Outcomes")
+
+ARTIFACTS$tables$summary <- save_df(tier3_summary_table, "tier3_summary_table")
+ARTIFACTS$summary <- tier3_summary_table
+
+# Write a compact index.rds pointing to everything you saved
+idx_file <- file.path(out_dir, "index.rds")
+# … after populating ARTIFACTS …
+saveRDS(ARTIFACTS, file.path(out_dir_abs, "index.rds"))
+writeLines(c(
+  glue("species: {params$species}"),
+  glue("contaminant: {params$contaminant}"),
+  glue("output_dir_rel: {out_dir_rel}"),       # useful for debugging
+  glue("index_rds_rel: index.rds")
+), file.path(out_dir_abs, "INDEX.txt"))
+
+
+```
+
+
+```{r t3c-smooth, eval = FALSE}
+library(mgcv)
+
+m_timevary <- gam(
+  log(Value) ~ 
+    s(Sample.Year, k = 8) +         # flexible, but modest k; increase if needed
+    s(Length, k = 6) + 
+    s(Waterbody.Code, bs = "re"),   # random intercept = GAMM-like
+  data = t3c_data,
+  method = "REML"
+)
+summary(m_timevary)
+
+# Instantaneous rate k(t) and half-life over time
+# Rate on log scale is negative derivative of time smooth
+library(gratia)
+
+der <- derivatives(m_timevary, select = "s(Sample.Year)", order = 1)
+# k(t) = - d/dt E[log(Value)]
+der$k_t <- -der$.derivative
+der$k_se <- der$.se
+der$half_life <- ifelse(der$k_t > 0, log(2) / der$k_t, NA_real_)
+
+round5 <- function(x) round(x/5)*5
+median_len <- round5(median(t3c_data$Length, na.rm = TRUE))
+
+target_conc <- thresholds_df$conc[match(params$restrict_threshold, thresholds_df$meals)]
+eta_minus_logtarget <- function(y) {
+  predict(m_timevary,
+          newdata = data.frame(Sample.Year = y, Length = median_len),
+          type = "link") - log(target_conc)
+}
+
+anchor <- max(t3c_data$Sample.Year, na.rm = TRUE)
+# extend far enough; adjust upper bound if needed
+root <- try(uniroot(eta_minus_logtarget, lower = anchor, upper = anchor + 150), silent = TRUE)
+
+years_to_target <- if (inherits(root, "try-error")) NA_real_ else (root$root - anchor)
+
+
+
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+
+round5 <- function(x) round(x/5)*5
+
+plot_t3c_future_timevary <- function(
+  m_timevary, t3c_data, thresholds_df, restrict_threshold,
+  contaminant_label = "Contaminant",
+  horizon_years = 20, pad_years = 5,
+  aoc_out = NULL  # optional: to extend to threshold year
+) {
+  median_len <- round5(median(t3c_data$Length, na.rm = TRUE))
+  min_year   <- min(t3c_data$Sample.Year, na.rm = TRUE)
+  max_year   <- max(t3c_data$Sample.Year, na.rm = TRUE)
+  anchor     <- max_year
+
+  # Compute threshold year from aoc_out if available
+  vt_year <- NA_real_
+  if (!is.null(aoc_out) && is.data.frame(aoc_out$results_tbl)) {
+    ytt <- aoc_out$results_tbl$years_to_target[1]
+    if (is.finite(ytt) && !is.na(ytt)) vt_year <- anchor + ytt
+  }
+
+  end_year <- max(max_year + horizon_years, if (is.finite(vt_year)) vt_year + pad_years else -Inf)
+  proj_years <- seq(min_year, ceiling(end_year), by = 1)
+
+  newdata <- tibble(Sample.Year = proj_years, Length = median_len)
+  pr <- predict(m_timevary, newdata = newdata, type = "link", se.fit = TRUE)
+  pred_df <- newdata %>%
+    mutate(
+      fit_log = as.numeric(pr$fit),
+      se_log  = as.numeric(pr$se.fit),
+      conc    = exp(fit_log),
+      lwr     = exp(fit_log - 1.96 * se_log),
+      upr     = exp(fit_log + 1.96 * se_log),
+      period  = ifelse(Sample.Year <= max_year, "Observed", "Projected")
+    )
+
+  target_conc <- thresholds_df %>% filter(meals == restrict_threshold) %>% pull(conc)
+  stopifnot(length(target_conc) == 1)
+
+  vt_df <- if (is.finite(vt_year)) tibble(vline_x = vt_year) else NULL
+  thr_lab <- paste0("Unrestrictive threshold (", restrict_threshold, " meals/mo)")
+
+  ggplot(pred_df, aes(Sample.Year, conc)) +
+    geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.15, linewidth = 0) +
+    geom_line(data = filter(pred_df, period == "Observed"),  linewidth = 1) +
+    geom_line(data = filter(pred_df, period == "Projected"), linewidth = 1, linetype = "22") +
+    geom_hline(yintercept = target_conc, linetype = "dotted") +
+    { if (!is.null(vt_df)) geom_vline(data = vt_df, aes(xintercept = vline_x),
+                                      linetype = "dotdash", linewidth = 0.6, colour = "grey30") } +
+    annotate("text",
+             x = min_year + 0.02 * (max(proj_years) - min_year),
+             y = target_conc, label = thr_lab, vjust = -0.6, hjust = 0, size = 3.4) +
+    { if (!is.null(vt_df)) annotate("text",
+                                    x = vt_df$vline_x, y = max(pred_df$conc, na.rm = TRUE),
+                                    label = "Reach threshold (est.)",
+                                    vjust = 1.2, hjust = 0.5, size = 3.2, colour = "grey30") } +
+    scale_y_continuous(labels = label_number(accuracy = 0.1)) +
+    labs(
+      x = "Year",
+      y = paste0(contaminant_label, " concentration"),
+      title = paste0("Tier 3c: Projected ", contaminant_label, " (AOC, time-varying trend)"),
+      subtitle = paste0("Representative fish length = ", median_len, " cm; ribbons = 95% CI"),
+      caption = "Solid = observed; Dashed = projection; Dotted = unrestrictive threshold"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(plot.title = element_text(face = "bold"),
+          legend.position = "none")
+}
+
+# Example call
+p_t3c_tv <- plot_t3c_future_timevary(
+  m_timevary = m_timevary,
+  t3c_data   = t3c_data,
+  thresholds_df = thresholds_df,
+  restrict_threshold = new_thr,
+  contaminant_label = contaminant_label,
+  horizon_years = 20,
+  pad_years = 5,
+  aoc_out = aoc_out
+)
+p_t3c_tv
+
+
+
+library(gratia)
+
+# Smooth plot
+draw(m_timevary, select = "s(Sample.Year)")
+
+# Derivative = d/dt log(Value); rate k(t) = -derivative
+der <- derivatives(m_timevary, term = "s(Sample.Year)", order = 1)
+der$k_t <- -der$derivative
+
+ggplot(der, aes(data, k_t)) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.15) +
+  geom_line() +
+  labs(x = "Year", y = "Instantaneous decline rate k(t)",
+       title = "Time-varying rate of decline (k(t))") +
+  theme_minimal()
+
+```
+
+
