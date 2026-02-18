@@ -16,47 +16,35 @@ In the following decades, the original delisting guideline from 1991 proved inad
 
 *“Consumption advisories for fish of interest in the AOC are unrestricted or no more restrictive than the advisories for suitable reference site(s) due to contaminants from locally-controllable sources.”*
 
-In 2018, Bhavsar recommended the delisting criterion be used as a generic delisting criterion for BUI 1 among Canadian AOCs [@bhavsar2018]. In 2021, following a series of workshops attended by RAP leaders and stakeholders, the shared generic delisting criterion and assessment framework were adopted by several Canadian AOCs. The intent was to draw from the experiences of the Toronto and Region, Niagara River, and Detroit River AOCs in using a tiered framework for assessing BUI 1. Through these workshops, a standardized operating procedure, common data sources, and data interpretation guidelines were developed to be applied in the tiered framework.
+In 2018, Bhavsar recommended the delisting criterion be used as a generic delisting criterion for BUI 1 among Canadian AOCs [@bhavsar2018]. In 2020, following reviews by the RAP team, the NR RAP adopted the following delisting criteria for BUI 1:
 
-In the St. Lawrence River (Cornwall/Akwesasne) AOC, the following delisting criteria for BUI 1 were adopted following the Stage 1 report (reference):
+1.  *"Consumption advisories for fish of interest in the AOC are unrestricted; OR"*
 
-1.  *"Contaminant levels in fish in the AOC are the same or less than those in upstream non-AOC areas in the St. Lawrence River.*
+2.  *"Consumption advisories for fish of interest are no more restrictive than the advisories for suitable reference sites due to contaminants (PCBs and dioxin-like PCBs) from locally-controllable sources; OR"*
 
-2.  *Restrictions same or fewer/less restrictive than upstream non-AOC areas in the St. Lawrence River.*
+3.  *"Multiple lines of evidence indicate improving conditions over time and all feasible remedial actions are complete."*
 
-3.  *No restrictions on the consumption of snapping turtles in the AOC."*
-
-In 2024, the St. Lawrence River Restoration Council (SLRRC) and the Mohawk Council of Akwesasne (MCA) adopted the generic delisting criterion and its associated tiered assessment framework, in addition to a new biocultural criterion designed to address impairments to biocultural practices that fall outside the scope of official consumption advisories. For example, the third delisting criterion, "*No restrictions on the consumption of snapping turtles in the AOC"*, was dropped because consumption advisories are not issued for snapping turtles in the AOC. Rather, consumption of snapping turtles and other wildlife are addressed under the biocultural criterion.The delisting criteria were accepted as the following:
-
-"*This BUI can be redesignated as “Not Impaired” when the following delisting criteria have been met:*
-
-*1.1 Consumption advisories for fish of interest in the AOC are non-restrictive or no more restrictive than the advisories for suitable reference site(s) due to contaminants from locally controllable sources.*
-
-*1.2 An increase in the Akwesasne community knowledge and/or willingness to engage in safe biocultural and traditional consumption of fish and wildlife."*
-
-Criterion 1.1 is assessed through the tiered framework, whereas criterion 1.2 is an additional metric for the BUI that is assessed in a separate technical report.
+These criteria are assessed through a tiered assessment framework, utilizing multiple lines of evidence to set out an order to which to assess the impairment of the BUI. Based on the outcome of each tiered evaluation, a recommendation is made to either maintain the "Imparied" BUI status or to pursue the redesignation of the BUI to "Not Impaired" given the evidence used in the assessment framework.
 
 ## Tiered assessment framework {#methods-tiered-framework}
 
 The tiered assessment framework, as adapted for use in the Niagara River AOC, comprises 3 tiers, each compiling different evidence lines to determine if delisting criterion 1.1 is met (Figure \@ref(fig:tiered-framework-fig)):
 
-Tier 1: Are monthly meal allowances for fish of interest in the AOC considered unrestrictive relative to the desired fish consumption rates?
+Tier 1: Consumption advisories for fish of interest in the AOC are unrestricted
 
-Tier 2: Are fish consumption restrictions in the AOC similar or less restrictive than suitable reference sites?
+Tier 2: Consumption advisories for fish of interest are no more restrictive than the advisories for suitable reference sites due to contaminants from locally-controllable sources
 
-Tier 3: Do lines of evidence indicate that the beneficial use is not impaired due to priority contaminants?
+Tier 3: Multiple lines of evidence indicate improving conditions over time and all feasible remedial actions are complete
 
-Tier 4: Have all feasible remedial actions to address local legacy contamination in the AOC been implemented?
+The framework is designed such that if all fish of interest in the AOC pass a particular tier, the delisting criterion can be said to be met. Otherwise, analysis moves to the next tier. If all tiers are failed, then the delisting criterion cannot be said to be met. It should be noted that, in the Niagara River AOC, the primary contaminants of concern are polychlorinated biphenyls (PCBs). Thus, analyses of contaminants are limited strictly to the sources and concentrations of PCBs in AOC fish.
 
-The framework is designed such that if all fish of interest in the AOC pass a particular tier, the delisting criterion can be said to be met. Otherwise, analysis moves to the next tier. If all tiers are failed, then the delisting criterion cannot be said to be met. It should be noted that, in the St. Lawrence River (Cornwall/Akwesasne) AOC, the primary contaminant of concern is mercury. Thus, analyses of contaminants are limited strictly to the sources and concentrations of mercury in AOC fish.
-
-(ref:tiered-framework-fig) Modified tiered assessment framework applied in the 2025 BUI 1 Assessment for the St. Lawrence River (Cornwall/Akwesasne) AOC. Adapted from @drouillard2022.
+(ref:tiered-framework-fig) Modified tiered assessment framework applied in the 2025 BUI 1 Assessment for the Niagara River AOC. Adapted from @drouillard2022.
 
 ```{r tiered-framework-fig, echo = FALSE, fig.cap="(ref:tiered-framework-fig)"}
-include_graphics("Images/tiered_flowchart_slr.png", )
+include_graphics("Images/tiered_flowchart_nr.png")
 ```
 
-Since the previous St. Lawrence River (Cornwall/Akwesasne) BUI 1 Assessment Report in 2017 (reference), the Guide to Eating Ontario Fish has been updated with new fish contaminant data (which was collected on an annual basis, excluding 2020 due to the Covid-19 pandemic [could use citation]) where available, including collections of targeted species (such as walleye and yellow perch) following recommendations from the report. Furthermore, a combination of angler surveys and scientific publications were used to assess the BUI in terms of community desired consumption rates of fish of interest, rather than using MECP definitions of restrictive consumption advice (MECP, 2025). These new data were used to make up-do-date comparisons of fish consumption advisories within the AOC and reference areas in the Upper St. Lawrence River and Lake Ontario. Below is a summary of each tier, and the methods for which they are evaluated.
+Since the previous BUI 1 Assessment Report in (year) (reference), the Guide to Eating Ontario Fish has been updated with new fish contaminant data (which was collected on an annual basis, excluding 2020 due to the Covid-19 pandemic [could use citation - Melissa]) where available, including collections of targeted species (such as walleye and yellow perch) following recommendations from the report. Furthermore, a combination of angler surveys and scientific publications were used to assess the BUI in terms of community desired consumption rates of fish of interest, rather than using MECP definitions of restrictive consumption advice (MECP, 2025). These new data were used to make up-do-date comparisons of fish consumption advisories within the AOC and reference areas in the Lake Erie and Lake Ontario. Below is a summary of each tier, and the methods for which they are evaluated.
 
 ### Tier 1: Comparison of AOC Fish Consumption Advisories to Desired Consumption Rates {#methods-tier1}
 
@@ -82,9 +70,9 @@ Advisory values for each fish of interest in the AOC were then compared against 
 
 Tier 2 assesses whether the fish consumption advisories for fish of interest in the AOC are comparable to those at suitable reference sites. If all the restrictive advisories for a given species in the AOC are less restrictive or equivalent to those in reference sites, the species passes Tier 2. Otherwise, the assessment of failing species moves to Tier 3. Similarly to Tier 1, Tier 2 uses official consumption advice provided by MECP. Species that passed Tier 1 assessment were excluded from Tier 2 analysis. Furthermore, size classes that pass Tier 1 within a species were excluded from Tier 2 analysis.
 
-The advisory values for each species of interest in the AOC are compared to the median value of advisories for reference sites. In Tier 2, reference sites are selected as those representative of a broad measure of background intensity of advisories across a comparable geographic region. That is, selection of reference sites for Tier 2 does not consider similarity of ecology, environmental conditions, or history; nor does it select for pristine, undisturbed water bodies. Rather, reference sites are characterized as a broad geographical representation of the region that are removed from AOC sources of legacy contamination. Furthermore, reference sites need to have fish consumption advisories available for the selected species of interest as well as overlapping size ranges of each species with that of the AOC. For this analysis, we selected all non-AOC fishing zones in the Upper St. Lawrence River and Lake Ontario (including East Lake and West Lake) for which consumption advice is issued for the same species of interest in the AOC. The AOC fishing zones excluded were Toronto Waterfront, Hamilton Harbour, and the Niagara River (Upper and Lower). Fishing zones including the Bay of Quinte AOC (Lake Ontario (Eastern Basin), Trenton Nearshore, and Belleville Nearshore) were not excluded as the priority contaminants driving advisories are organic rather than mercury, and because the Bay of Quinte shares ecological and environmental similarities to the upper St. Lawrence River. Furthermore, tributaries, embayments, and harbours were excluded, as they generally do not encapsulate background conditions of the geographical region.
+The advisory values for each species of interest, at each reported size class, in the AOC are compared to the median value of advisories for reference sites. Tier 2 reference sites are selected as those representative of a broad measure of background intensity of advisories across a comparable geographic region. That is, reference sites are characterized as a broad geographical representation of the region that are removed from AOC sources of legacy contamination rather than selecting for pristine, undisturbed waterbodies or areas with similar ecology. Furthermore, reference sites need to have fish consumption advisories available for the selected species of interest as well as overlapping size ranges of each species with that of the AOC. For this analysis, we selected all non-AOC, open-water fishing zones in Lake Erie as comparisons for the Upper Niagara River (Lake Erie to the top of the Niagara Falls) and Lake Ontario as comparisons for the Lower Niagara River (from the bottom of Niagara Falls to Lake Ontario) for which consumption advice is issued for the same species of interest in the AOC. The AOC fishing zones excluded were Toronto Waterfront and Hamilton Harbour. Furthermore, tributaries, embayments, and harbours were excluded, as they generally do not encapsulate background conditions of the geographical region.
 
-To compare the intensity of advisories, we compared the advisory value for each species and size class, each for the General and Sensitive populations, for available species of interest in the AOC (below the Tier 1 benchmark) to the median of reference advisories for which advisories were issued for the same species. Because meal/month consumption advisories are issued in discrete categories (see Section \@ref(mecp-advisory-data)), reference median values were rounded up to the next advisory value when there were an even number of reference sites. For example, a median advisory value of 10 meals/month would be rounded up to 12 meals/month. This is because the median of an even number of sites would fall between two advisory categories (e.g., the median between 8 and 12 is 10). While this does not change the outcome of the analysis, it is a clearer representation of official consumption advice. AOC advisory values below the desired consumption benchmark (e.g., 8 meals/month) are compared to their respective reference medians, and those size categories equal to or above the reference median pass Tier 2 assessment, while those below the reference median fail Tier 2. Similarly to Tier 1, Tier 2 adopts a strict benchmark, where any number of size categories for either population type will cause a species to fail and move to Tier 3.
+To compare the intensity of advisories, we compared the advisory value for each species and size class, each for the General and Sensitive populations, for available species of interest in the AOC (below the Tier 1 benchmark) to the median of reference advisories for which advisories were issued for the same species. Because meal/month consumption advisories are issued in discrete categories (see Section \@ref(mecp-advisory-data)), reference median values were rounded up to the next advisory value when there were an even number of reference sites (and the true median would therefore fall between advisory categories). For example, a median advisory value of 10 meals/month would be rounded up to 12 meals/month. This is because the median of an even number of sites would fall between two advisory categories (e.g., the median between 8 and 12 is 10). While this does not change the outcome of the analysis, it is a clearer representation of official consumption advice. AOC advisory values below the desired consumption benchmark (e.g., 8 meals/month) are compared to their respective reference medians, and those size categories equal to or above the reference median pass Tier 2 assessment, while those below the reference median fail Tier 2. Similarly to Tier 1, Tier 2 adopts a strict benchmark, where any number of size categories for either population type will cause a species to fail and move to Tier 3.
 
 ### Tier 3: Weight of Evidence Approach {#methods-tier3}
 
@@ -128,16 +116,18 @@ To properly address the needs of the community surrounding the AOC through this 
 
 A fish consumption survey was conducted in within the AOC from April to November of 2025. The survey asked respondents about where community members fished, their fishing methods, whether they eat fish, which fish from the AOC they consume (or feed to others), how often they eat each kind of fish, their normal portion size for each fish, their methods of cooking, and how often they would eat each fish species if there were no issues related to contamination in the AOC. The survey also asked respondents the same questions about fish consumed from outside of the AOC. Additionally, the survey asked respondents if they had heard of the Guide to Eating Ontario Fish and the RAP program, and whether either of these resources have modified their consumption habits.
 
-Responses from this survey were used to establish the community's restrictive consumption threshold for each species using several methods: First, species of interest are defined as those consumed by at least 5% of survey respondents who eat fish. Second, a weighted average for meal frequency was calculated by multiplying the number of respondents by their current monthly consumption rate (converted from survey response options to monthly meal equivalents, see Table \@ref(tab:survey-conversion-rate)), then dividing by the total number of respondents that eat this species. Third, a weighted average meal size was calculated similarly to frequency, with survey response options converted to monthly meal equivalents as per Table \@ref(tab:survey-conversion-portion). In these surveys, average portion size was estimated across species, as there were no species-specific questions for portion size. Finally, the weighted average frequency was multiplied by the weighted average portion size to get an average desired consumption rate, which was rounded up to the next advisory category for the Sensitive population (0, 4, 8, 12, 16, or 32 meals per month).
+For this BUI assessment, surveys from the following sources were used to determine species of interest and local consumption habits: the Niagara Peninsula Conservation Authority (NPCA; online 2019-2021, n = 157; and in person 2020-2021, n = 237), Missisaugas of the Credit First Nation (MCFN; 2019, n = 44), Six Nations of the Grand River (SN; year, n = 50), and the Metis of Ontario (MNO; year, n = 629). To preserve data sovereignty and privacy of the survey respondents, the summary results were anonymized and pooled for the purposes of this assessment. Respondents were asked about fish consumption habits in the AOC, and in some cases, surrounding areas. Summaries of responses to questions about whether or not the respondents eat fish caught from the AOC, the species they eat, the average consumption frequency of each species, and the average portion size of a fish meal were used.
 
-Since fish consumption restrictions are most impactful to the highest consumers of fish (e.g., subsistence fishers), a separate restrictive consumption threshold
+Since survey data was used from different sources, it was not always possible to retain exact parity between responses. Survey questions differed in how they asked about where respondents fish and how often they eat each species. For instance, the MNO survey asked respondents about fishing habits in Lake Erie and Lake Ontario separately, and separate questions about a) whether respondents fish in the AOC, and b) whether consumption habits are different in AOCs versus other locations. As the NR AOC was included under "Lake Ontario" for this survey, summary data from this section was used for this assessment. Similarly, the SN survey asked a subset of fishers that consume fish in the NR AOC which species are caught and consumed there, so summary data for these species were used in this assessment. Additionally, consumption frequency questions (eg, "Once a week", "2-3 times per week", "3-6 times per month") differed between surveys, so these were standardized into categories as displayed in Table \@ref(tab:survey-conversion-rate). Two of the surveys subsetted some species into family groups that may be easier for respondents to identify (perches, basses, salmonids, pike, catfish, and panfishes), so the consumption frequencies for each of these categories were applied to all species that appear in the Guide to Eating Ontario Fish within them (eg, consumption frequency of "basses" is applied equally across smallmouth and largemouth bass).
+
+Responses from these surveys were used to establish the community's restrictive consumption threshold for each species using several methods: First, species of interest are defined as those consumed by at least 5% of survey respondents who eat fish. Second, a weighted average for meal frequency was calculated by multiplying the number of respondents by their current monthly consumption rate (converted from survey response options to monthly meal equivalents, see Table \@ref(tab:survey-conversion-rate)), then dividing by the total number of respondents that eat this species. Third, a weighted average meal size was calculated similarly to frequency, with survey response options converted to monthly meal equivalents as per Table \@ref(tab:survey-conversion-portion). In these surveys, average portion size was estimated across species, as there were no species-specific questions for portion size. Finally, the weighted average frequency was multiplied by the weighted average portion size to get an average desired consumption rate, which was rounded up to the next advisory category for the Sensitive population (0, 4, 8, 12, 16, or 32 meals per month).
 
 (ref:survey-conversion-rate) Survey response conversion table for desired consumption frequency.
 
 ```{r survey-conversion-rate, tab.cap ='(ref:survey-conversion-rate)', echo = FALSE}
-rates_resp = c("A few times per year", "A few times per month", "A few times per week", "Daily")
+rates_resp = c("Rarely (<1/month)", "Once a month", "Once a week", "2-5 times a week", "Daily")
 
-rates_conv = c(1, 8, 16, 32)
+rates_conv = c(0.5, 1, 4, 16, 32)
 
 conv_rate = data.frame(rates_resp, rates_conv)
 
@@ -156,9 +146,9 @@ ft_conv
 
 ```{r survey-conversion-portion, tab.cap = '(ref:survey-conversion-portion)', echo = FALSE}
 
-port_resp = c("Less than 4 oz", "4 oz", "4-8 oz", "8 oz", "Greater than 8 oz")
+port_resp = c("Less than 4 oz", "4 oz", "8 oz", "Other")
 
-port_conv = c(0.25, 0.5, 0.75, 1, 2)
+port_conv = c(0.25, 0.5, 1, 1.5)
 
 conv_port = data.frame(port_resp,port_conv)
 
@@ -172,6 +162,8 @@ ft_port = autofit(ft_port)
 ft_port
 
 ```
+
+Since fish consumption restrictions are most impactful to the highest consumers of fish (e.g., subsistence fishers), a separate restrictive consumption threshold was calculated for the top 5% of fish consumers in the AOC, as per survey results. Rather than acquiring average consumption rates, the minimum frequency category consumed by ≥5% of respondents was obtained using cumulative proportions of each category. The highest consumption category capturing at least 5% of respondents was then used as the consumption threshold for the highest consumers. For instance, if 1% of respondents consume a species daily, 3% consume it 2-5 times per week, 10% consume it once a week, and 40% consume it once a month, the restrictive consumption threshold for at least 5% of anglers is once a week or 4 meals a month (1% + 3% + 10% = 14%). For Tier 1 assessment, this high-consumer threshold was used for comparison with official consumption advisories in the AOC.
 
 ## Data Sources {#methods-data}
 

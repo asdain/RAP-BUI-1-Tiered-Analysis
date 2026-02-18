@@ -1,78 +1,97 @@
-## Make heatmap N table function
-
 make_heatmap_table <- function(df, length_levels = NULL, aoc_site_name, sites) {
   
   if (is.null(length_levels)) {
-    length_levels <- tryCatch(get("length_levels", envir = .GlobalEnv),
-                              error = function(...) intersect(names(df), names(df)))
+    # default: use the size labels present in the data, in their existing order
+    length_levels <- df %>%
+      dplyr::distinct(length_category_label) %>%
+      dplyr::pull(length_category_label)
   }
+  length_levels_chr <- as.character(length_levels)
   
-  # Get AOC species-size combinations
+  # Get AOC species-size combinations (Sensitive only)
   aoc_combinations <- df %>%
-    filter(guide_locname_eng == aoc_site_name,
-           population_type_desc == "Sensitive") %>%
-    distinct(Species = specname, Size = length_category_label) %>%
-    mutate(Population = "Sensitive",
-           Size = factor(Size, levels = length_levels, ordered = TRUE))
+    dplyr::filter(
+      guide_locname_eng == aoc_site_name,
+      population_type_desc == "Sensitive"
+    ) %>%
+    dplyr::distinct(Species = specname, Size = length_category_label) %>%
+    dplyr::mutate(
+      Population = "Sensitive",
+      Size = factor(Size, levels = length_levels_chr, ordered = TRUE)
+    )
   
   reference_grid <- expand.grid(
     Species = unique(aoc_combinations$Species),
-    Size = length_levels,
-    Site = sites
+    Size    = length_levels_chr,
+    Site    = sites,
+    stringsAsFactors = FALSE
   ) %>%
-    mutate(Population = "Sensitive",
-           Size = factor(Size, levels = length_levels, ordered = TRUE))
+    dplyr::mutate(
+      Population = "Sensitive",
+      Size = factor(Size, levels = length_levels_chr, ordered = TRUE)
+    )
   
-  reference_counts <- cons_data %>%
-    filter(guide_locname_eng %in% sites,
-           population_type_desc == "Sensitive",
-           specname %in% unique(aoc_combinations$Species)) %>%
-    group_by(Species = specname,
-             Size = length_category_label,
-             Site = guide_locname_eng) %>%
-    summarise(n = n(), .groups = "drop") %>%
-    mutate(Size = factor(Size, levels = length_levels, ordered = TRUE))
+  reference_counts <- df %>%
+    dplyr::filter(
+      guide_locname_eng %in% sites,
+      population_type_desc == "Sensitive",
+      specname %in% unique(aoc_combinations$Species)
+    ) %>%
+    dplyr::group_by(
+      Species = specname,
+      Size    = length_category_label,
+      Site    = guide_locname_eng
+    ) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+    dplyr::mutate(Size = factor(Size, levels = length_levels_chr, ordered = TRUE))
   
   reference_full <- reference_grid %>%
-    left_join(reference_counts, by = c("Species", "Size", "Site")) %>%
-    mutate(n = replace_na(n, 0))
+    dplyr::left_join(reference_counts, by = c("Species", "Size", "Site")) %>%
+    dplyr::mutate(n = tidyr::replace_na(n, 0))
   
   reference_summary <- reference_full %>%
-    group_by(Species, Population, Size) %>%
-    summarise(n = sum(n), .groups = "drop")
+    dplyr::group_by(Species, Population, Size) %>%
+    dplyr::summarise(n = sum(n), .groups = "drop")
   
   summary_data <- aoc_combinations %>%
-    left_join(reference_summary,
-              by = c("Species", "Population", "Size")) %>%
-    arrange(Species, Size) %>%
-    pivot_wider(names_from = Size, values_from = n) %>%
-    select(-Population)
+    dplyr::left_join(reference_summary, by = c("Species", "Population", "Size")) %>%
+    dplyr::arrange(Species, Size) %>%
+    tidyr::pivot_wider(
+      names_from  = Size,
+      values_from = n,
+      names_sort  = FALSE
+    ) %>%
+    dplyr::select(-Population)
   
-  size_cols <- setdiff(names(summary_data), "Species")
+  # ---- FORCE COLUMN ORDER HERE ----
+  desired_size_cols <- length_levels_chr[length_levels_chr %in% names(summary_data)]
+  summary_data <- summary_data %>%
+    dplyr::select(dplyr::all_of(c("Species", desired_size_cols)))
   
-  columns_list <- list(Species = colDef(minWidth = 150))
+  size_cols <- desired_size_cols
+  
+  columns_list <- list(Species = reactable::colDef(minWidth = 150))
   
   for (col in size_cols) {
-    columns_list[[col]] <- colDef(
+    columns_list[[col]] <- reactable::colDef(
       name = col,
       align = "center",
       style = function(value) {
         val <- as.numeric(value)
-        if (is.na(val)) {
-          return(list(background = "#eeeeee", color = "#000000"))
-        }
-        if (val < 4) {
-          color <- scales::col_numeric(c("#d80032", "#edf2f4"), domain = c(0, 5))(val)
+        if (is.na(val)) return(list(background = "#eeeeee", color = "#000000"))
+        
+        if (val < 3) {
+          color <- scales::col_numeric(c("#d80032", "#edf2f4"), domain = c(0, 3))(val)
         } else {
-          max_val <- max(summary_data[size_cols], na.rm = TRUE)
-          color <- scales::col_numeric(c("#8d99ae", "#2b2d42"), domain = c(4, max_val))(val)
+          max_val <- max(as.matrix(summary_data[, size_cols, drop = FALSE]), na.rm = TRUE)
+          color <- scales::col_numeric(c("#8d99ae", "#2b2d42"), domain = c(3, max_val))(val)
         }
         list(background = color, color = "#ffffff")
       }
     )
   }
   
-  reactable(
+  reactable::reactable(
     summary_data,
     columns = columns_list,
     bordered = TRUE,

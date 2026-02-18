@@ -1,0 +1,481 @@
+---
+title: "SLR BUI 1 Report Text"
+author: "Aaron Dain"
+date: "2025-09-26"
+site: bookdown::bookdown_site
+always_allow_html: true
+---
+```{r include=FALSE, cache=FALSE}
+# Common setup for all chapters
+library(here)
+source(here::here("Scripts","setup.R"))
+
+
+# Choose the AOC 
+AOC_full <- "St. Lawrence River (Cornwall/Akwesasne)"
+
+
+# Load derived objects created by your analysis run for this AOC
+# (run your existing parameterized analysis once to write these)
+t1_df   <- readr::read_rds(here::here("Derived", "SLR", "t1_df.rds"))
+flags   <- readr::read_rds(here::here("Derived", "SLR", "flags.rds"))            # t1/t2 flags
+mappings <- readr::read_rds(here::here("Derived", "SLR","mappings.rds"))
+ref_names <- readr::read_rds(here::here("Derived", "SLR", "t2_ref_sites.rds"))
+
+region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
+
+n_pass <- flags %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+aoc_name = "St. Lawrence River (Lake St. Francis)"
+```
+
+```{r setup-for-book}
+source(here::here("Output", "Full-SLR-Report","_common.R"))
+```
+
+<!--chapter:end:index.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+# Common setup for all chapters
+library(here)
+source(here::here("Scripts","setup.R"))
+
+
+# Choose the AOC 
+AOC_full <- "St. Lawrence River (Cornwall/Akwesasne)"
+
+
+# Load derived objects created by your analysis run for this AOC
+# (run your existing parameterized analysis once to write these)
+t1_df   <- readr::read_rds(here::here("Derived", "SLR", "t1_df.rds"))
+flags   <- readr::read_rds(here::here("Derived", "SLR", "flags.rds"))            # t1/t2 flags
+mappings <- readr::read_rds(here::here("Derived", "SLR","mappings.rds"))
+ref_names <- readr::read_rds(here::here("Derived", "SLR", "t2_ref_sites.rds"))
+
+region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
+
+n_pass <- flags %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+aoc_name = "St. Lawrence River (Lake St. Francis)"
+```
+# Introduction
+
+## Delisting criteria
+
+<!--chapter:end:01-intro.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+# Common setup for all chapters
+library(here)
+source(here::here("Scripts","setup.R"))
+
+
+# Choose the AOC 
+AOC_full <- "St. Lawrence River (Cornwall/Akwesasne)"
+
+
+# Load derived objects created by your analysis run for this AOC
+# (run your existing parameterized analysis once to write these)
+t1_df   <- readr::read_rds(here::here("Derived", "SLR", "t1_df.rds"))
+flags   <- readr::read_rds(here::here("Derived", "SLR", "flags.rds"))            # t1/t2 flags
+mappings <- readr::read_rds(here::here("Derived", "SLR","mappings.rds"))
+ref_names <- readr::read_rds(here::here("Derived", "SLR", "t2_ref_sites.rds"))
+
+region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
+
+n_pass <- flags %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+aoc_name = "St. Lawrence River (Lake St. Francis)"
+```
+# (PART) Tiered Assessment Approach for Criterion 1.1
+
+# Methods {#methods}
+
+## Generic criteria
+
+“In 2021, a series of workshops attended by Canadian AOC RAP Coordinators, Great Lakes Managers from ECCC and MECP, academic researchers and other stakeholders were held to review and revise the generic BUI #1 delisting statement and tiered framework. The intent of these workshops was to draw upon experiences gained from the implementing the original BUI #1 framework (Figure 3) and modified forms of the framework implemented across three AOCs: Toronto and Region AOC, Niagara River and the Canadian portion of the Detroit River AOC. In addition, the workshops deliberated and generated a set of recommended operating guidelines to help standardized the types of data and approach to data interpretation applied in each tier of the framework. Following consultation with the Fish Consumption Technical Working Group for the Toronto and Region Remedial Action Plan in 2022, these new standard approaches were adopted in the current BUI #1 Assessment for the Toronto and Region AOC.
+
+The 2016 preliminary assessment (Bhavsar 2016) utilized the following delisting statement as part of its BUI #1 assessment:
+
+“Consumption advisories for fish of interest in the AOC are unrestricted or no more restrictive than the advisories for suitable reference site(s) due to contaminants from locally-controllable sources.” This was modified to the following:
+
+“Consumption advisories for fish of interest in the AOC are unrestricted or no more restrictive than advisories for suitable reference site(s), demonstrate fish contamination not different from reference(s), are improving through time or cannot be improved by additional restoration actions within the AOC.” The modified delisting statement provides stronger linkage between sub-statements contained within the criteria that link directly to each tier of the recommended BUI #1 framework. Tier 1 of the framework determines whether official fish consumption advice issued for the AOC is considered restrictive or not as captured by the sub-statement: ‘Consumption advisories for fish of interest in the AOC are unrestricted’. Tier 2 examines if fish consumption advisories are less restrictive or equivalent in their monthly meal allowances to reference sites as indicated by ‘unrestricted or no more restrictive than advisories for suitable reference site(s)’. The sub-statement ‘demonstrate fish contamination not different from reference(s), are improving through time point to evidence lines that are included in Tier 3. Finally, the sub-statement ‘or cannot be improved by additional restoration actions within the AOC’ focusses on whether or not additional restoration actions conducted within the AOC are capable of improving fish contamination and lowering fish consumption restriction advice corresponding to Tier 4.” (Pasted from Toronto report – revise).
+
+## Community fish consumption survey
+
+To properly address the needs of the community surrounding the AOC through this BUI assessment, it is important to understand the the impact of the BUI on the consumption habits of the community. By asking the community about consumption habits, we can identify a list of species of interest in the AOC, how often these species are being consumed, and the desired rate of consumption if there were no issues related to priority contaminants. 
+
+
+
+## Tiered assessment framework 
+
+To evaluate the Beneficial Use Impairment (BUI) Restrictions on Fish and Wildlife Consumption, we applied a tiered framework originally developed for other Great Lakes Areas of Concern (AOCs) and adapted it for use in the St. Lawrence River. This framework proceeds in a stepwise manner, beginning with simple threshold tests and progressing toward more complex statistical modeling. Each tier is designed to answer a progressively more nuanced question about the degree of impairment, with multiple lines of evidence integrated to provide a comprehensive assessment. The basis of the tiered assessment report is outlined in Bhavsar (2016) and Drouillard (2022), the latter of which being an adapted framework with additional methods, and on which the present assessment is based. The general framework is outlined in Figure \@ref(tiered-framework-fig). Below is a summary of each tier, and
+
+
+```{r tiered-frameowrk-fig, echo = FALSE, fig.cap="Modified 4 tiered evaluation framework applied in the 2022 BUI #1 Assessment for the Toronto and Region AOC. (Drouillard 2022)"}
+include_graphics(path = here::here("Output", "Full-SLR-Report", "Images", "tiered_flowchart.png"))
+```
+
+
+As part of their 2016 assessment of BUI 1, Toronto and Region RAP team introduced a three-tier assessment framework (Bhavsar 2016; Bhavsar 2018). The framework sets out the order in which three evaluation methods, or tiers, are to be applied, and from which a recommendation on redesignation is made. Tier 1 examines whether the environmental conditions in the AOC meet all of the guideline criteria for the BUI. If so, the BUI is redesignated as “Not Impaired”. If the conditions in the AOC do not meet the criteria, the assessment moves to Tier 2 of the framework. Tier 2 assesses whether the environmental conditions pertaining to the BUI in the AOC are comparable to those at appropriate non-AOC reference sites. If the AOC conditions are better or equivalent to reference sites, the BUI in the AOC is redesignated “Not Impaired”, otherwise the assessment moves to Tier 3. Tier 3 evaluates the status of the BUI using a weight of evidence approach involving multiple lines of ecological and environmental evidence. The overall outcome of the weight of evidence available will support or not support redesignation of the BUI. Since its inception, the tiered assessment framework has been revised and adapted to better fit the needs of the redesignation process of BUI 1. The adoption of generic delisting criteria for BUI 1 across the remaining Canadian AOCs where BUI 1 is impaired has allowed for a more standardized approach to evaluate each aspect of the criteria. In the AOCs where the Tiered Framework has been applied, (cite Detroit and Toronto), the assessment tiers evaluate the degree of fish consumption advisories firstly to an “unrestrictive” monthly allowance, and then compared to the advisories in comparable reference sites. A combination of angler surveys and scientific publications allowed RAP teams to assess the BUI in terms of desired consumption rates of species consumed by local communities. New fish contaminant collections by MECP and MNR across the Great Lakes have allowed updated comparisons to be made to reference sites in Tier 2 and Tier 3. Furthermore, a fourth tier has been added, which aims to assess the local environmental conditions and previous remedial actions taken to address whether further actions are necessary following a failed Tier 3 outcome (see figure X for a full breakdown). In the St. Lawrence River (Cornwall/Akwesasne) AOC, the framework follows the procedure outlined by Drouillard in the 2022 Toronto AOC assessment report. Since the previous assessment report in 2017, the Guide to Eating Ontario fish has been updated with new collections following the report’s recommendations, and the SLR AOC has adopted a version of the generic delisting criterion. 
+
+### Tier 1 {#t1-methods}
+
+The first step of the tiered framework provides a coarse screening of whether fish consumption advisories in the AOC are restrictive in absolute terms. Advisory values, expressed as the number of meals per month recommended for the general and sensitive population groups, were compiled from the Guide to Eating Ontario Fish. These advisories are based on contaminant concentrations measured in sportfish and translated into species- and size-specific consumption categories using Ministry of the Environment, Conservation and Parks (MECP) thresholds.
+
+Advisory values for each fish of interest in the AOC were then compared against a threshold representing acceptable levels of consumption, determined per-species by community survey (see Section \@ref(survey-methods). Any advisory below this benchmark was considered restrictive, while those at or above the threshold were considered non-restrictive. This step provides a baseline indication of potential impairment and allows the RAP team to quickly identify species or size classes where consumption guidance is most restrictive, independent of regional comparisons.
+
+The first step of the tiered framework pro
+"Uses fish consumption advice generated by the appropriate regulatory framework within the AOC as the main source for data interpretation. Data are collated for official fish consumption advice issued for selected indicator fish species for both the sensitive and general population and evaluated against an unrestricted monthly meal allowance criteria. Angler surveys administered within the AOC and region are used to identify which indicator species are appropriate for the Tier 1 criteria and also the unrestricted monthly meal allowance threshold. Where one or more advisories are found to be more restrictive than the monthly meal allowance criteria, Tier 1 is deemed to fail and analysis proceeds to the next tier. Tier 2. The Tier 2 assessment, similar to Tier 1, focusses on official fish consumption advice and uses the same indicator species adopted in Tier 1. However, indicator species that passed the Tier 1 criteria are omitted from further consideration in the Tier 2 assessment. A set of appropriate reference sites are assigned to compare degree of restrictiveness of monthly meal allowances in the AOC against reference locations. Semi-quantitative methods are then used to compare the monthly recommended meals in the AOC against the reference dataset. Typically, this involves comparing the median monthly meal allowance for a given indicator and size class across the selected reference sites against the monthly meal recommendation issued for the same size class/species in the AOC. Cases where the monthly meal recommendation is more stringent than that of the reference result in failure of the Tier 2 criteria."
+
+
+       
+### Tier 3
+
+The Tier 3 assessment adopts several evidence lines to ascertain if the beneficial use is recovering through time.  Tier 3 deviates from Tier 1 and 2 in that it compiles varying types of data beyond fish consumption restrictions that can be derived from different sources.  The evidence lines that are considered include 1) generating virtual fish consumption advice based on the most recent data on fish contamination in the AOC and comparing this against Tier 1 and 2 criteria; 2) measuring differences between priority concentrations in fish tissues between the AOC and reference sites and 3) examining for temporal trends in fish contamination through time and computing number of years to achieve Tier 1 or Tier 2 criteria. Each evidence line is evaluated separately to determine if it supports or refutes an impaired decision.  Given that different evidence lines may conflict in their assessment support, an overall weighting of evidence across the lines is used in conjunction with a decision matrix of evidence line outcomes to generate an overall decision for Tier 3.  Where Tier 3 is judged to fail the assessment, Tier 4 may be further evaluated.
+
+### Tier 4
+
+The Tier 4 assessment, like Tier 3, adopts several evidence lines. Evidence lines are compiled to address past and prospective restoration actions in the AOC and their impact on environmental quality and degree of fish contamination. Within this tier, evidence lines compiled may include 1) listing of the restoration actions identified in the Stage 2 RAP report and assessing the completion status of identified actions and 2) evaluating temporal declines in water, sediment or other environmental media linked to restoration actions and natural environmental recovery occurring within the AOC.  In addition, the feasibility of restoration actions to reduce fish contamination may be partially dependent on fish movements within and outside of the AOC boundaries.  In this case, data on chemical tracers or external studies of fish movements such as fish telemetry studies may be compiled for indicator species and used to evaluate fish residency in the AOC.  In cases where indicator species are shown to spend a majority of their time outside of the AOC boundaries, it can be argued that further restoration within the AOC are likely to have minimal impacts on contaminant bioaccumulation by the study species.  Tier 4 evidence lines on fish movements may therefore be used to exclude highly mobile species from inclusion as indicator species to facilitate a re-evaluation of Tier 3 based on exclusion of mobile species. Other evidence lines may include source track down studies involving water, sediment and forage fish contamination used to infer spatial patterns of environmental contamination and how this relates to restoration actions.  In addition to the above Tier 4 may include use modelling tools, isotopic tracer studies or other tools as appropriate to uncover priority contaminant source-fish contaminant linkages within the AOC and beyond the AOC boundaries.
+
+
+### Tier 3: Aarons version.
+
+Tier 3 evidence lines are determined in aggregate, meaning that unlike the decision tree between tiers, all sub-categories of Tier 3 are considered simultaneously regardless if a species  passes or fails one or more evidence lines. Tier 3 adopts multiple evidence lines,  including the following:
+
+#### Tier 3A: Virtual advisory {#t3a-methods}
+
+Tier 3A seeks to address the relationship between priority contaminants in the AOC and fish consumption advice. Because fish consumption advisories consider multiple fish contaminants, and are issued based on the strictest restriction from any contaminant (cite), it is important to isolate the effect of priority AOC contaminants on driving local fish consumption advisories. Additionally, official advisories may be based on data that dates as far back as the 1970s. Thus, it is important that restrictions on fish consumption are considered using more recent data to account for restorative effects in the AOC associated with previous remedial actions. To achieve this, "virtual advisories" are created using parallel data sources and methods to that is used by MECP in generating official consumption advice. Fish contaminant data (obtained from MECP, see \@ref(data-sources)) is filtered to the contaminant of concern (in the case of the SLR AOC, this is mercury) and the previous 10 years of data (2014 and more recent), and this data is used to calculate virtual advisories based on the MECP method.
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration. For each region (AOC and reference), the function fits a log-log linear model (lm(log(Value) \~ log(Length)) to evaluate whether a significant relationship exists (p ≤ 0.05). If so, predicted concentrations are generated across a continuous length range, and then averaged within fixed 5 cm bins. Advisory levels are assigned using MECP-defined contaminant- and population-specific (General/Sensitive) thresholds to the mean predicted concentrations. If no significant relationship is detected, advisory levels are based on the mean concentration of all observations within each bin.
+
+(Figure for power relationship)
+
+(Table for thresholds)
+
+Virtual advisories are not to be used as a replacement for official consumption advice, and are limited strictly to the evaluation of this BUI. 
+
+The virtual advisories in this tier are evaluated similarly to Tiers 1 and 2; i.e., first it is determined if virtual advice for any size categories are restrictive compared to the community desired consumption rate (see Section \@ref(t1-methods)), then if virtual advice for any size category are more restrictive than suitable reference sites. Similarly to Tiers 1 and 2, any number of restrictive size categories are considered a failure for Tier 3A.
+
+#### Tier 3B: Comparisons of fish contaminants in the AOC vs Reference {#t3b-methods}
+
+To determine the degree of contamination in fish in the AOC by priority contaminants, the concentration of contaminants (mercury) in fish tissue are compared between the AOC and suitable reference sites. 
+
+Reference sites for Tier 3B differ from those used in Tier 2 in that the MECP fish collection zones do not correlate directly with the zones used in the official advisories. For example, one official advisory zone (as is used in Tier 2) may comprise several collection areas. For Tier 3B, reference zones are similarly limited to non-AOC collections zones in the upper St. Lawrence River (upstream of the Moses-Saunders Dam) and Lake Ontario for which collections of the evaluated species have occurred within the previous 10 years (since 2014). The number and locations of reference sites may differ between species depending on the availability of data.
+
+To assess differences in fish contamination between the AOC and reference sites, contaminant–length relationships were modeled using Generalized Additive Models (GAMs), allowing for non-linear associations. For this model, length was first log-transformed to control for skewed data distributions, and used a (fixed effect? length, region), with collection area as a random effect to control for site-specific confounding variables. For each priority contaminant and indicator species, we first tested whether the shape of the concentration–length relationship differed significantly between AOC and reference fish by comparing the full model to a null model with reduced terms using ANOVA. Where models supported statistically similar trends (non-significant interaction), we compared size-adjusted contaminant levels using estimated marginal means. Where shapes differed significantly, contaminant concentration values were compared by GAM-predicted values across the range of lengths of each fish species at 5 cm intervals. A threshold of α = 0.05 was used to evaluate statistical significance throughout.
+
+Where contaminant-length relationships differed between AOC and reference, Tier 3B can be considered supportive of redesignation when the majority of size classes do not significantly differ in predicted contaminant concentration between AOC and reference. Where the contaminant-length relationship does not significantly differ, Tier 3B can be considered supportive of redesignation when the marginal mean of contaminant concentration does not significantly differ between AOC in reference. Otherwise, Tier 3B is considered not supportive of redesignation.
+
+#### Tier 3C: Temporal trends of contaminants in fish
+
+Temporal trends in contaminants of concern in AOC fish of interest were assessed using linear models across all years of data. An initial model tested for a significant interaction between fish length and sampling year. If an interaction was detected, trends were evaluated separately for the three most frequently sampled length bins. Otherwise, annual mean contaminant concentrations were used. Trends help support Tier 3C by assessing if contaminant levels have declined, remained stable, or increased over time.
+
+#### Tier 3D: Future predictions of contaminants in fish
+
+To infer the amount of time... While Tier 3C shines light on the direction of contaminant concentrations through time, Tier 3D seeks to estimate the amount of time necessary to return contaminant concentrations to a level that would not impose consumption restrictions.
+
+## Application of tiered framework to Fish Consumption BUI
+
+### Data Sources {#data-sources}
+
+#### MECP Advisory Data
+
+Tier 1 and Tier 2 of the BUI 1 assessment framework are based on the official fish consumption advisories issued by the Ontario Ministry of Environment, Conservation and Parks (MECP) for the AOC and suitable reference sites. For this assessment report, the most recent advisories were pulled from the 2024 Guide to Eating Ontario Fish (at the time of writing, available at: [link]). The Guide provides monthly meal recommendations based on the size and species of fish available from collections in each area assessed. Recommendations are based on contaminant testing of fish within each zone, which are modeled and compared against concentration thresholds associated with a recommended monthly meal allowance. In the St. Lawrence River (Cornwall/Akwesasne) AOC, the monthly meal recommendations correspond to advisory tables issued for the “St. Lawrence River – Lake St. Francis” zone, available at the time of writing at (link). Advisory information was collected for all available species for which advice is issued, at all size classes and for the two populations identified: General and Sensitive Populations. For reference sites, information was collected only for species that are also monitored in the AOC. Fish consumption advisories are provided for General and Sensitive Populations. Advisories for Sensitive Populations are intended to be used by women of childbearing age and children under the age of 15. Generally, advisories tend to be stricter for the Sensitive Populations, with lower contaminant concentration benchmarks for some contaminants such as mercury, due to the greater sensitivity of this population to negative health effects from some contaminants. Maximum monthly meal recommendation categories for the Sensitive Population include 32, 16, 12, 8, 4 and 0 meals/month. Maximum monthly meal recommendation categories for the General Population include 32, 16, 12, 8, 4, 2, 1 and 0 meals per month. For the purposes of this assessment, advisories for both populations will be considered for Tiers 1 and 2.
+
+#### MECP Contaminant Data
+
+
+
+## Chat GPT summary
+"Tier 3 – Contaminant and Temporal Analyses
+
+The third tier of assessment provides the most detailed line of evidence by examining contaminant drivers, size-specific patterns, and temporal dynamics. These analyses extend beyond observed advisory values to evaluate the mechanisms underlying observed differences between the AOC and reference sites. Tier 3 is subdivided into four complementary components.
+
+Tier 3A – Virtual Advisories
+
+Tier 3A translates modeled contaminant concentrations into predicted consumption advisories, here referred to as “virtual advisories.” This approach allows direct comparisons between AOC and reference sites even where advisory data may be sparse or where contaminant concentrations exist but have not yet been formally translated into consumption guidance.
+
+Generalized additive models (GAMs) were fit to contaminant concentration data for each species, using fish length as a continuous predictor and including waterbody as a random effect. Predicted concentrations were then converted into advisory categories using MECP’s contaminant- and species-specific thresholds. The resulting virtual advisories were summarized across fish size bins, allowing for direct comparison with observed advisories. This provides a parallel line of evidence to the advisory dataset, highlighting whether modeled contaminant data reproduce the same patterns of restrictiveness and whether the AOC remains more restrictive relative to reference regions under this simulated approach.
+
+Tier 3B – Contaminant Concentration Comparisons
+
+In Tier 3B, contaminant concentrations themselves were compared between the AOC and reference sites, rather than their translation into advisory values. This analysis was carried out using generalized additive models (GAMs) fitted to log-transformed contaminant concentrations. Fish length was modeled as a smooth term to capture size-dependent bioaccumulation, while random effects for waterbody were included to account for site-specific variation. Factor-smooth interactions were used to test whether concentration–length relationships differed between the AOC and reference regions.
+
+This modeling framework allowed us to generate predicted contaminant–size curves with associated confidence intervals for each region. Comparisons of these curves provided a robust statistical test of whether contaminant burdens were consistently higher in the AOC across the size spectrum, or whether differences were limited to certain size classes. Output from Tier 3B helps identify whether observed advisory restrictiveness in the AOC is driven by elevated contaminant concentrations in fish tissue, and if so, whether those differences are uniform or size-specific.
+
+Tier 3C – Temporal Trends
+
+Tier 3C evaluates long-term changes in contaminant concentrations over time to assess whether the AOC is on a trajectory toward recovery. This analysis was conducted using linear regression models fitted to contaminant concentration data spanning multiple years of monitoring. Separate models were developed for the AOC and reference sites, allowing direct comparison of temporal slopes.
+
+The primary output of this analysis is the estimated rate of change in contaminant concentrations, expressed as the slope of the fitted regression line. Negative slopes indicate declining concentrations over time, while flat or positive slopes suggest little change or ongoing accumulation. By comparing AOC trends to those observed in reference regions, Tier 3C addresses whether the AOC is recovering at a similar pace, lagging behind, or showing distinct contaminant dynamics. This provides essential information for evaluating progress toward delisting the BUI.
+
+Tier 3D – Half-Life Analysis
+
+The final component, Tier 3D, provides a quantitative estimate of how quickly contaminant levels are declining by calculating half-lives of contaminants in fish tissue. Half-life estimates were derived from regression-based decay models fitted to long-term monitoring data. These models assume exponential decline, with half-life values representing the number of years required for contaminant concentrations to decrease by 50%.
+
+By estimating half-lives, this analysis projects the expected time required for contaminant concentrations to fall below advisory thresholds if current trends continue. Comparing half-life values between the AOC and reference sites further indicates whether recovery in the AOC is occurring at a slower or faster pace than elsewhere. This information is particularly valuable for management planning, as it provides a forecast of how long restrictive advisories may persist in the absence of additional interventions.
+
+Integration
+
+Taken together, the tiered framework provides a structured, multi-layered assessment of BUI 1. Tier 1 establishes whether advisories are restrictive in absolute terms, Tier 2 situates those restrictions in a regional context, and Tier 3 provides detailed insight into the contaminant concentrations, size-specific drivers, temporal trends, and recovery rates underlying observed patterns. This comprehensive approach allows for a robust evaluation of impairment status and offers clear, evidence-based guidance for decision-making under the St. Lawrence River RAP."
+
+<!--chapter:end:02-methods.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+# Common setup for all chapters
+library(here)
+source(here::here("Scripts","setup.R"))
+
+
+# Choose the AOC 
+AOC_full <- "St. Lawrence River (Cornwall/Akwesasne)"
+
+
+# Load derived objects created by your analysis run for this AOC
+# (run your existing parameterized analysis once to write these)
+t1_df   <- readr::read_rds(here::here("Derived", "SLR", "t1_df.rds"))
+flags   <- readr::read_rds(here::here("Derived", "SLR", "flags.rds"))            # t1/t2 flags
+mappings <- readr::read_rds(here::here("Derived", "SLR","mappings.rds"))
+ref_names <- readr::read_rds(here::here("Derived", "SLR", "t2_ref_sites.rds"))
+
+region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
+
+n_pass <- flags %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+aoc_name = "St. Lawrence River (Lake St. Francis)"
+```
+# Tiered Results 
+
+## Tier 1 Assessment for the `r AOC_full` AOC
+
+```{r t1-setup, echo = F}
+# Document setup
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, messages = FALSE)
+```
+
+Tier 1 assessment compares the official MECP consumption advisory information for each fish of interest to the desired consumption rate (in meals per month) as indicated by community survey. Table \@ref(tab:tier-1-table) summarizes the MECP advisory values for fish of interest in the `r AOC_full` AOC for both General and Sensitive, compared to each species'  community desired consumption rate. In total, just `r n_pass$t1_pass_n` of `r n_pass$t1_total` species passed Tier 1 assessment (brown bullhead), with the rest failing and moving to Tier 2 (Table \@ref(tab:tier-1-pass-fail)).
+
+<caption>(#tab:tier-1-table) Results of Tier 1 assessment for `r AOC_full`. The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the "Restrictive" meals/month threshold (indicated by community survey), and green cells indicate advisories levels equal to or above this threshold. The contaminants driving the advisories are displayed below each cells.</caption>
+```{r tier-1-table}
+# Load contaminant mappings
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+
+# Render the t1 table using the pared-down RDS table provided from analysis script
+t1_table = render_t1_table_any(
+  df = t1_df,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  table_height = "1000px",
+  show_legend = TRUE
+)
+
+
+t1_table
+```
+
+
+
+<br />
+
+<caption>(#tab:tier-1-pass-fail) Results by species of Tier 1 assessment for `r AOC_full`. The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Species for which the consumption advisory is equal to or above the desired consumption rate pass Tier 1 and are excluded from further analysis; otherwise the species fails and moves forward to Tier 2.</caption>
+```{r tier-1-pass-fail, results = 'asis'}
+  
+t1_pass = report_pass_fail_species(flags, tier = "t1", output = "table")
+
+
+
+```
+
+
+
+
+<!--chapter:end:03-tier1.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+# Common setup for all chapters
+library(here)
+source(here::here("Scripts","setup.R"))
+
+
+# Choose the AOC 
+AOC_full <- "St. Lawrence River (Cornwall/Akwesasne)"
+
+
+# Load derived objects created by your analysis run for this AOC
+# (run your existing parameterized analysis once to write these)
+t1_df   <- readr::read_rds(here::here("Derived", "SLR", "t1_df.rds"))
+flags   <- readr::read_rds(here::here("Derived", "SLR", "flags.rds"))            # t1/t2 flags
+mappings <- readr::read_rds(here::here("Derived", "SLR","mappings.rds"))
+ref_names <- readr::read_rds(here::here("Derived", "SLR", "t2_ref_sites.rds"))
+
+region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
+
+n_pass <- flags %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+aoc_name = "St. Lawrence River (Lake St. Francis)"
+```
+## Tier 2 Assessment for the `r AOC_full` AOC
+
+Tier 2 assessment compares the intensity of fish consumption advisories in the AOC to suitable reference sites. Reference sites for Tier 2 assessment should reflect background levels of intensity of advisories, i.e., they should represent geographically similar locations that are not AOCs. For the `r AOC_full` AOC, reference sites were non-AOC fishing zones in the upper St. Lawrence River (upstream of the Moses-Saunders Dam) and Lake Ontario for which advisories for species located in the AOC were available. The following reference sites were used for the Tier 2 analysis of the SLR AOC: 
+
+`r knitr::asis_output(paste0("- ", ref_names, collapse = "\n"))`
+
+The consumption advisories for each fish of interest that failed Tier 1 in the AOC were compared to the median advisory (rounded to the nearest advisory level issued, see methods section X) level (in meals per month) of available reference sites for which advisories are issued for that species and size class. The results are summarized below in Table \@ref(tab:tier-2-table). Species where ALL size classes are equal to or above the median advisory level of the reference sites pass Tier 2 and are excluded from further analysis, otherwise the species fails Tier 2 and is carried forward to Tier 3 (Table \@ref(tab:tier-2-pass-fail)). Species and size classes with fewer than 3 reference sites are considered data-deficient and the results are to be interpreted with caution. For the puposes of this assessment, data-deficient species fail Tier 2 automatically.
+
+<caption>(#tab:tier-2-table) Results of Tier 2 assessment for `r AOC_full`. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC, alongside the median advisory level of suitable reference sites. n values indicate the number of reference sites with advisories for this species, size class, and population type. Red cells indicate an advisory in the AOC lower than the median of reference sites, and green cells indicate advisories levels equal to or above the reference median. Grey cells are advisories in the AOC with no suitable reference sites. The drop-down menus display the advisory levels in each reference site for that species and population type. <caption>
+```{r tier-2-table}
+prep <- readr::read_rds(here::here("Derived", "SLR", "t2_prep.rds"))
+
+# Auto: HTML → reactable; Word/PDF → flextable
+render_t2_table_any(prep = prep, table_height = "800px")
+
+
+```
+
+
+
+
+<caption>(#tab:tier-2-pass-fail) Results by species of Tier 2 assessment for `r AOC_full`. The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Species for which the consumption advisory is equal to or above the desired consumption rate pass Tier 1 and are excluded from further analysis; otherwise the species fails and moves forward to Tier 2.</caption>
+```{r tier-2-pass-fail, results = 'asis'}
+report_pass_fail_species(flags, tier = "t2", output = "table", filter_t1_pass = TRUE)
+```
+
+⚠️ - Species has low reference site count (<3) at more than 50% of size classes.
+
+<!--chapter:end:04-tier2.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+# Common setup for all chapters
+library(here)
+source(here::here("Scripts","setup.R"))
+
+
+# Choose the AOC 
+AOC_full <- "St. Lawrence River (Cornwall/Akwesasne)"
+
+
+# Load derived objects created by your analysis run for this AOC
+# (run your existing parameterized analysis once to write these)
+t1_df   <- readr::read_rds(here::here("Derived", "SLR", "t1_df.rds"))
+flags   <- readr::read_rds(here::here("Derived", "SLR", "flags.rds"))            # t1/t2 flags
+mappings <- readr::read_rds(here::here("Derived", "SLR","mappings.rds"))
+ref_names <- readr::read_rds(here::here("Derived", "SLR", "t2_ref_sites.rds"))
+
+region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
+
+n_pass <- flags %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+aoc_name = "St. Lawrence River (Lake St. Francis)"
+```
+## Tier 3
+
+
+```{r t3-loading, echo = FALSE}
+t3_path_book = here("Derived", "SLR", "Tier3")
+t3_walleye_path = here(t3_path_book, "__")
+
+```
+
+In Tier 1, we assessed whether fish consumption advisories for fish of interest within the AOC were more restrictive than the established thresholds for beneficial use, determined by community survey. A total of `nrow(thr_df)` species were evaluated across both general and sensitive population groups. Tables 1 and 2 summarize the Tier 1 results for all species of interest in the St. Lawrence River (Cornwall/Akwesasne) AOC across all size bins and population types.
+
+<br />
+
+Tier 1 results for the St. Lawrence River (Cornwall/Akwesasne) AOC. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the restrictive meal/month threshold determined by community survey, and green cells indicate unrestrictive advisories levels above this threshold. The contaminants driving the advisories are displayed below each cell with an indicated colour and shape.</caption>
+
+
+<br />
+
+<caption>(#tab:tier1-pass-fail) Summary of species that pass/fail Tier 1 assessment.</caption>
+
+
+Tier 1 results indicate that all species of interest in the AOC, save for brown bullhead, have at least one size class with restrictive consumption advisories. For most species, all size categories have restrictive consumption advisories compared the the community desired consumption rate. Northern pike are unrestrictive at smaller size categories, but fail Tier 1 at 65 cm and above for the general population, and 45 cm and above for the sensitive population.
+
+<!--chapter:end:05-tier3.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+# Common setup for all chapters
+library(here)
+source(here::here("Scripts","setup.R"))
+
+
+# Choose the AOC 
+AOC_full <- "St. Lawrence River (Cornwall/Akwesasne)"
+
+
+# Load derived objects created by your analysis run for this AOC
+# (run your existing parameterized analysis once to write these)
+t1_df   <- readr::read_rds(here::here("Derived", "SLR", "t1_df.rds"))
+flags   <- readr::read_rds(here::here("Derived", "SLR", "flags.rds"))            # t1/t2 flags
+mappings <- readr::read_rds(here::here("Derived", "SLR","mappings.rds"))
+ref_names <- readr::read_rds(here::here("Derived", "SLR", "t2_ref_sites.rds"))
+
+region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
+
+n_pass <- flags %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+aoc_name = "St. Lawrence River (Lake St. Francis)"
+```
+## Tier 4
+
+
+
+<!--chapter:end:06-tier4.Rmd-->
+

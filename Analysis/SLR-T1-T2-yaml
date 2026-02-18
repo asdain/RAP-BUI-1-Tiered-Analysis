@@ -86,6 +86,55 @@ params:
   - Rainbow Smelt
 ---
 
+## T1/2 Yaml NR
+---
+title: "NR BUI 1 - Tier 1/2 - Lake Ontario"
+always_allow_html: true
+output:
+  html_document:
+    theme: yeti
+    css: fullwidth.css
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+params:
+  AOC: '42577857'
+  AOC_shorthand: "NR-UR"
+  reference_sites:
+  - '44007727'
+  - '43557712'
+  - '43497905'
+  - '43117922'
+  - '43397900'
+  - '43517847'
+  - '43527851'
+  - '44397535'
+  - '43557717'
+  - '43527856'
+  restrict_threshold: 8
+  thr_path: "Data/consumption_threshold_nr.csv"
+  interest_species:
+  - Black Crappie
+  - Channel Catfish
+  - Freshwater Drum
+  - Largemouth Bass
+  - Northern Pike
+  - Rock Bass
+  - Smallmouth Bass
+  - Walleye
+  - White Perch
+  - Yellow Perch
+  - Chinook Salmon
+  - Lake Whitefish
+  - Rainbow Smelt
+  - Rainbow Trout
+  - Lake Trout
+  - Brown Trout
+  - Coho Salmon
+  - Silver Bass
+---
+
 
 ## T3 Yaml BOQ
 ---
