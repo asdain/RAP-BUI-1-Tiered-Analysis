@@ -1,3 +1,8 @@
+min_na_safe <- function(x) {
+  if (all(is.na(x))) return(NA_real_)
+  min(x, na.rm = TRUE)
+}
+
 make_restrict_table <- function(df,
                                 aoc_id,
                                 length_levels = NULL,
@@ -9,35 +14,61 @@ make_restrict_table <- function(df,
                               error = function(...) intersect(names(df), names(df)))
   }
   
+  aoc_ids <- as.character(aoc_id)
+  
   cons_data <- df %>%
-    dplyr::filter(waterbody_group == aoc_id) %>%
-    dplyr::mutate(length_category_label = factor(length_category_label,
-                                                 levels = length_levels,
-                                                 ordered = TRUE))
+    dplyr::filter(waterbody_group %in% aoc_ids) %>%
+    dplyr::mutate(
+      length_category_label = factor(length_category_label,
+                                     levels = length_levels,
+                                     ordered = TRUE)
+    )
   
   dat_aoc <- cons_data %>%
     dplyr::select(
-      spec = specname,
-      pop_id = population_type_id,
-      pop_name = population_type_desc,
-      length_id = length_category_id,
-      length_name = length_category_label,
-      adv_level = adv_level,
-      adv_cause = adv_cause_multiple_name
+      spec       = specname,
+      pop_id     = population_type_id,
+      pop_name   = population_type_desc,
+      length_id  = length_category_id,
+      length_name= length_category_label,
+      adv_level  = adv_level,
+      adv_cause  = adv_cause_multiple_name
     )
   
-  # >>> NEW: filter to interest species HERE (once)
+  # Filter to interest species (once)
   if (!is.null(interest_species)) {
     dat_aoc <- dat_aoc %>% dplyr::filter(spec %in% interest_species)
   }
   
-  # thresholds (unchanged logic)
+  # Ensure numeric adv_level before collapsing
+  dat_aoc <- dat_aoc %>%
+    dplyr::mutate(adv_level = suppressWarnings(as.numeric(adv_level)))
+  
+  # --- NEW: collapse multiple AOC zones to ONE “most restrictive” value per cell ---
+  dat_aoc <- dat_aoc %>%
+    dplyr::group_by(spec, pop_id, pop_name, length_id, length_name) %>%
+    dplyr::summarise(
+      adv_level = min_na_safe(adv_level),
+      adv_cause = {
+        m <- min_na_safe(adv_level)
+        if (is.na(m)) NA_character_ else {
+          cc <- adv_cause[adv_level == m]
+          cc <- cc[!is.na(cc) & nzchar(cc)]
+          if (length(cc) == 0) NA_character_ else paste(unique(cc), collapse = ", ")
+        }
+      },
+      .groups = "drop"
+    )
+  
+  # thresholds (same logic, applied after collapse)
   if (is.numeric(restrict_threshold) && length(restrict_threshold) == 1L) {
     dat_aoc$thr <- restrict_threshold
+    
   } else if (is.numeric(restrict_threshold) && !is.null(names(restrict_threshold))) {
     thr_vec <- restrict_threshold
     dat_aoc$thr <- thr_vec[dat_aoc$spec]
     dat_aoc$thr[is.na(dat_aoc$thr)] <- 8
+    
   } else if (is.data.frame(restrict_threshold)) {
     thr_df <- restrict_threshold
     if (!"spec" %in% names(thr_df)) {
@@ -47,24 +78,23 @@ make_restrict_table <- function(df,
     if (!"threshold" %in% names(thr_df)) {
       stop("When passing a data.frame for restrict_threshold, include column 'threshold'.")
     }
+    
     dat_aoc <- dat_aoc %>%
       dplyr::left_join(dplyr::select(thr_df, spec, threshold), by = "spec")
+    
     dat_aoc$thr <- dat_aoc$threshold
     dat_aoc$thr[is.na(dat_aoc$thr)] <- 8
     dat_aoc$threshold <- NULL
+    
   } else {
     stop("restrict_threshold must be a single number, a named numeric vector, or a data.frame with 'spec/specname/Species' and 'threshold'.")
   }
   
-  # ensure numeric and (per your earlier code) use <= for restrictive
   dat_aoc <- dat_aoc %>%
-    dplyr::mutate(
-      adv_level = suppressWarnings(as.numeric(adv_level)),
-      thr       = suppressWarnings(as.numeric(thr))
-    )
+    dplyr::mutate(thr = suppressWarnings(as.numeric(thr)))
   
   restrict_aoc <- dat_aoc %>%
-    dplyr::mutate(restrictive = adv_level <= thr)   # matches your earlier CSV logic
+    dplyr::mutate(restrictive = adv_level <= thr)  # keeping your current rule
   
   restrict_aoc_long <- restrict_aoc %>%
     dplyr::mutate(adv_level = as.character(adv_level)) %>%
@@ -92,8 +122,10 @@ make_restrict_table <- function(df,
     dplyr::select(spec, Row_Label, dplyr::everything(), -VarPop) %>%
     dplyr::rename(Species = spec)
   
-  # carry per-species threshold
-  thr_map <- dat_aoc %>% dplyr::distinct(Species = spec, Unrestrictive_Threshold = thr)
+  # carry per-species threshold (now guaranteed unique per Species)
+  thr_map <- dat_aoc %>%
+    dplyr::distinct(Species = spec, Unrestrictive_Threshold = thr)
+  
   t1_df <- t1_df %>%
     dplyr::left_join(thr_map, by = "Species") %>%
     dplyr::mutate(Species_display = ifelse(duplicated(Species), "", Species))

@@ -1,5 +1,5 @@
 ---
-title: "BOQ BUI 1 - Tier 1/2 - Lake Ontario"
+title: "NR BUI 1 - Tier 1/2 - Lake Ontario"
 always_allow_html: true
 output:
   html_document:
@@ -10,40 +10,32 @@ output:
   pdf_document:
     toc: true
 params:
-  AOC: '43457711'
-  AOC_shorthand: "BOQ-LO"
+  AOC: '42577857'
+  AOC_shorthand: "NR_UR"
   reference_sites:
   - '44007727'
   - '43557712'
   - '43497905'
-  - '43117922'
   - '43397900'
   - '43517847'
-  - '43527851'
-  - '44397535'
   - '43557717'
-  - '43527856'
+  - '42208117'
   restrict_threshold: 8
-  thr_path: "Data/consumption_threshold_boq.csv"
+  thr_path: "Data/consumption_threshold_nr.csv"
   interest_species:
-  - Black Crappie
-  - Bluegill
-  - Brown Bullhead
-  - Channel Catfish
-  - Pumpkinseed
-  - Freshwater Drum
-  - Largemouth Bass
-  - Northern Pike
-  - Rock Bass
-  - Smallmouth Bass
-  - Walleye
-  - White Perch
-  - Yellow Perch
-  - Chinook Salmon
-  - White Bass
-  - White Sucker
-  - Lake Whitefish
-  - Rainbow Smelt
+    - Walleye
+    - Smallmouth Bass
+    - Largemouth Bass
+    - Rainbow Trout
+    - Lake Trout
+    - Brown Trout
+    - Coho Salmon
+    - Chinook Salmon
+    - Yellow Perch
+    - White Perch
+    - Rock Bass
+    - Northern Pike
+    - Rainbow Smelt
 ---
 
 ```{r Setup, echo=FALSE, include = FALSE}
@@ -53,7 +45,7 @@ options(inline_output = TRUE)
 # Base setup
 library(here)
 source(here("Scripts","setup.R"))
-aoc_short = params$AOC_shorthand
+aoc_short = params$AOC_short
 
 dir_derived = here("Derived", aoc_short)
 dir_figs    <- here("Derived", aoc_short, "figs")
@@ -67,6 +59,7 @@ readr::write_rds(ref_names, file = path(dir_derived, "t2_ref_sites.rds"))
 
 
 
+
 # make knitr write figures to Derived/<AOC>/figs from project root (works even if Rmd is in Analysis/)
 knitr::opts_knit$set(root.dir = here())
 knitr::opts_chunk$set(fig.path = file.path("Derived", aoc_short, "figs/"))
@@ -75,6 +68,12 @@ knitr::opts_chunk$set(fig.path = file.path("Derived", aoc_short, "figs/"))
 # This is a csv file with consumption thresholds for each species (ie, how many meals/month is considered unrestrictive in the AOC?). It is located in the Data folder,  and you can change it yourself based on your species of interest and consumption thresholds. When calling the T1 table, you can set restrict_thresholds = NULL  and restrict_threshold = (some number) to use the same number for all species (default 8)
 
 thr_df <- if (file.exists(params$thr_path)) {readr::read_csv(params$thr_path, show_col_types = FALSE)} else {tibble::tibble()}
+
+restrict_threshold = if(nrow(thr_df) > 1){
+  thr_df
+} else {
+  as.integer(params$restrict_threshold)
+}
 
 # Save thresholds to derived RDS for Bookdown
 readr::write_rds(thr_df, file = path(dir_derived, "thr_df.rds"))
@@ -85,7 +84,7 @@ t1_df <- make_restrict_table(
   df = cons_data,
   aoc_id = params$AOC,
   length_levels = length_levels,
-  restrict_threshold = thr_df,     # single value, named vector, or df
+  restrict_threshold = restrict_threshold,     # single value, named vector, or df
   interest_species = params$interest_species  
 )
 
@@ -109,7 +108,7 @@ flags <- get_species_pass_flags(
   reference_sites = params$reference_sites,
   length_levels = length_levels,
   interest_species = params$interest_species,
-  restrict_threshold = thr_df
+  restrict_threshold = restrict_threshold
 )
 
 
@@ -121,8 +120,9 @@ readr::write_rds(flags, file = path(dir_derived, "flags.rds"))
 ```{r, Waterbody Lookup, include=FALSE, echo=FALSE}
 # As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
 
-get_waterbody_ids(cons_data, site_name = "Lake Ontario (Eastern Basin)")
+get_waterbody_ids(cons_data, site_name = "Niagara River (Upper reach)")
 
+get_waterbody_names(cons_data, site_ids = "43517847")
 ```
 
 # Tier 2
@@ -137,7 +137,7 @@ prep <- t2_prep_display(
   interest_species = params$interest_species,
   exclude_t1_passed = TRUE,
   flags_df = flags,        # (optional) if you already computed them
-  threshold_df = thr_df
+  threshold_df = restrict_threshold
 )
 readr::write_rds(prep, file = path(dir_derived, "t2_prep.rds"))
 
