@@ -1,0 +1,130 @@
+/* ================================
+   1) Page width / layout (GitBook)
+   ================================ */
+.book .book-body .page-wrapper .page-inner {
+  /* Keep content readable across screens */
+  max-width: clamp(800px, 92vw, 1400px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+}
+
+/* =========================================
+   2) Unified caption styling (HTML outputs)
+   Targets:
+   - knitr/bookdown figures: <p class="caption">Figure 1: ...
+   - Tables (Pandoc/kable/kableExtra): <caption>...</caption>
+     and variants .table-caption, .lightable-caption, .kable-caption
+   ========================================= */
+p.caption,
+table > caption,
+caption.table-caption,
+.lightable-caption,
+.kable-caption {
+  font-size: 0.95em;   /* slightly smaller than body */
+  color: #444;         /* dark grey */
+  line-height: 1.3;
+  margin-top: 0.25rem;
+  caption-side: top;   /* harmless if already top */
+}
+
+/* Bold the label+number (e.g., "Figure 2", "Table 3.1") */
+p.caption .caption-number,
+table > caption .caption-number,
+caption.table-caption .caption-number,
+.lightable-caption .caption-number,
+.kable-caption .caption-number {
+  font-weight: 700;
+}
+
+/* Keep the caption text (right of the colon) regular weight */
+.caption-text {
+  font-weight: 400;
+}
+
+/* ============================
+   3) gt tables caption styling
+   ============================ */
+.gt_caption {
+  font-size: 0.95em;
+  color: #444;
+}
+.gt_caption .gt_caption_title {
+  font-weight: 700;
+}
+
+/* =================================
+   4) Optional: tighten block spacing
+   ================================= */
+.figure,
+.table {
+  margin-bottom: 1rem;
+}
+
+
+/* Ensure generic .caption inside .table containers is also styled */
+.table .caption,
+div.caption,
+p.table-caption {
+  font-size: 0.95em;
+  color: #444;
+  line-height: 1.3;
+  margin-top: 0.25rem;
+}
+
+/* Bold only after wrapping */
+.caption-number { font-weight: 700; }
+.caption-text   { font-weight: 400; }
+
+
+/* Bold "Table X.Y:" which lives in the first span with id "tab:..." */
+table > caption > span[id^="tab:"] {
+  font-weight: 700;
+}
+
+/* (Optional) keep following text normal weight */
+table > caption > span:not([id^="tab:"]) {
+  font-weight: 400;
+}
+
+/* --- Bookdown table captions: <caption><span id="tab:...">Table X.Y: </span><span>text</span> --- */
+.book .book-body table > caption {
+  font-size: 0.95em !important;   /* slightly smaller */
+  color: #444 !important;          /* dark grey */
+  line-height: 1.3 !important;
+  margin-top: 0.25rem !important;
+  caption-side: top;               /* harmless if already top */
+}
+
+/* Bold the label/number span: <span id="tab:...">Table X.Y: </span> */
+.book .book-body table > caption > span[id^="tab:"] {
+  font-weight: 700 !important;
+}
+
+/* Ensure the following text span stays regular weight */
+.book .book-body table > caption > span[id^="tab:"] + span {
+  font-weight: 400 !important;
+}
+
+/* --- Unified caption styling (figures + tables) --- */
+.book .book-body p.caption,
+.book .book-body table > caption {
+  font-size: 0.95em;     /* slightly smaller than body */
+  color: #444;
+  line-height: 1.3;
+  margin-top: 0.25rem;
+  caption-side: top;
+}
+
+/* Bold the label/number; keep the text normal */
+.book .book-body p.caption .caption-number,
+.book .book-body table > caption .caption-number { font-weight: 700; }
+
+.book .book-body p.caption .caption-text,
+.book .book-body table > caption .caption-text { font-weight: 400; }
+
+/* (Optional) support older/table-id style too */
+.book .book-body table > caption > span[id^="tab:"] { font-weight: 700; }
+.book .book-body table > caption > span[id^="tab:"] + span { font-weight: 400; }
+

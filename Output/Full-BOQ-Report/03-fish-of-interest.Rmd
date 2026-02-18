@@ -1,0 +1,18 @@
+# Results: Species of Interest and Desired Consumption Rate
+
+## Species of Interest and Desired Consumption Rate
+
+The following species were identified as species of interest, with the respective desired consumption rates:
+
+(ref:threshold-df) Fish species of interest and desired consumption rate within the `r AOC_full` AOC.
+
+```{r threshold-df, tab.cap='(ref:threshold-df)', echo = F}
+disp_thr = thr_df %>%
+  rename("Desired Consumption Rate" = threshold)
+
+thr_ft = flextable(disp_thr)
+thr_ft = autofit(thr_ft)
+
+thr_ft
+
+```

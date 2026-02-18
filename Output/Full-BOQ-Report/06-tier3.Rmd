@@ -1,0 +1,756 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+## Tier 3 Assessment for the `r AOC_full` AOC {#tier3-results}
+
+
+Tier 3 comprises multiple lines of evidence (virtual advisory,  contaminant concentration comparisons, and temporal contaminant trends in fish of interest) to determine if redesignating the BUI  is supported by contaminant trends in each species of interest. Below, the full Tier 3 analysis is demonstrated for brown bullhead. All other species of interest that passed Tier 2 are evaluated independently, and the results for which are presented in-text (with further details in Appendices). A full summary of Tier 3 results are summarized in Table \@ref(tab:t3-full-summary-pcb).
+
+### PCBs
+
+
+```{r, setup-t3-pcb, include=FALSE}
+book_root <- here::here("Output", "Full-BOQ-Report")
+knitr::opts_knit$set(root.dir = book_root)
+
+
+t3_base = "Derived/BOQ/Tier3"
+
+
+# Load walleye files
+wal_pcb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Walleye",
+  contaminant = "PCBs"
+)
+
+
+bb_pcb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Brown Bullhead",
+  contaminant = "PCBs"
+)
+
+cs_pcb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Chinook Salmon",
+  contaminant = "PCBs"
+)
+
+
+lw_pcb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Lake Whitefish",
+  contaminant = "PCBs"
+)
+
+np_pcb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Northern Pike",
+  contaminant = "PCBs"
+)
+
+rs_pcb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Rainbow Smelt",
+  contaminant = "PCBs"
+)
+
+smb_pcb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Smallmouth Bass",
+  contaminant = "PCBs"
+)
+
+```
+
+#### Tier 3 Summary
+
+
+Table \@ref(tab:t3-full-summary-pcb) summarizes the results of tier 3 assessment for each species. Lines of evidence are evaluated independently, and the overall decision for each species is based on whether or not the majority of evidence lines are supportive of redesignating.
+
+(ref:t3-full-summary-pcb) Summary of tier 3 results for each species of interest that failed Tiers 1 and 2 within the Bay of Quinte Area of Concern. For each species, the analytical metric is presented along with the outcome for each line of evidence, as described in the methods. The overall Tier 3 decision is based on whether or not the majority of evidence lines are supportive of redesignating for each species.
+
+```{r, t3-full-summary-pcb, tab.cap='(ref:t3-full-summary-pcb)'}
+# ---- Tier 3 Summary (Word/HTML/LaTeX-safe) ----
+# Assumes objects bg, cc, lmb, np, smb, rb, bb_pcb, yp exist with a $summary
+
+# ---- Tier 3 Summary (Word/HTML/LaTeX-safe) ----
+
+
+
+
+spec_names <- c("bb_pcb","cs_pcb","lw_pcb","np_pcb","smb_pcb","rs_pcb","wal_pcb")
+
+sp_index <- mget(spec_names, ifnotfound = list(NULL), inherits = TRUE)
+sp_index <- Filter(Negate(is.null), sp_index)
+
+all_spp <- purrr::imap_dfr(sp_index, ~{
+  if (!is.list(.x) || !("summary" %in% names(.x))) return(NULL)
+  dplyr::mutate(.x$summary, Species = .y, .before = 1)
+})
+
+tier_levels <- c("Tier 3A","Tier 3B","Tier 3C")
+species_map <- c(
+  "bb_pcb"="Brown Bullhead","cs_pcb" ="Chinook Salmon",
+  "np_pcb"="Northern Pike","wal_pcb"="Walleye","smb_pcb"="Smallmouth Bass",
+  "rs_pcb"="Rainbow Smelt", "lw_pcb" = "Lake Whitefish"
+)
+
+sp_clean <- all_spp |>
+  dplyr::mutate(
+    Species = dplyr::recode(Species, !!!species_map),
+    Tier = factor(Tier, levels = tier_levels)
+  ) |>
+  dplyr::filter(!is.na(Tier), !is.na(Outcome))
+
+overall_tbl <- sp_clean |>
+  dplyr::group_by(Species) |>
+  dplyr::summarize(n_supp = sum(Outcome == "Supportive", na.rm = TRUE), .groups = "drop") |>
+  dplyr::mutate(`Tier 3 Overall` = dplyr::if_else(n_supp >= 2, "Supportive", "Unsupportive")) |>
+  dplyr::select(Species, `Tier 3 Overall`)
+
+tbl_long <- dplyr::bind_rows(
+  dplyr::transmute(sp_clean, Species, Type = "Outcome", Tier, value = Outcome),
+  dplyr::transmute(sp_clean, Species, Type = "Metric",  Tier, value = Metric)
+)
+
+tbl_wide <- tbl_long |>
+  dplyr::arrange(Species, factor(Type, c("Outcome","Metric")), Tier) |>
+  tidyr::pivot_wider(names_from = Tier, values_from = value) |>
+  dplyr::left_join(overall_tbl, by = "Species") |>
+  dplyr::select(Species, Type, `Tier 3A`, `Tier 3B`, `Tier 3C`, `Tier 3 Overall`)
+
+# Indices and display copy
+out_idx <- which(tbl_wide$Type == "Outcome")
+met_idx <- which(tbl_wide$Type == "Metric")
+tbl_disp <- dplyr::select(tbl_wide, -Type)
+overall_col_disp <- match("Tier 3 Overall", names(tbl_disp))
+
+if (knitr::is_html_output()) {
+  # HTML: work on a copy; don't mutate tbl_disp in-place
+  html_tbl <- tbl_disp
+  html_tbl[["Tier 3 Overall"]] <- paste0(
+    html_tbl[["Tier 3 Overall"]],
+    "<span style='display:none'>", tbl_wide$Species, "</span>"
+  )
+
+  knitr::kable(
+    html_tbl, format = "html", escape = FALSE,
+    col.names = c("Species","Tier 3A","Tier 3B","Tier 3C","Tier 3 Overall")
+  ) |>
+    kableExtra::kable_styling(full_width = FALSE, bootstrap_options = c("striped","condensed")) |>
+    kableExtra::collapse_rows(columns = c(1, overall_col_disp), valign = "top") |>
+    kableExtra::row_spec(out_idx, bold = TRUE) |>
+    kableExtra::row_spec(met_idx, extra_css = "font-size: 90%; line-height: 1.1;")
+
+} else if (knitr::is_latex_output()) {
+  # LaTeX: work on a copy; don't mutate tbl_disp in-place
+  tex_tbl <- tbl_disp
+  tex_tbl[["Tier 3 Overall"]] <- paste0(
+    tex_tbl[["Tier 3 Overall"]],
+    "{\\color{white}{", tbl_wide$Species, "}}"
+  )
+
+  knitr::kable(
+    tex_tbl, format = "latex", booktabs = TRUE, escape = FALSE,
+    col.names = c("Species","Tier 3A","Tier 3B","Tier 3C","Tier 3 Overall")
+  ) |>
+    kableExtra::kable_styling(full_width = FALSE, latex_options = c("hold_position","striped","condensed")) |>
+    kableExtra::collapse_rows(columns = c(1, overall_col_disp), valign = "top") |>
+    kableExtra::row_spec(out_idx, bold = TRUE) |>
+    kableExtra::row_spec(met_idx, font_size = 9)
+
+} else {
+  # WORD: scrub any stray HTML tokens just in case a prior HTML knit polluted the env
+  word_tbl <- tbl_disp
+  word_tbl[["Tier 3 Overall"]] <- gsub("<span[^>]*>.*?</span>", "", word_tbl[["Tier 3 Overall"]])
+
+  # Render with flextable
+  library(flextable)
+  library(officer)
+
+  ft <- flextable(word_tbl) |>
+    merge_v(j = "Species") |>
+    merge_v(j = "Tier 3 Overall") |>
+    valign(j = c("Species","Tier 3 Overall"), valign = "top") |>
+    bold(i = out_idx, bold = TRUE) |>
+    fontsize(i = met_idx, size = 9) |>
+    autofit() |>
+    theme_vanilla()
+
+  # ensure it prints in Word:
+  print(ft)
+  invisible(NULL)
+}
+
+```
+
+#### Brown Bullhead {#tier3-results-bb}
+
+
+
+The following AOC and reference sites were used in the tier 3 analysis of brown bullhead in the Bay of Quinte AOC:
+
+`r t3_text(bb_pcb,"reference_sites")`
+
+##### Tier 3A
+
+(ref:t3a-brown-bullhead-fig-pcb) Virtual `r contaminant_label` advisories in `r tolower(bb_pcb$params$species)`. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for `r contaminant_label` for the sensitive population (dashed lines).
+
+```{r t3a-brown-bullhead-fig-pcb, fig.cap='(ref:t3a-brown-bullhead-fig-pcb)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+bb_t3a_fig_pcb = t3_fig(bb_pcb, "t3a_virtual")
+
+include_graphics(bb_t3a_fig_pcb)
+
+
+```
+
+<br />
+
+`r t3_text(bb_pcb, "t3a_model_summary")`
+
+(ref:t3a-brown-bullhead-table-pcb) Virtual advisory levels for `r contaminant_label` in `r tolower(bb_pcb$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r bb_pcb$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
+
+```{r t3a-brown-bullhead-table-pcb, tab.cap='(ref:t3a-brown bullhead-table-pcb)'}
+bb_t3a_pcb = t3_table(bb_pcb, "t3a_virtual_advisory")
+
+
+bb_t3a_tab_pcb = render_t3_virtual_any(
+  bb_t3a_pcb,
+  restrict_threshold = bb_pcb$params$restrict_threshold,
+  force = "flextable",
+  table_height = "auto"
+)
+
+
+bb_t3a_tab_pcb
+
+```
+
+```{r t3a-brown-bullhead-text-pcb}
+bb_t3a_model_pcb = t3_text(bb_pcb, "t3a_decision_text")
+```
+
+`r bb_t3a_model_pcb` Overall, Tier 3A assessment for brown bullhead is `r tolower(bb_pcb$decisions$t3a_overall)`.
+
+
+**Tier 3A Overall Decision:** `r t3_decision(bb_pcb,"t3a_overall")`
+
+<br/>
+
+##### Tier 3B
+
+<br />
+
+(ref:t3b-bb-fig-pcb) PCB concentration in `r bb_pcb$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity,), ribbons represent 95% confidence interval.
+
+```{r, t3b-bb-fig-pcb, fig.cap='(ref:t3b-bb-fig-pcb)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+t3b_bb_pcb = t3_fig(bb_pcb, "t3b_gam_plot")
+ 
+include_graphics(t3b_bb_pcb)
+```
+
+<br />
+
+```{r t3b-bb-text-print-pcb, eval = F}
+t3_text(bb_pcb, "t3b_summary")
+```
+
+Generalized Additive Models (GAMs) were used to model the relationship between fish length and total PCBs concentrations for brown bullhead in the AOC and reference regions. The length-contaminant relationship did not differ significantly between sites (interaction test p = NA). Marginal mean concentrations were estimated across the full size distribution using a reduced model with shared smooths. The estimated marginal mean PCBs concentration in the AOC was 3.66 units (95% CI: 3.32–4). Estimated values for reference site(s): Reference: 3.88 units (95% CI: 3.62–4.14).
+
+(ref:t3b-bb-tab-pcb) Predicted `r contaminant_label` concentrations (µg/g) in `r bb_pcb$params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.
+
+```{r t3b-bb-tab-pcb, tab.cap='(ref:t3b-bb-tab-pcb)'}
+if(exists("bb_pcb$tables$t3b_pred")){
+  
+t3b_tab = (t3_table(bb_pcb, "t3b_pred"))
+
+sig_cols <- setdiff(names(t3b_tab), "Region")
+
+# robust asterisk check
+has_star <- function(x) {
+  x <- trimws(as.character(x))
+  grepl("[\\*\\u2217]", x)
+}
+
+# row index for AOC
+i_aoc <- which(t3b_tab$Region == "AOC")
+stopifnot(length(i_aoc) == 1)
+
+# columns where AOC has an asterisk
+bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
+j_bold    <- match(bold_cols, names(t3b_tab))
+
+t3b_ft <- flextable(t3b_tab) %>%
+  # bold header + first column
+  bold(part = "header", bold = TRUE) %>%
+  bold(j = 1, part = "body", bold = TRUE) %>%
+  # bold only AOC cells with asterisk
+  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+t3b_ft
+}
+```
+
+`r t3_text(bb_pcb, "t3b_decision")`(Table \@ref(tab:t3b-bb-tab)). Therefore, Tier 3B analysis of brown bullhead is considered `r tolower(t3_decision(bb_pcb,"t3b_overall"))` for redesignation.
+
+**Tier 3B Overall Decision:** `r t3_decision(bb_pcb,"t3b_overall")`
+
+<br />
+
+##### Tier 3C
+
+
+(ref:t3c-brown-bullhead-table-pcb) Estimated time to unrestrictive `r contaminant_label` threshold for median, upper-quartile, and lower-quartile-sized `r tolower(bb_pcb$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of representative-length fish is reported for the most recent year of observation, and the target concentration corresponding to the earliest of either Tier 1 or Tier 2 thresholds. Tier 1 thresholds representitive an "unrestrictive" advisory for the Sensitive population of `r bb_pcb$params$restrict_threshold`, based on survey results and MECP advisory thresholds. Tier 2 thresholds are size-matched Sensitive reference medians.
+
+```{r t3c-brown-bullhead-table-pcb, tab.cap='(ref:t3c-brown-bullhead-table-pcb)'}
+t3c_tab = t3_table(bb_pcb, "t3c_sensitivity")
+
+
+t3c_sensitivity_ft_data <- t3c_tab %>%
+  mutate(
+    # outcome from years_to_target (same logic as your kable)
+    outcome = case_when(
+      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target)                          ~ "Unsupportive",
+      years_to_target > 10                            ~ "Unsupportive",
+      TRUE                                            ~ "Supportive"
+    ),
+
+    # format display fields using ONLY columns present in the table
+    predicted_conc_f   = sprintf("%.2f", predicted_conc),
+    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
+    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
+    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
+    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
+    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
+    ci_95              = case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  select(
+    `Representative group`              = role,
+    `Length (cm)`                       = length_cm,
+    `Predicted Conc. (Current Year)`    = predicted_conc_f,
+    `Desired Consumption Rate` = t1_meals,
+    `Tier 1 threshold conc.`            = target_conc_t1_f,
+    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
+    `Tier 2 Threshold conc.`            = target_conc_t2_f,
+    `Target Threshold (earliest)`           = target_conc_f,
+    `Years to Threshold`                = years_to_target_f,
+    `95% CI`                            = ci_95,
+    `Outcome`                           = outcome
+  )
+
+
+t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+  bold(part = "header") %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+# optional: subtle emphasis on Outcome
+t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
+
+t3c_sensitivity_ft
+
+```
+
+<br/>
+
+(ref:t3c-bb-fig-pcb) Projected PCB concentration in median, lower-, and upper-quartile-length brown bullhead in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCB threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+
+```{r t3c-bb-fig-pcb, fig.cap='(ref:t3c-bb-fig-pcb)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+include_graphics(t3_fig(bb_pcb, "t3c_projected_multi"))
+```
+
+`r t3_text(bb_pcb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(bb_pcb,"t3c_overall"))`.
+
+**Tier 3C Overall Decision:** `r t3_decision(bb_pcb,"t3c_overall")`
+
+##### Summary
+
+A summary of Tier 3 assessment results can be found in table \@ref(tab:t3-bb-summary-pcb). Overall, results from this species are supportive of redesignation.
+
+(ref:t3-bb-summary-pcb) Summary of Tier 3 assessment results in the Bay of Quinte Area of Concern.
+
+```{r t3-bb-summary-pcb, tab.cap='(ref:t3-bb-summary-pcb)'}
+t3_bb_pcb = flextable(bb_pcb$summary)
+t3_bb_pcb = autofit(t3_bb_pcb)
+
+t3_bb_pcb
+```
+
+
+
+#### Lake Whitefish
+
+The following reference sites were used in the tier 3 analysis of lake whitefish in the Bay of Quinte AOC:
+
+`r t3_text(lw_pcb,"reference_sites")`
+
+##### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for lake whitefish and `r contaminant_label`.
+
+`r t3_text(lw_pcb, "t3a_model_summary")`
+
+`r t3_text(lw_pcb, "t3a_decision_text")` Therefore, Tier 3A analysis of lake whitefish is considered `r tolower(t3_decision(lw_pcb,"t3a_overall"))` for redesignation.
+
+##### Tier 3B
+
+`r t3_text(lw_pcb, "t3b_summary")`
+
+`r t3_text(lw_pcb, "t3b_decision")` Therefore, Tier 3B analysis of lake whitefish is considered `r tolower(t3_decision(lw_pcb,"t3b_overall"))` for redesignation.
+
+##### Tier 3C
+
+Temporal trends in lake whitefish for PCBs were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(lw_pcb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(lw_pcb,"t3c_overall"))` for redesignation.
+
+##### Tier 3 Summary
+
+```{r t3-lw-summary-pcb}
+t3_lw_pcb = kable(lw_pcb$summary)
+
+t3_lw_pcb
+```
+
+
+#### Northern Pike
+
+The following reference sites were used in the tier 3 analysis of northern pike in the Bay of Quinte AOC:
+
+`r t3_text(np_pcb,"reference_sites")`
+
+##### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for northern pike and PCBs.
+
+`r t3_text(np_pcb, "t3a_model_summary")`
+
+`r t3_text(np_pcb, "t3a_decision_text")` Therefore, Tier 3A analysis of northern pike is considered `r tolower(t3_decision(np_pcb,"t3a_overall"))` for redesignation.
+
+##### Tier 3B
+
+`r t3_text(np_pcb, "t3b_summary")`
+
+`r t3_text(np_pcb, "t3b_decision")` Therefore, Tier 3B analysis of northern pike is considered `r tolower(t3_decision(np_pcb,"t3b_overall"))` for redesignation.
+
+##### Tier 3C
+
+Temporal trends in northern pike for PCBs were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(np_pcb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(np_pcb,"t3c_overall"))` for redesignation.
+
+##### Tier 3 Summary
+
+```{r t3-np-summary-pcb}
+t3_np_pcb = kable(np_pcb$summary)
+
+t3_np_pcb
+```
+
+#### Smallmouth Bass
+
+The following reference sites were used in the tier 3 analysis of smallmouth bass in the Bay of Quinte AOC:
+
+`r t3_text(smb_pcb,"reference_sites")`
+
+
+##### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for smallmouth bass and `r contaminant_label`.
+
+`r t3_text(smb_pcb, "t3a_model_summary")`
+
+`r t3_text(smb_pcb, "t3a_decision_text")` Therefore, Tier 3A analysis of smallmouth bass is considered `r tolower(t3_decision(smb_pcb,"t3a_overall"))` for redesignation.
+
+##### Tier 3B
+
+`r t3_text(smb_pcb, "t3b_summary")`
+
+`r t3_text(smb_pcb, "t3b_decision")` Therefore, Tier 3B analysis of smallmouth bass is considered `r tolower(t3_decision(smb_pcb,"t3b_overall"))` for redesignation.
+
+##### Tier 3C
+
+Temporal trends in smallmouth bass for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(smb_pcb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(smb_pcb,"t3c_overall"))` for redesignation.
+
+##### Tier 3 Summary
+
+```{r t3-smb-summary-pcb}
+t3_smb_pcb = kable(smb_pcb$summary)
+
+t3_smb_pcb
+```
+
+#### Walleye
+
+The following reference sites were used in the tier 3 analysis of walleye in the Bay of Quinte AOC:
+
+`r t3_text(wal_pcb,"reference_sites")`
+
+##### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for walleye and PCBs.
+
+`r t3_text(wal_pcb, "t3a_model_summary")`
+
+`r t3_text(wal_pcb, "t3a_decision_text")` Therefore, Tier 3A analysis of walleye is considered `r tolower(t3_decision(wal_pcb,"t3a_overall"))` for redesignation.
+
+##### Tier 3B
+
+`r t3_text(wal_pcb, "t3b_summary")`
+
+`r t3_text(wal_pcb, "t3b_decision")` Therefore, Tier 3B analysis of walleye is considered `r tolower(t3_decision(wal_pcb,"t3b_overall"))` for redesignation.
+
+##### Tier 3C
+
+Temporal trends in walleye for PCBs were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(wal_pcb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(wal_pcb,"t3c_overall"))` for redesignation.
+
+##### Tier 3 Summary
+
+```{r t3-wal-summary-pcb}
+t3_wal_pcb = kable(wal_pcb$summary)
+
+t3_wal_pcb
+```
+
+
+#### Chinook Salmon and Rainbow Smelt
+
+
+There were an insufficient number of observed records of Chinook salmon (26 observations across 5 years of data), and rainbow smelt (18 observations across 5 years of data) in the AOC from which to draw conclusions at the Tier 3 level. Thus, these species automatically fail Tier 3, and will be considered holistically as part of Tier 4 assessment.
+
+
+
+### Dioxins and Furans
+
+
+Data availability for dioxins and furans contamination for species of interest within the Bay of Quinte is limited, and insufficient for tier 3 analysis for most species. However, there is sufficient data for limited scope analysis of brown bullhead. While PCBs are the major contaminant of concern in the Bay of Quinte AOC, analysis of dioxins and furans in brown bullhead helps to provide additional context for the state of organic contamination within the AOC, as brown bullhead are considered a sentinel species and generally accumulate larger amounts of organic contaminants than other lean predator fish such as brown bullhead. Dioxins and furans are estimated using the TEQWH4 method (World  Health Organization Toxicity Equivalency Units).
+
+Reference data availability is extremely limited for dioxins/furans in Lake Ontario, as testing is prohibitively expensive for most sites. It is likely that limited measurements are only taken from sites where these contaminants are known to be an issue, such as AOCs. Thus, the examination of dioxins and furans for brown bullhead focuses on the AOC context, and the "reference" areas (Toronto Waterfront and Whitby Harbour) provide some additional context on dioxin/furan contamination in other Lake Ontario sites.
+
+
+#### Brown Bullhead {#tier3-results-brown-bullhead-dxf}
+
+```{r, setup-t3-dxf, include=FALSE}
+book_root <- here::here("Output", "Full-BOQ-Report")
+knitr::opts_knit$set(root.dir = book_root)
+
+
+t3_base = "Derived/BOQ/Tier3"
+
+
+# Load brown bullhead files
+
+bb_dxf <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Brown Bullhead",
+  contaminant = "TEQWH4"
+)
+
+
+
+```
+
+
+
+The following sites were used in the tier 3 analysis of brown bullhead in the Bay of Quinte AOC:
+  
+`r t3_text(bb_dxf, "reference_sites")`
+
+##### Tier 3A
+
+(ref:t3a-brown-bullhead-fig-dxf) Virtual `r contaminant_label` advisories in `r tolower(bb_dxf$params$species)`. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for `r contaminant_label` for the sensitive population (dashed lines).
+
+```{r t3a-brown-bullhead-fig-dxf, fig.cap='(ref:t3a-brown-bullhead-fig-dxf)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+bb_t3a_fig_dxf = t3_fig(bb_dxf, "t3a_virtual")
+
+include_graphics(bb_t3a_fig_dxf)
+
+
+```
+
+<br />
+  
+`r t3_text(bb_dxf, "t3a_model_summary")` Most observations of dioxins/furans in brown bullhead in the AOC are below detection limits (Figure \@ref(fig:t3a-brown bullhead-fig-dxf)). Additionally, the low reference data induces a dramatic curve which may not represent actual patterns in dioxin/furan contamination within these two sites.
+
+(ref:t3a-brown-bullhead-table-dxf) Virtual advisory levels for `r contaminant_label` in `r tolower(bb_dxf$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r bb_dxf$params$restrict_threshold` meals/month; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate. Reference values are shown for comparison, but are not used for the assessment of Tier 3A.
+
+```{r t3a-brown-bullhead-table-dxf, tab.cap='(ref:t3a-brown-bullhead-table-dxf)'}
+bb_t3a_dxf = t3_table(bb_dxf, "t3a_virtual_advisory")
+
+
+bb_t3a_tab_dxf = render_t3_virtual_any(
+  bb_t3a_dxf,
+  restrict_threshold = bb_dxf$params$restrict_threshold,
+  force = "flextable",
+  table_height = "auto"
+)
+
+
+bb_t3a_tab_dxf
+
+```
+
+```{r t3a-brown-bullhead-text-dxf}
+bb_t3a_model_dxf = t3_text(bb_dxf, "t3a_decision_text")
+```
+
+`r bb_t3a_model_dxf` Overall, Tier 3A assessment for brown bullhead is `r tolower(bb_dxf$decisions$t3a_overall)`.
+
+
+**Tier 3A Overall Decision:** `r t3_decision(bb_dxf,"t3a_overall")`
+
+<br/>
+  
+##### Tier 3B
+  
+<br />
+  
+(ref:t3b-bb-fig-dxf) PCB concentration in `r bb_dxf$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity,), ribbons represent 95% confidence interval.
+
+```{r, t3b-bb-fig-dxf, fig.cap='(ref:t3b-bb-fig-dxf)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+t3b_bb_dxf = t3_fig(bb_dxf, "t3b_gam_plot")
+
+include_graphics(t3b_bb_dxf)
+```
+
+<br />
+  
+```{r t3b-bb-text-print-dxf, eval = F}
+t3_text(bb_dxf, "t3b_summary")
+```
+
+Generalized Additive Models (GAMs) were used to model the relationship between fish length and dioxin/furan concentrations for brown bullhead in the AOC and reference regions. The length-contaminant relationship did not differ significantly between sites (interaction test p = 0.48). Marginal mean concentrations were estimated across the full size distribution using a reduced model with shared smooths. The estimated marginal mean TEQWH4 concentration in the AOC was -3.44 pg/g (95% CI: -4.59–-2.3). Estimated values for reference site(s): Reference: -2.07 pg/g (95% CI: -4.24–0.11).
+
+(ref:t3b-bb-tab-dxf) Predicted `r contaminant_label` concentrations (µg/g) in `r bb_dxf$params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.
+
+```{r t3b-bb-tab-dxf, tab.cap='(ref:t3b-bb-tab-dxf)'}
+if(exists("bb_dxf$tables$t3b_pred")){
+  
+t3b_tab = (t3_table(bb_dxf, "t3b_pred"))
+
+sig_cols <- setdiff(names(t3b_tab), "Region")
+
+# robust asterisk check
+has_star <- function(x) {
+  x <- trimws(as.character(x))
+  grepl("[\\*\\u2217]", x)
+}
+
+# row index for AOC
+i_aoc <- which(t3b_tab$Region == "AOC")
+stopifnot(length(i_aoc) == 1)
+
+# columns where AOC has an asterisk
+bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
+j_bold    <- match(bold_cols, names(t3b_tab))
+
+t3b_ft <- flextable(t3b_tab) %>%
+  # bold header + first column
+  bold(part = "header", bold = TRUE) %>%
+  bold(j = 1, part = "body", bold = TRUE) %>%
+  # bold only AOC cells with asterisk
+  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+t3b_ft
+}
+```
+
+`r t3_text(bb_dxf, "t3b_decision")`(Table \@ref(tab:t3b-bb-tab)). Therefore, Tier 3B analysis of brown bullhead is considered `r tolower(t3_decision(bb_dxf,"t3b_overall"))` for redesignation.
+
+**Tier 3B Overall Decision:** `r t3_decision(bb_dxf,"t3b_overall")`
+
+<br />
+  
+##### Tier 3C
+  
+  
+(ref:t3c-brown-bullhead-table-dxf) Estimated time to unrestrictive `r contaminant_label` threshold for an upper-quartile-sized `r tolower(bb_dxf$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an "unrestrictive" advisory for the Sensitive population of `r bb_dxf$params$restrict_threshold`, based on survey results and MECP advisory thresholds.
+
+```{r t3c-brown-bullhead-table-dxf, tab.cap='(ref:t3c-brown-bullhead-table-dxf)'}
+t3c_tab = t3_table(bb_dxf, "t3c_sensitivity")
+
+
+t3c_sensitivity_ft_data <- t3c_tab %>%
+  mutate(
+    # outcome from years_to_target (same logic as your kable)
+    outcome = case_when(
+      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target)                          ~ "Unsupportive",
+      years_to_target > 10                            ~ "Unsupportive",
+      TRUE                                            ~ "Supportive"
+    ),
+
+    # format display fields using ONLY columns present in the table
+    predicted_conc_f   = sprintf("%.2f", predicted_conc),
+    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
+    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
+    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
+    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
+    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
+    ci_95              = case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  select(
+    `Representative group`              = role,
+    `Length (cm)`                       = length_cm,
+    `Predicted Conc. (Current Year)`    = predicted_conc_f,
+    `Desired Consumption Rate` = t1_meals,
+    `Tier 1 threshold conc.`            = target_conc_t1_f,
+    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
+    `Tier 2 Threshold conc.`            = target_conc_t2_f,
+    `Target Threshold (earliest)`           = target_conc_f,
+    `Years to Threshold`                = years_to_target_f,
+    `95% CI`                            = ci_95,
+    `Outcome`                           = outcome
+  )
+
+
+t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+  bold(part = "header") %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+# optional: subtle emphasis on Outcome
+t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
+
+t3c_sensitivity_ft
+
+
+```
+
+<br/>
+  
+(ref:t3c-bb-fig-dxf) Projected PCB concentration in upper-quartile-length brown bullhead in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCB threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+
+```{r t3c-bb-fig-dxf, fig.cap='(ref:t3c-bb-fig-dxf)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+include_graphics(t3_fig(bb_dxf, "t3c_projected_multi"))
+```
+
+`r t3_text(bb_dxf, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(bb_dxf,"t3c_overall"))`.
+
+**Tier 3C Overall Decision:** `r t3_decision(bb_dxf,"t3c_overall")`
+
+##### Summary
+
+A summary of Tier 3 assessment results can be found in table \@ref(tab:t3-bb-summary). Overall, results from this species are supportive of redesignation.
+
+(ref:t3-bb-summary-dxf) Summary of Tier 3 assessment results of dioxins and furans in brown bullhead in the Bay of Quinte Area of Concern.
+
+```{r t3-bb-summary-dxf, tab.cap='(ref:t3-bb-summary)'}
+t3_bb_dxf = kable(bb_dxf$summary)
+
+t3_bb_dxf
+```
+

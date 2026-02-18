@@ -1,0 +1,657 @@
+# (APPENDIX) Appendix {-}
+
+
+# Tier 3 Supplementary Figures for `r AOC_full` AOC {#tier3-appendix}
+
+
+```{r, apdx-setup-t3, include=FALSE}
+book_root <- here::here("Output", "Full-BOQ-Report")
+knitr::opts_knit$set(root.dir = book_root)
+
+
+t3_base = "Derived/BOQ/Tier3"
+
+
+# Load walleye files
+wal <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Walleye",
+  contaminant = "PCBs"
+)
+
+
+bb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Brown Bullhead",
+  contaminant = "PCBs"
+)
+
+cs <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Chinook Salmon",
+  contaminant = "PCBs"
+)
+
+
+lw <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Lake Whitefish",
+  contaminant = "PCBs"
+)
+
+np <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Northern Pike",
+  contaminant = "PCBs"
+)
+
+rs <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Rainbow Smelt",
+  contaminant = "PCBs"
+)
+
+smb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Smallmouth Bass",
+  contaminant = "PCBs"
+)
+
+```
+
+### Walleye
+
+(ref:apdx-t3a-wal-fig) Virtual `r contaminant_label` advisories in `r tolower(wal$params$species)`. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for `r contaminant_label` for the Sensititve population (dashed lines).
+
+```{r apdx-t3a-wal-fig, fig.cap='(ref:apdx-t3a-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+wal_t3a_fig = t3_fig(wal, "t3a_virtual")
+
+include_graphics(wal_t3a_fig)
+
+
+```
+
+
+(ref:apdx-t3a-wal-table) Virtual advisory levels for `r contaminant_label` in `r tolower(wal$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r wal$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
+
+```{r apdx-t3a-wal-table, tab.cap='(ref:apdx-t3a-wal-table)'}
+wal_t3a = t3_table(wal_pcb, "t3a_virtual_advisory")
+
+
+wal_t3a_tab = render_t3_virtual_any(
+  wal_t3a,
+  restrict_threshold = lw$params$restrict_threshold,
+  force = "flextable",
+  table_height = "auto"
+)
+
+
+wal_t3a_tab
+```
+
+
+<br/>
+
+(ref:apdx-t3b-wal-fig) PCBs concentration in `r wal$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), riwalons represent 95% confidence interval.
+
+```{r apdx-t3b-wal-fig, fig.cap='(ref:apdx-t3b-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+t3b_wal = t3_fig(wal, "t3b_gam_plot")
+ 
+include_graphics(t3b_wal)
+```
+
+
+(ref:apdx-t3b-wal-tab) Predicted `r contaminant_label` concentrations (µg/g) in `r wal$params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.
+```{r apdx-t3b-wal-tab, tab.cap='(ref:apdx-t3b-wal-tab)'}
+if(exists("wal_pcb$tables$t3b_pred")){
+  
+t3b_tab = (t3_table(wal_pcb, "t3b_pred"))
+
+sig_cols <- setdiff(names(t3b_tab), "Region")
+
+# robust asterisk check
+has_star <- function(x) {
+  x <- trimws(as.character(x))
+  grepl("[\\*\\u2217]", x)
+}
+
+# row index for AOC
+i_aoc <- which(t3b_tab$Region == "AOC")
+stopifnot(length(i_aoc) == 1)
+
+# columns where AOC has an asterisk
+bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
+j_bold    <- match(bold_cols, names(t3b_tab))
+
+t3b_ft <- flextable(t3b_tab) %>%
+  # bold header + first column
+  bold(part = "header", bold = TRUE) %>%
+  bold(j = 1, part = "body", bold = TRUE) %>%
+  # bold only AOC cells with asterisk
+  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+t3b_ft
+}
+```
+
+
+(ref:apdx-t3c-wal-table) Estimated time to unrestrictive `r contaminant_label` threshold for an upper-quartile-sized `r tolower(wal$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an "unrestrictive" advisory for the Sensitive population of `r wal$params$restrict_threshold`, based on survey results and MECP advisory thresholds.
+
+```{r apdx-t3c-wal-table, tab.cap='(ref:apdx-t3c-wal-table)'}
+t3c_tab = t3_table(wal_pcb, "t3c_sensitivity")
+
+
+t3c_sensitivity_ft_data <- t3c_tab %>%
+  mutate(
+    # outcome from years_to_target (same logic as your kable)
+    outcome = case_when(
+      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target)                          ~ "Unsupportive",
+      years_to_target > 10                            ~ "Unsupportive",
+      TRUE                                            ~ "Supportive"
+    ),
+
+    # format display fields using ONLY columns present in the table
+    predicted_conc_f   = sprintf("%.2f", predicted_conc),
+    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
+    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
+    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
+    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
+    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
+    ci_95              = case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  select(
+    `Representative group`              = role,
+    `Length (cm)`                       = length_cm,
+    `Predicted Conc. (Current Year)`    = predicted_conc_f,
+    `Desired Consumption Rate` = t1_meals,
+    `Tier 1 threshold conc.`            = target_conc_t1_f,
+    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
+    `Tier 2 Threshold conc.`            = target_conc_t2_f,
+    `Target Threshold (earliest)`           = target_conc_f,
+    `Years to Threshold`                = years_to_target_f,
+    `95% CI`                            = ci_95,
+    `Outcome`                           = outcome
+  )
+
+
+t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+  bold(part = "header") %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+# optional: subtle emphasis on Outcome
+t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
+
+t3c_sensitivity_ft
+
+
+```
+
+
+<br/>
+
+(ref:apdx-t3c-wal-fig) Projected PCBs concentration in upper-quartile-length `r wal$params$species` in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, riwalons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+
+```{r apdx-t3c-wal-fig, fig.cap='(ref:apdx-t3c-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+include_graphics(t3_fig(wal, "t3c_projected_multi"))
+```
+
+
+### Lake Whitefish
+
+(ref:apdx-t3a-lw-fig) Virtual `r contaminant_label` advisories in `r tolower(lw$params$species)`. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for `r contaminant_label` for the Sensititve population (dashed lines).
+
+```{r apdx-t3a-lw-fig, fig.cap='(ref:apdx-t3a-lw-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+lw_t3a_fig = t3_fig(lw_pcb, "t3a_virtual")
+
+include_graphics(lw_t3a_fig)
+
+
+```
+
+
+(ref:apdx-t3a-lw-table) Virtual advisory levels for `r contaminant_label` in `r tolower(lw$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r lw$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
+
+```{r apdx-t3a-lw-table, tab.cap='(ref:apdx-t3a-lw-table)'}
+lw_t3a = t3_table(lw_pcb, "t3a_virtual_advisory")
+
+
+lw_t3a_tab = render_t3_virtual_any(
+  lw_t3a,
+  restrict_threshold = lw$params$restrict_threshold,
+  force = "flextable",
+  table_height = "auto"
+)
+
+
+lw_t3a_tab
+
+```
+
+
+<br/>
+
+(ref:apdx-t3b-lw-fig) PCBs concentration in `r lw$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), rilwons represent 95% confidence interval.
+
+```{r apdx-t3b-lw-fig, fig.cap='(ref:apdx-t3b-lw-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+t3b_lw = t3_fig(lw_pcb, "t3b_gam_plot")
+ 
+include_graphics(t3b_lw)
+```
+
+
+(ref:apdx-t3b-lw-tab) Predicted `r contaminant_label` concentrations (µg/g) in `r lw$params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.
+```{r apdx-t3b-lw-tab, tab.cap='(ref:apdx-t3b-lw-tab)'}
+if(exists("lw_pcb$tables$t3b_pred")){
+  
+t3b_tab = (t3_table(lw_pcb, "t3b_pred"))
+
+sig_cols <- setdiff(names(t3b_tab), "Region")
+
+# robust asterisk check
+has_star <- function(x) {
+  x <- trimws(as.character(x))
+  grepl("[\\*\\u2217]", x)
+}
+
+# row index for AOC
+i_aoc <- which(t3b_tab$Region == "AOC")
+stopifnot(length(i_aoc) == 1)
+
+# columns where AOC has an asterisk
+bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
+j_bold    <- match(bold_cols, names(t3b_tab))
+
+t3b_ft <- flextable(t3b_tab) %>%
+  # bold header + first column
+  bold(part = "header", bold = TRUE) %>%
+  bold(j = 1, part = "body", bold = TRUE) %>%
+  # bold only AOC cells with asterisk
+  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+t3b_ft
+}
+```
+
+
+(ref:apdx-t3c-lw-table) Estimated time to unrestrictive `r contaminant_label` threshold for an upper-quartile-sized `r tolower(lw$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an "unrestrictive" advisory for the Sensitive population of `r lw$params$restrict_threshold`, based on survey results and MECP advisory thresholds.
+
+```{r apdx-t3c-lw-table, tab.cap='(ref:apdx-t3c-lw-table)'}
+t3c_tab = t3_table(lw_pcb, "t3c_sensitivity")
+
+
+t3c_sensitivity_ft_data <- t3c_tab %>%
+  mutate(
+    # outcome from years_to_target (same logic as your kable)
+    outcome = case_when(
+      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target)                          ~ "Unsupportive",
+      years_to_target > 10                            ~ "Unsupportive",
+      TRUE                                            ~ "Supportive"
+    ),
+
+    # format display fields using ONLY columns present in the table
+    predicted_conc_f   = sprintf("%.2f", predicted_conc),
+    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
+    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
+    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
+    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
+    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
+    ci_95              = case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  select(
+    `Representative group`              = role,
+    `Length (cm)`                       = length_cm,
+    `Predicted Conc. (Current Year)`    = predicted_conc_f,
+    `Desired Consumption Rate` = t1_meals,
+    `Tier 1 threshold conc.`            = target_conc_t1_f,
+    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
+    `Tier 2 Threshold conc.`            = target_conc_t2_f,
+    `Target Threshold (earliest)`           = target_conc_f,
+    `Years to Threshold`                = years_to_target_f,
+    `95% CI`                            = ci_95,
+    `Outcome`                           = outcome
+  )
+
+
+t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+  bold(part = "header") %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+# optional: subtle emphasis on Outcome
+t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
+
+t3c_sensitivity_ft
+
+```
+
+
+<br/>
+
+(ref:apdx-t3c-lw-fig) Projected PCBs concentration in upper-quartile-length `r lw$params$species` in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+
+```{r apdx-t3c-lw-fig, fig.cap='(ref:apdx-t3c-lw-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+include_graphics(t3_fig(lw, "t3c_projected_multi"))
+```
+
+
+### Northern Pike
+
+```{r apdx-t3-pike-loading}
+np <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Northern Pike",
+  contaminant = "PCBs"
+)
+```
+
+(ref:apdx-t3a-np-fig) Virtual `r contaminant_label` advisories in `r tolower(np$params$species)`. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for `r contaminant_label` for the Sensititve population (dashed lines).
+
+```{r apdx-t3a-np-fig, fig.cap='(ref:apdx-t3a-np-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+np_t3a_fig = t3_fig(np, "t3a_virtual")
+
+include_graphics(np_t3a_fig)
+
+
+```
+
+
+(ref:apdx-t3a-np-table) Virtual advisory levels for `r contaminant_label` in `r tolower(np$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r np$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
+
+```{r apdx-t3a-np-table, tab.cap='(ref:apdx-t3a-np-table)'}
+np_t3a = t3_table(np, "t3a_virtual_advisory")
+
+
+np_t3a_tab = render_t3_virtual_any(
+  np_t3a,
+  restrict_threshold = np$params$restrict_threshold,
+  force = "flextable",
+  table_height = "auto"
+)
+
+
+np_t3a_tab
+
+```
+
+
+<br/>
+
+(ref:apdx-t3b-np-fig) PCBs concentration in `r np$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval.
+
+```{r apdx-t3b-np-fig, fig.cap='(ref:apdx-t3b-np-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+t3b_np = t3_fig(np, "t3b_gam_plot")
+ 
+include_graphics(t3b_np)
+```
+
+
+(ref:apdx-t3b-np-tab) Predicted `r contaminant_label` concentrations (µg/g) in `r np$params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.
+```{r apdx-t3b-np-tab, tab.cap='(ref:apdx-t3b-np-tab)'}
+if(exists("np$tables$t3b_pred")){
+  
+t3b_tab = (t3_table(np, "t3b_pred"))
+
+sig_cols <- setdiff(names(t3b_tab), "Region")
+
+# robust asterisk check
+has_star <- function(x) {
+  x <- trimws(as.character(x))
+  grepl("[\\*\\u2217]", x)
+}
+
+# row index for AOC
+i_aoc <- which(t3b_tab$Region == "AOC")
+stopifnot(length(i_aoc) == 1)
+
+# columns where AOC has an asterisk
+bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
+j_bold    <- match(bold_cols, names(t3b_tab))
+
+t3b_ft <- flextable(t3b_tab) %>%
+  # bold header + first column
+  bold(part = "header", bold = TRUE) %>%
+  bold(j = 1, part = "body", bold = TRUE) %>%
+  # bold only AOC cells with asterisk
+  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+t3b_ft
+}
+```
+
+
+(ref:apdx-t3c-np-table) Estimated time to unrestrictive `r contaminant_label` threshold for an upper-quartile-sized `r tolower(np$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an "unrestrictive" advisory for the Sensitive population of `r np$params$restrict_threshold`, based on survey results and MECP advisory thresholds.
+
+```{r apdx-t3c-np-table, tab.cap='(ref:apdx-t3c-np-table)'}
+t3c_tab = t3_table(np, "t3c_sensitivity")
+
+
+t3c_sensitivity_ft_data <- t3c_tab %>%
+  mutate(
+    # outcome from years_to_target (same logic as your kable)
+    outcome = case_when(
+      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target)                          ~ "Unsupportive",
+      years_to_target > 10                            ~ "Unsupportive",
+      TRUE                                            ~ "Supportive"
+    ),
+
+    # format display fields using ONLY columns present in the table
+    predicted_conc_f   = sprintf("%.2f", predicted_conc),
+    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
+    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
+    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
+    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
+    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
+    ci_95              = case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  select(
+    `Representative group`              = role,
+    `Length (cm)`                       = length_cm,
+    `Predicted Conc. (Current Year)`    = predicted_conc_f,
+    `Desired Consumption Rate` = t1_meals,
+    `Tier 1 threshold conc.`            = target_conc_t1_f,
+    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
+    `Tier 2 Threshold conc.`            = target_conc_t2_f,
+    `Target Threshold (earliest)`           = target_conc_f,
+    `Years to Threshold`                = years_to_target_f,
+    `95% CI`                            = ci_95,
+    `Outcome`                           = outcome
+  )
+
+
+t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+  bold(part = "header") %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+# optional: subtle emphasis on Outcome
+t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
+
+t3c_sensitivity_ft
+
+
+```
+
+
+<br/>
+
+(ref:apdx-t3c-np-fig) Projected PCBs concentration in upper-quartile-length `r np$params$species` in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+
+```{r apdx-t3c-np-fig, fig.cap='(ref:apdx-t3c-np-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+include_graphics(t3_fig(np, "t3c_projected_multi"))
+```
+
+
+### Smallmouth Bass
+```{r apdx-t3-smallmouth-loading}
+smb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Smallmouth Bass",
+  contaminant = "PCBs"
+)
+```
+
+(ref:apdx-t3a-smb-fig) Virtual `r contaminant_label` advisories in `r tolower(smb$params$species)`. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for `r contaminant_label` for the Sensititve population (dashed lines).
+
+```{r apdx-t3a-smb-fig, fig.cap='(ref:apdx-t3a-smb-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+smb_t3a_fig = t3_fig(smb, "t3a_virtual")
+
+include_graphics(smb_t3a_fig)
+
+
+```
+
+
+(ref:apdx-t3a-smb-table) Virtual advisory levels for `r contaminant_label` in `r tolower(smb$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r smb$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
+
+```{r apdx-t3a-smb-table, tab.cap='(ref:apdx-t3a-smb-table)'}
+smb_t3a = t3_table(smb, "t3a_virtual_advisory")
+
+
+smb_t3a_tab = render_t3_virtual_any(
+  smb_t3a,
+  restrict_threshold = smb$params$restrict_threshold,
+  force = "flextable",
+  table_height = "auto"
+)
+
+
+smb_t3a_tab
+
+```
+
+
+<br/>
+
+(ref:apdx-t3b-smb-fig) PCBs concentration in `r smb$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity, fitted across the 1st to 99th percentile of data to ensure reasonable support), ribbons represent 95% confidence interval.
+
+```{r apdx-t3b-smb-fig, fig.cap='(ref:apdx-t3b-smb-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+t3b_smb = t3_fig(smb, "t3b_gam_plot")
+ 
+include_graphics(t3b_smb)
+```
+
+
+(ref:apdx-t3b-smb-tab) Predicted `r contaminant_label` concentrations (µg/g) in `r smb$params$species`, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (\*) indicate size classes where the AOC differs significantly (p \< 0.05) from reference.
+```{r apdx-t3b-smb-tab, tab.cap='(ref:apdx-t3b-smb-tab)'}
+if(exists("smb_pcb$tables$t3b_pred")){
+  
+t3b_tab = (t3_table(smb_pcb, "t3b_pred"))
+
+sig_cols <- setdiff(names(t3b_tab), "Region")
+
+# robust asterisk check
+has_star <- function(x) {
+  x <- trimws(as.character(x))
+  grepl("[\\*\\u2217]", x)
+}
+
+# row index for AOC
+i_aoc <- which(t3b_tab$Region == "AOC")
+stopifnot(length(i_aoc) == 1)
+
+# columns where AOC has an asterisk
+bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
+j_bold    <- match(bold_cols, names(t3b_tab))
+
+t3b_ft <- flextable(t3b_tab) %>%
+  # bold header + first column
+  bold(part = "header", bold = TRUE) %>%
+  bold(j = 1, part = "body", bold = TRUE) %>%
+  # bold only AOC cells with asterisk
+  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+t3b_ft
+}
+```
+
+
+(ref:apdx-t3c-smb-table) Estimated time to unrestrictive `r contaminant_label` threshold for an upper-quartile-sized `r tolower(smb$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of an upper-quartile length fish is reported for the most recent year of observation, and the target concentration corresponding to an "unrestrictive" advisory for the Sensitive population of `r smb$params$restrict_threshold`, based on survey results and MECP advisory thresholds.
+
+```{r apdx-t3c-smb-table, tab.cap='(ref:apdx-t3c-smb-table)'}
+t3c_tab = t3_table(smb_pcb, "t3c_sensitivity")
+
+
+t3c_sensitivity_ft_data <- t3c_tab %>%
+  mutate(
+    # outcome from years_to_target (same logic as your kable)
+    outcome = case_when(
+      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target)                          ~ "Unsupportive",
+      years_to_target > 10                            ~ "Unsupportive",
+      TRUE                                            ~ "Supportive"
+    ),
+
+    # format display fields using ONLY columns present in the table
+    predicted_conc_f   = sprintf("%.2f", predicted_conc),
+    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
+    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
+    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
+    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
+    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
+    ci_95              = case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  select(
+    `Representative group`              = role,
+    `Length (cm)`                       = length_cm,
+    `Predicted Conc. (Current Year)`    = predicted_conc_f,
+    `Desired Consumption Rate` = t1_meals,
+    `Tier 1 threshold conc.`            = target_conc_t1_f,
+    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
+    `Tier 2 Threshold conc.`            = target_conc_t2_f,
+    `Target Threshold (earliest)`           = target_conc_f,
+    `Years to Threshold`                = years_to_target_f,
+    `95% CI`                            = ci_95,
+    `Outcome`                           = outcome
+  )
+
+
+t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+  bold(part = "header") %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+# optional: subtle emphasis on Outcome
+t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
+
+t3c_sensitivity_ft
+
+
+```
+
+
+<br/>
+
+(ref:apdx-t3c-smb-fig) Projected PCBs concentration in upper-quartile-length `r smb$params$species` in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. The solid line represents predicted values within the temporal range of observations, the dashed line represents projected future concentrations, ribbons show 95% CI, and the horizontal dotted line represents the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds.
+
+```{r apdx-t3c-smb-fig, fig.cap='(ref:apdx-t3c-smb-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+include_graphics(t3_fig(smb, "t3c_projected_multi"))
+```
+

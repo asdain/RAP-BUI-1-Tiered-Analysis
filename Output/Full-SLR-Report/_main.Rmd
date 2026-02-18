@@ -1,0 +1,80 @@
+
+
+<!--chapter:end:index.Rmd-->
+
+# Results
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(inline_output = TRUE)
+
+# Base setup
+source("Scripts/setup.R")
+
+
+
+aoc_name = get_waterbody_names(cons_data, site_id = params$AOC)
+ref_names = get_waterbody_names(cons_data, site_id = params$reference_sites)
+
+# This is a csv file with consumption thresholds for each species (ie, how many meals/month is considered unrestrictive in the AOC?). It is located in the Data folder,  and you can change it yourself based on your species of interest and consumption thresholds. When calling the T1 table, you can set restrict_thresholds = NULL  and restrict_threshold = (some number) to use the same number for all species (default 8)
+thr_path <- "Data/consumption_threshold_slr.csv"
+thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
+
+
+# Make table
+t1_df <- make_restrict_table(
+  df = cons_data,
+  aoc_id = params$AOC,
+  length_levels = length_levels,
+  restrict_threshold = thr_df,     # single value, named vector, or df
+  interest_species = params$interest_species  
+)
+
+# Set contaminant mappings
+unique_contaminants <- extract_unique_adv_causes(t1_df)
+mappings <- assign_contaminant_mappings(unique_contaminants)
+contaminant_shapes <- mappings$shapes
+contaminant_colours <- mappings$colours
+```
+
+# BUI 1 Results
+
+## Tier 1 {#sec-tier-1-tabset .tabset .tabset-pills}
+
+In Tier 1, we assessed whether fish consumption advisories for fish of interest within the AOC were more restrictive than the established thresholds for beneficial use, determined by community survey. A total of `nrow(thr_df)` species were evaluated across both general and sesnsitive population groups. Tables 1 and 2 summarize the Tier 1 results for all species of interest in the St. Lawrence River (Cornwall/Akwesasne) AOC across all size bins and population types.
+
+<br />
+
+<caption>(#tab:tier1-table) Tier 1 results for the St. Lawrence River (Cornwall/Akwesasne) AOC. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the restrictive meal/month threshold determined by community survey, and green cells indicate unrestrictive advisories levels above this threshold. The contaminants driving the advisories are displayed below each cell with an indicated colour and shape.</caption>
+
+```{r tier1-table, echo=FALSE}
+slr_t1_table = render_t1_table_any(
+  df = t1_df,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  table_height = "800px",
+  show_legend = TRUE
+)
+
+slr_t1_table
+
+```
+
+<br />
+
+<caption>(#tab:tier1-pass-fail) Summary of species that pass/fail Tier 1 assessment.</caption>
+
+```{r tier1-pass-fail, echo = F, asis = TRUE}
+flags = get_species_pass_flags(cons_data, params$AOC, params$reference_sites, length_levels, interest_species = params$interest_species, restrict_threshold = thr_df)
+
+
+  
+t1_pass = report_pass_fail_species(flags, tier = "t1", output = "table")
+
+t1_pass
+```
+
+Tier 1 results indicate that all species of interest in the AOC, save for brown bullhead, have at least one size class with restrictive consumption advisories. For most species, all size categories have restrictive consumption advisories compared the the community desired consumption rate. Northern pike are unrestrictive at smaller size categories, but fail Tier 1 at 65 cm and above for the general population, and 45 cm and above for the sensitive population.
+
+<!--chapter:end:04-Results.Rmd-->
+

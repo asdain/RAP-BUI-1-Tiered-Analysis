@@ -1,0 +1,82 @@
+## Tier 1 Assessment for the `r AOC_full` AOC {#results-tier1}
+
+```{r t1-setup, echo = F}
+# Document setup
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, messages = FALSE)
+```
+
+The Tier 1 assessment compares the official MECP consumption advisory information for each fish of interest to the desired consumption rate (in meals per month) as indicated by the community survey. Table \@ref(tab:tier-1-table) summarizes the MECP advisory values for fish of interest in the `r AOC_full` AOC for both General and Sensitive populations, compared to each species'  community desired consumption rate. Tier 1 analyses are conducted separately for the Upper and Lower reaches of the Niagara River respectively.
+
+### Upper Reach
+
+(ref:tier-1-table-ur) Results of Tier 1 assessment for the Niagara River (Upper reach) fishing zone. The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the "Restrictive" meals/month threshold (indicated by community survey), and green cells indicate advisory levels equal to or above this threshold. The contaminants driving the advisories are displayed below each cell.
+
+```{r tier-1-table-ur, tab.cap='(ref:tier-1-table-ur)'}
+# Load contaminant mappings
+contaminant_shapes_ur <- mappings_ur$shapes
+contaminant_colours_ur <- mappings_ur$colours
+
+# Render the t1 table using the pared-down RDS table provided from analysis script
+t1_table_ur = render_t1_table_any(
+  df = t1_df_ur,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  generate_shape_fn = generate_shape,
+  shape_size = 8,
+  force = "flextable",
+  table_height = "1000px",
+  show_legend = TRUE
+)
+
+
+t1_table_ur
+```
+
+
+
+(ref:tier-1-pass-fail-ur) Results by species of Tier 1 assessment for Niagara River (Upper reach) fishing zone. The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Species for which the consumption advisory is equal to or above the desired consumption rate pass Tier 1 and are excluded from further analysis; otherwise, the species fails and moves forward to Tier 2.
+
+```{r tier-1-pass-fail-ur, results = 'asis', tab.cap='(ref:tier-1-pass-fail-ur)'}
+  
+t1_pass_ur = report_pass_fail_species(flags_ur, tier = "t1", output = "table")
+
+
+```
+
+
+### Lower reach
+
+(ref:tier-1-table-lr) Results of Tier 1 assessment for Niagara River (Lower reach). The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC. Red cells indicate an advisory below the "Restrictive" meals/month threshold (indicated by community survey), and green cells indicate advisory levels equal to or above this threshold. The contaminants driving the advisories are displayed below each cell.
+
+```{r tier-1-table-lr, tab.cap='(ref:tier-1-table-lr)'}
+# Load contaminant mappings
+contaminant_shapes_lr <- mappings_lr$shapes
+contaminant_colours_lr <- mappings_lr$colours
+
+# Render the t1 table using the pared-down RDS table provided from analysis script
+t1_table_lr = render_t1_table_any(
+  df = t1_df_lr,
+  contaminant_shapes = contaminant_shapes,
+  contaminant_colours = contaminant_colours,
+  generate_shape_fn = generate_shape,
+  shape_size = 8,
+  force = "flextable",
+  table_height = "1000px",
+  show_legend = TRUE
+)
+
+
+t1_table_lr
+```
+
+
+
+(ref:tier-1-pass-fail-lr) Results by species of Tier 1 assessment for Niagara River (Lower reach). The consumption advisory for each species is compared to its desired consumption rate, as determined by community survey. Species for which the consumption advisory is equal to or above the desired consumption rate pass Tier 1 and are excluded from further analysis; otherwise, the species fails and moves forward to Tier 2.
+
+```{r tier-1-pass-fail-lr, results = 'asis', tab.cap='(ref:tier-1-pass-fail-lr)'}
+  
+t1_pass_lr = report_pass_fail_species(flags_lr, tier = "t1", output = "table")
+
+
+
+```

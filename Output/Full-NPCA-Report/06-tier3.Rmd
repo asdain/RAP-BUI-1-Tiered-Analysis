@@ -1,0 +1,551 @@
+## Tier 3 Assessment for the `r AOC_full` AOC {#tier3-results}
+
+Tier 3 comprises multiple lines of evidence (virtual advisory, contaminant concentration comparisons, and temporal contaminant trends in fish of interest) to determine if redesignating the BUI is supported by contaminant trends in each species of interest. Table \@ref(tab:t3-full-summary) summarizes the results of tier 3 assessment for each species. Lines of evidence are evaluated independently, and the overall decision for each species is based on whether or not the majority of evidence lines are supportive of redesignating.
+
+```{r t3-loading, include=FALSE}
+
+sanitize_word_cell <- function(x) {
+  x <- as.character(x)
+  x[is.na(x)] <- ""
+
+  # Remove any HTML tags
+  x <- gsub("<[^>]+>", "", x)
+
+  # Replace raw angle brackets which can break Word when HTML is allowed
+  x <- gsub("<", "\u2039", x)  # ‹
+  x <- gsub(">", "\u203A", x)  # ›
+
+  # Remove control characters
+  x <- gsub("[[:cntrl:]]", "", x)
+
+  x
+}
+
+
+book_root <- here::here("Output", "Full-SLR-Report")
+knitr::opts_knit$set(root.dir = book_root)
+
+
+t3_base = "Derived/SLR/Tier3"
+
+
+# Load walleye files
+wal <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Walleye",
+  contaminant = "MERCURY"
+)
+
+lmb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Largemouth Bass",
+  contaminant = "MERCURY"
+)
+
+np <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Northern Pike",
+  contaminant = "MERCURY"
+)
+
+smb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Smallmouth Bass",
+  contaminant = "MERCURY"
+)
+
+yp <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Yellow Perch",
+  contaminant = "MERCURY"
+)
+
+
+bg <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Bluegill",
+  contaminant = "MERCURY"
+)
+
+cc <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Channel Catfish",
+  contaminant = "MERCURY"
+)
+
+rb <- t3_load_index(
+  base_dir    = t3_base,
+  species     = "Rock Bass",
+  contaminant = "MERCURY"
+)
+
+```
+
+(ref:t3-full-summary) Summary of tier 3 results for each species of interest that failed Tiers 1 and 2 within the St. Lawrence River (Cornwall/Akwesasne) Area of Concern. For each species, the analytical metric is presented along with the outcome for each line of evidence, as described in the methods. The overall Tier 3 decision is based on whether or not the majority of evidence lines are supportive of redesignating.
+
+```{r t3-full-summary, tab.cap='(ref:t3-full-summary)'}
+# ---- Tier 3 Summary (Word/HTML/LaTeX-safe) ----
+# Assumes objects bg, cc, lmb, np, smb, rb, wal, yp exist with a $summary
+
+# ---- Tier 3 Summary (Word/HTML/LaTeX-safe) ----
+
+
+
+spec_names <- c("cc","lmb","np","smb","rb","wal","yp")
+
+sp_index <- mget(spec_names, ifnotfound = list(NULL), inherits = TRUE)
+sp_index <- Filter(Negate(is.null), sp_index)
+
+all_spp <- purrr::imap_dfr(sp_index, ~{
+  if (!is.list(.x) || !("summary" %in% names(.x))) return(NULL)
+  dplyr::mutate(.x$summary, Species = .y, .before = 1)
+})
+
+tier_levels <- c("Tier 3A","Tier 3B","Tier 3C")
+species_map <- c(
+  "cc"="Channel Catfish","lmb"="Largemouth Bass",
+  "np"="Northern Pike","wal"="Walleye","smb"="Smallmouth Bass",
+  "rb"="Rock Bass","yp"="Yellow Perch"
+)
+
+sp_clean <- all_spp |>
+  dplyr::mutate(
+    Species = dplyr::recode(Species, !!!species_map),
+    Tier = factor(Tier, levels = tier_levels)
+  ) |>
+  dplyr::filter(!is.na(Tier), !is.na(Outcome))
+
+overall_tbl <- sp_clean %>%
+  dplyr::group_by(Species) %>%
+  dplyr::summarize(
+    n_supp = sum(Outcome == "Supportive", na.rm = TRUE),
+    n_unsupp = sum(Outcome == "Unsupportive", na.rm = TRUE),
+    n_insuf = sum(Outcome == "Insufficient Data", na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    `Tier 3 Overall` = dplyr::case_when(
+      n_insuf >= 2 ~ "Insufficient Data",   
+      n_supp  >= 2 ~ "Supportive",
+      TRUE         ~ "Unsupportive"
+    )
+  ) %>%
+  dplyr::select(Species, `Tier 3 Overall`)
+
+
+
+tbl_long <- dplyr::bind_rows(
+  dplyr::transmute(sp_clean, Species, Type = "Outcome", Tier, value = Outcome),
+  dplyr::transmute(sp_clean, Species, Type = "Metric",  Tier, value = Metric)
+)
+
+tbl_wide <- tbl_long |>
+  dplyr::arrange(Species, factor(Type, c("Outcome","Metric")), Tier) |>
+  tidyr::pivot_wider(names_from = Tier, values_from = value) |>
+  dplyr::left_join(overall_tbl, by = "Species") |>
+  dplyr::select(Species, Type, `Tier 3A`, `Tier 3B`, `Tier 3C`, `Tier 3 Overall`)
+
+# Indices and display copy
+out_idx <- which(tbl_wide$Type == "Outcome")
+met_idx <- which(tbl_wide$Type == "Metric")
+tbl_disp <- dplyr::select(tbl_wide, -Type)
+overall_col_disp <- match("Tier 3 Overall", names(tbl_disp))
+
+
+
+  # WORD: scrub any stray HTML tokens just in case a prior HTML knit polluted the env
+  word_tbl <- tbl_disp
+  word_tbl[] <- lapply(word_tbl, sanitize_word_cell)
+  word_tbl[["Tier 3 Overall"]] <- gsub("<span[^>]*>.*?</span>", "", word_tbl[["Tier 3 Overall"]])
+
+  # Render with flextable
+  library(flextable)
+  library(officer)
+
+  ft <- flextable(word_tbl) |>
+    merge_v(j = "Species") |>
+    merge_v(j = "Tier 3 Overall") |>
+    valign(j = c("Species","Tier 3 Overall"), valign = "top") |>
+    bold(i = out_idx, bold = TRUE) |>
+    fontsize(i = met_idx, size = 9) |>
+    autofit() |>
+    theme_vanilla()
+
+
+  ft
+
+
+
+```
+
+<br />
+
+Below, the full Tier 3 analysis is demonstrated for walleye. All other species of interest that passed Tier 2 are evaluated independently, and the results for which are presented in-text (with further details in Appendices). A full summary of Tier 3 results are summarized in Table \@ref(tab:t3-full-summary).
+
+### Walleye {#tier3-results-walleye}
+
+The following AOC and reference sites were used in the tier 3 analysis of walleye in the St. Lawrence River (Cornwall/Akwesasne) AOC:
+
+`r t3_text(wal,"reference_sites")`
+
+#### Tier 3A: Virtual Advisory
+
+(ref:t3a-walleye-fig) Virtual mercury advisories in walleye. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for mercury for the sensitive population (dashed lines).
+
+```{r t3a-walleye-fig, fig.cap='(ref:t3a-walleye-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+wal_t3a_fig = t3_fig(wal, "t3a_virtual")
+
+include_graphics(wal_t3a_fig)
+
+
+```
+
+<br />
+
+`r t3_text(wal, "t3a_model_summary")`
+
+(ref:t3a-walleye-table) Virtual advisory levels for `r contaminant_label` in `r tolower(wal$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r wal$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
+
+```{r tier-3a-cap, echo=FALSE, results='asis'}
+is_html <- knitr::is_html_output()
+  if (is_html){
+tbl_caption("t3a-walleye-table")
+  }
+```
+
+```{r t3a-walleye-table, tab.cap='(ref:t3a-walleye-table)'}
+wal_t3a = t3_table(wal, "t3a_virtual_advisory")
+
+
+wal_t3a_tab = render_t3_virtual_any(
+  wal_t3a,
+  restrict_threshold = wal$params$restrict_threshold,
+  force = "auto",
+  table_height = "auto"
+)
+
+
+wal_t3a_tab
+
+```
+
+```{r t3a-walleye-text}
+wal_t3a_model = t3_text(wal, "t3a_decision_text")
+```
+
+`r wal_t3a_model` Overall, Tier 3A assessment for walleye is `r tolower(wal$decisions$t3a_overall)`.
+
+```{r diagnostic, eval = F}
+cat("chunk getwd(): ", getwd(), "\n")
+cat("knitr root.dir: ", knitr::opts_knit$get("root.dir"), "\n")
+cat("here::here(): ", here::here(), "\n")
+
+p <- wal$figs$t3b_gam_plot
+cat("index value: ", p, "\n")
+
+# What path will you actually pass to include_graphics?
+# (If you build a path around p, do it here and print it.)
+final_p <- p
+cat("final path: ", final_p, "\n")
+cat("exists(as-is)? ", file.exists(final_p), "\n")
+
+```
+
+**Tier 3A Overall Decision:** `r t3_decision(wal,"t3a_overall")`
+
+<br/>
+
+#### Tier 3B: Contaminant Comparison vs. Reference
+
+<br />
+
+(ref:t3b-wal-fig) Mercury concentration in `r wal$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity,), ribbons represent 95% confidence interval.
+
+```{r t3b-wal-fig, fig.cap='(ref:t3b-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+t3b_wal = t3_fig(wal, "t3b_gam_plot")
+ 
+include_graphics(t3b_wal)
+```
+
+<br />
+
+```{r t3b-wal-text-print, eval = F}
+t3_text(wal, "t3b_summary")
+```
+
+Generalized Additive Models (GAMs) were used to model the relationship between fish length and mercury concentrations for walleye in the AOC and reference sites. The length–contaminant relationship differed significantly between sites (interaction test p = 0.0411). Model-predicted concentrations were calculated across the observed size range for which observations existed for both regions (every 5 cm from 20 to 70 cm) and are presented in Table \@ref(tab:t3b-wal-tab).
+
+(ref:t3b-wal-tab) Predicted mercury concentrations (µg/g) in walleye, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (*) indicate size classes where the AOC differs significantly (p &lt; 0.05) from reference.
+
+```{r t3b-wal-tab, tab.cap='(ref:t3b-wal-tab)'}
+t3b_tab = (t3_table(wal, "t3b_pred"))
+
+
+
+
+sig_cols <- setdiff(names(t3b_tab), "Region")
+
+# robust asterisk check
+has_star <- function(x) {
+  x <- trimws(as.character(x))
+  grepl("[\\*\\u2217]", x)
+}
+
+# row index for AOC
+i_aoc <- which(t3b_tab$Region == "AOC")
+stopifnot(length(i_aoc) == 1)
+
+# columns where AOC has an asterisk
+bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
+j_bold    <- match(bold_cols, names(t3b_tab))
+
+t3b_ft <- flextable(t3b_tab) %>%
+  # bold header + first column
+  bold(part = "header", bold = TRUE) %>%
+  bold(j = 1, part = "body", bold = TRUE) %>%
+  # bold only AOC cells with asterisk
+  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+t3b_ft
+
+
+
+```
+
+`r t3_text(wal, "t3b_decision")`(Table \@ref(tab:t3b-wal-tab)). Therefore, Tier 3B analysis of walleye is considered `r tolower(t3_decision(wal,"t3b_overall"))` of redesignation.
+
+**Tier 3B Overall Decision:** `r t3_decision(wal,"t3b_overall")`
+
+<br />
+
+#### Tier 3C: Temporal Trends
+
+(ref:t3c-walleye-table) Estimated time to unrestrictive `r contaminant_label` threshold for median, upper-quartile, and lower-quartile-sized `r tolower(wal$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of representative-length fish is reported for the most recent year of observation, and the target concentration corresponding to the earliest of either Tier 1 or Tier 2 thresholds. Tier 1 thresholds representitive an "unrestrictive" advisory for the Sensitive population of `r wal$params$restrict_threshold`, based on survey results and MECP advisory thresholds. Tier 2 thresholds are size-matched Sensitive reference medians.
+
+```{r t3c-walleye-table, tab.cap='(ref:t3c-walleye-table)'}
+t3c_wal_tab = t3_table(wal, "t3c_sensitivity")
+
+
+t3c_sensitivity_ft_data <- t3c_wal_tab %>%
+  mutate(
+    # outcome from years_to_target (same logic as your kable)
+    outcome = case_when(
+      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
+      is.na(years_to_target)                          ~ "Unsupportive",
+      years_to_target > 10                            ~ "Unsupportive",
+      TRUE                                            ~ "Supportive"
+    ),
+
+    # format display fields using ONLY columns present in the table
+    predicted_conc_f   = sprintf("%.2f", predicted_conc),
+    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
+    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
+    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
+    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
+    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
+    ci_95              = case_when(
+      is.na(years_lwr) | is.na(years_upr) ~ "—",
+      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
+    )
+  ) %>%
+  select(
+    `Representative group`              = role,
+    `Length (cm)`                       = length_cm,
+    `Predicted Conc. (Current Year)`    = predicted_conc_f,
+    `Desired Consumption Rate` = t1_meals,
+    `Tier 1 threshold conc.`            = target_conc_t1_f,
+    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
+    `Tier 2 Threshold conc.`            = target_conc_t2_f,
+    `Target Threshold (earliest)`           = target_conc_f,
+    `Years to Threshold`                = years_to_target_f,
+    `95% CI`                            = ci_95,
+    `Outcome`                           = outcome
+  )
+
+
+t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+  bold(part = "header") %>%
+  autofit() %>%
+  set_table_properties(layout = "autofit")
+
+# optional: subtle emphasis on Outcome
+t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
+
+t3c_sensitivity_ft
+```
+
+<br/>
+
+(ref:t3c-wal-fig) Projected mercury concentration in median, upper-quartile, and lower-quartile-length walleye in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. Solid lines represent predicted values within the temporal range of observations, dashed lines represent projected future concentrations, ribbons show 95% CI, and horizontal dotted lines represent the unrestrictive mercury threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds, and median tier 2 threshold.
+
+```{r t3c-wal-fig, fig.cap='(ref:t3c-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
+include_graphics(t3_fig(wal, "t3c_projected_multi"))
+```
+
+`r t3_text(wal, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(wal,"t3c_overall"))`.
+
+**Tier 3C Overall Decision:** `r t3_decision(wal,"t3c_overall")`
+
+#### Summary
+
+A summary of Tier 3 assessment results can be found in table \@ref(tab:t3-wal-summary). Overall, results from this species are unsupportive of redesignation.
+
+(ref:t3-wal-summary) Summary of Tier 3 assessment results in the St. Lawrence River (Cornwall/Akwesasne) Area of Concern.
+
+```{r t3-wal-summary, tab.cap='(ref:t3-wal-summary)'}
+t3_wal = flextable(wal$summary)
+t3_wal = autofit(t3_wal)
+
+t3_wal
+```
+
+<br />
+
+### Largemouth Bass
+
+The following reference sites were used in the tier 3 analysis of largemouth bass in the St. Lawrence River (Cornwall/Akwesasne) AOC:
+
+`r t3_text(lmb,"reference_sites")`
+
+#### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for largemouth bass and `r contaminant_label`.
+
+`r t3_text(lmb, "t3a_model_summary")`
+
+`r t3_text(lmb, "t3a_decision_text")` Therefore, Tier 3A analysis of largemouth bass is considered `r tolower(t3_decision(lmb,"t3a_overall"))` for redesignation.
+
+#### Tier 3B
+
+`r t3_text(lmb, "t3b_summary")`
+
+`r t3_text(lmb, "t3b_decision")` Therefore, Tier 3B analysis of largemouth bass is considered `r tolower(t3_decision(lmb,"t3b_overall"))` for redesignation.
+
+#### Tier 3C
+
+Temporal trends in largemouth bass for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(lmb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(lmb,"t3c_overall"))` for redesignation.
+
+#### Tier 3 Summary
+
+```{r t3-lmb-summary}
+t3_lmb = flextable(lmb$summary)
+t3_lmb = autofit(t3_lmb)
+
+t3_lmb
+```
+
+<br />
+
+### Northern Pike
+
+The following reference sites were used in the tier 3 analysis of northern pike in the St. Lawrence River (Cornwall/Akwesasne) AOC:
+
+`r t3_text(np,"reference_sites")`
+
+#### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for northern pike and `r contaminant_label`.
+
+`r t3_text(np, "t3a_model_summary")`
+
+`r t3_text(np, "t3a_decision_text")` Therefore, Tier 3A analysis of northern pike is considered `r tolower(t3_decision(np,"t3a_overall"))` for redesignation.
+
+#### Tier 3B
+
+`r t3_text(np, "t3b_summary")`
+
+`r t3_text(np, "t3b_decision")` Therefore, Tier 3B analysis of northern pike is considered `r tolower(t3_decision(np,"t3b_overall"))` for redesignation.
+
+#### Tier 3C
+
+Temporal trends in northern pike for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(np, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(np,"t3c_overall"))` for redesignation.
+
+#### Tier 3 Summary
+
+```{r t3-np-summary}
+t3_np = flextable(np$summary)
+t3_np = autofit(t3_np)
+
+t3_np
+```
+
+<br />
+
+### Smallmouth Bass
+
+The following reference sites were used in the tier 3 analysis of smallmouth bass in the St. Lawrence River (Cornwall/Akwesasne) AOC:
+
+`r t3_text(smb,"reference_sites")`
+
+#### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for smallmouth bass and `r contaminant_label`.
+
+`r t3_text(smb, "t3a_model_summary")`
+
+`r t3_text(smb, "t3a_decision_text")` Therefore, Tier 3A analysis of smallmouth bass is considered `r tolower(t3_decision(smb,"t3a_overall"))` for redesignation.
+
+#### Tier 3B
+
+`r t3_text(smb, "t3b_summary")`
+
+`r t3_text(smb, "t3b_decision")` Therefore, Tier 3B analysis of smallmouth bass is considered `r tolower(t3_decision(smb,"t3b_overall"))` for redesignation.
+
+#### Tier 3C
+
+Temporal trends in smallmouth bass for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(smb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(smb,"t3c_overall"))` for redesignation.
+
+#### Tier 3 Summary
+
+```{r t3-smb-summary}
+t3_smb = flextable(smb$summary)
+t3_smb = autofit(t3_smb)
+
+t3_smb
+```
+
+<br />
+
+### Yellow Perch
+
+The following reference sites were used in the tier 3 analysis of yellow perch in the St. Lawrence River (Cornwall/Akwesasne) AOC:
+
+`r t3_text(yp,"reference_sites")`
+
+#### Tier 3A
+
+Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for yellow perch and `r contaminant_label`.
+
+`r t3_text(yp, "t3a_model_summary")`
+
+`r t3_text(yp, "t3a_decision_text")` Therefore, Tier 3A analysis of yellow perch is considered `r tolower(t3_decision(yp,"t3a_overall"))` for redesignation.
+
+#### Tier 3B
+
+`r t3_text(yp, "t3b_summary")`
+
+`r t3_text(yp, "t3b_decision")` Therefore, Tier 3B analysis of yellow perch is considered `r tolower(t3_decision(yp,"t3b_overall"))` for redesignation.
+
+#### Tier 3C
+
+Temporal trends in yellow perch for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(yp, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(yp,"t3c_overall"))` for redesignation.
+
+#### Tier 3 Summary
+
+```{r t3-yp-summary}
+t3_yp = flextable(yp$summary)
+t3_yp = autofit(t3_yp)
+
+t3_yp
+```
+
+<br />
+
+### Channel Catfish, Rock Bass, and White Perch
+
+There were an insufficient number of observed records of channel catfish (17 observations across 2 years of data), rock bass (24 observations across 3 years of data), and white perch (7 observations across 2 years of data) in the AOC from which to draw conclusions at the Tier 3 level. Thus, these species automatically fail Tier 3, and will be considered holistically as part of Tier 4 assessment.
+
+<br />

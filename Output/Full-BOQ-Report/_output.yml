@@ -1,0 +1,48 @@
+bookdown::gitbook:
+  css: "style.css"
+  includes:
+    in_header: "caption-wrap.html"
+  default: TRUE
+  split_by: "chapter"
+  split_bib: no
+  sharing: null
+  download: ["pdf", "docx"]
+  
+  
+bookdown::word_document2:
+  toc: true
+  number_sections: true
+  fig_caption: true
+  df_print: "default" # Lets me choose table packages explicitly
+  reference_docx: "reference.docx"
+  pandoc_args:
+    - "--wrap=none"
+  indent: true
+
+html_document2:
+  css: "style.css"
+  includes:
+    in_header: "caption-wrap.html"
+  default: TRUE
+  split_by: "chapter"
+  split_bib: no
+  sharing: null
+  download: ["pdf", "docx"]
+
+pdf_document:
+  toc: true
+  latex_engine: wkhtmltopdf
+
+bookdown::html_document2:
+  theme: yeti
+  css: fullwidth.css
+  toc: true
+  toc_float: true
+  number_sections: true
+
+bookdown::pdf_document2:
+  toc: true
+html_notebook:
+  self_contained: true
+
+
