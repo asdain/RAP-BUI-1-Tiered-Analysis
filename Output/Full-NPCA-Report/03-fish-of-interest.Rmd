@@ -1,10 +1,10 @@
 # Results
 
-## Species of Interest and Desired Consumption Rate {#results-species-of-interest}
+## Species of Interest and Restrictive Consumption Thresholds {#results-species-of-interest}
 
-The following species were identified as species of interest, with the respective desired consumption rates (see Section \@ref(methods-survey)):
+The following species were identified as species of interest, with the respective restrictive consumption thresholds (see Section \@ref(methods-survey)):
  
-(ref:threshold-table) Community survey results in the St. Lawrence River (Cornwall/Akwesasne) AOC. Species are listed with the percent of survey respondents that eat them, the current consumption rate weighted by average portion size (in meals/month, rounded up to nearest advisory category), and the desired consumption rate weighted by average portion size (in meals/month, rounded up to nearest advisory category). Bolded and asterisked species are consumed by at least 5% of respondents, and are therefore considered species of interest.
+(ref:threshold-table) Combined fish consumption survey results for the Niagara River AOC. Summary information from NPCA, MCFN, MNO, and SN were compiled to determine species of interest and consumption rates. Species are listed with the percent of survey respondents that eat them, the average consumption rate weighted by average portion size (in meals/month, rounded up to nearest advisory category), and the average consumption rate weighted by average portion size (in meals/month, rounded up to nearest advisory category). Bolded and asterisked species are consumed by at least 5% of respondents, and are therefore considered species of interest.
 
 ```{r threshold-table-cap, echo=FALSE, results='asis'}
 is_html <- knitr::is_html_output()
@@ -14,7 +14,7 @@ tbl_caption("threshold-table")
 ```
 
 ```{r threshold-table, tab.cap='(ref:threshold-table)', echo = FALSE}
-survey_df = read.csv(here("Data", "survey_results_slr.csv"))
+survey_df = read.csv(here("Data", "survey_results_nr.csv"))
 
 
 survey_df <- survey_df %>%
@@ -28,8 +28,8 @@ survey_ft <- flextable(survey_df) %>%
   set_header_labels(
     Species = "Species",
     pcteat  = "Percent Eaten by Respondents",
-    current = "Current Weighted Consumption Rate (meals/month)",
-    desired = "Desired Weighted Consumption Rate (meals/month)"
+    average = "Weighted Average Consumption Rate (meals/month)",
+    top5 = "Weighted Consumption Threshold (meals/month), Top 5% of Respondents"
   ) %>%
   bold(i = ~ pcteat >= 5, j = "Species", bold = TRUE) %>%  # bold species meeting threshold
   colformat_num(
@@ -41,4 +41,4 @@ survey_ft <- flextable(survey_df) %>%
 survey_ft
 ```
 
-Of the identified species of interest, neither black crappie or chinook salmon have official consumption advice in the AOC, and will therefore be excluded from the tiered assessment.
+"Other" species included lake sturgeon, lake whitefish, and other unidentified fishes. Lake whitefish will be considered as a species of interest for this assessment. Lake sturgeon does not have official consumption advice, and will therefore not be included in this assessment.

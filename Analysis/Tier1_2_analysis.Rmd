@@ -1,5 +1,5 @@
 ---
-title: "BOQ BUI 1 - Tier 1/2 - Lake Ontario"
+title: "NR BUI 1 - Tier 1/2 - Lake Ontario"
 always_allow_html: true
 output:
   html_document:
@@ -10,27 +10,26 @@ output:
   pdf_document:
     toc: true
 params:
-  AOC: '43457711'
-  AOC_shorthand: "BOQ-LO"
+  AOC: '42577857'
+  AOC_shorthand: "NR_UR"
   reference_sites:
-  - '44007727'
-  - '43557712'
-  - '43497905'
-  - '43117922'
-  - '43397900'
-  - '43517847'
-  - '43527851'
-  - '44397535'
-  - '43557717'
-  - '43527856'
+    - '44127632'
+    - '43557712' 
+    - '43497905'
+    - '43117922'
+    - '42208117'
+    - '43457711'
+    - '43397900'
+    - '43517847'
+    - '42178153'
+    - '43557717'
+    - '42068227'
+    - '43527856'
   restrict_threshold: 8
-  thr_path: "Data/consumption_threshold_boq.csv"
+  thr_path: "Data/consumption_threshold_nr.csv"
   interest_species:
   - Black Crappie
-  - Bluegill
-  - Brown Bullhead
   - Channel Catfish
-  - Pumpkinseed
   - Freshwater Drum
   - Largemouth Bass
   - Northern Pike
@@ -40,10 +39,13 @@ params:
   - White Perch
   - Yellow Perch
   - Chinook Salmon
-  - White Bass
-  - White Sucker
   - Lake Whitefish
   - Rainbow Smelt
+  - Rainbow Trout
+  - Lake Trout
+  - Brown Trout
+  - Coho Salmon
+  - Silver Bass
 ---
 
 ```{r Setup, echo=FALSE, include = FALSE}
@@ -121,7 +123,7 @@ readr::write_rds(flags, file = path(dir_derived, "flags.rds"))
 ```{r, Waterbody Lookup, include=FALSE, echo=FALSE}
 # As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
 
-get_waterbody_ids(cons_data, site_name = "Lake Ontario (Eastern Basin)")
+get_waterbody_ids(cons_data, site_name = "Niagara River (Upper reach)")
 
 ```
 
@@ -130,7 +132,7 @@ get_waterbody_ids(cons_data, site_name = "Lake Ontario (Eastern Basin)")
 
 
 prep <- t2_prep_display(
-  df = cons_data,         # your big input
+  df = cons_data,         
   aoc_id = params$AOC,
   reference_sites = params$reference_sites,
   length_levels = length_levels,

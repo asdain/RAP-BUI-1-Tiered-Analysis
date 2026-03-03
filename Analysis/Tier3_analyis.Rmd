@@ -1,5 +1,5 @@
 ---
-title: "SLR BUI 1 Tier 3 Analysis"
+title: "NR BUI 1 Tier 3 Analysis"
 author: "Aaron Dain"
 always_allow_html: true
 output:
@@ -19,27 +19,28 @@ output:
   bookdown::pdf_document2:
     toc: true
 params:
-  AOC_name: Bay of Quinte
-  species: Rainbow Smelt
-  contaminant: TEQWH4
+  AOC_name: Lake Ontario 1a - Upper Niagara River
+  species: Rainbow Trout
+  contaminant: PCBs
   aoc_shapefile: null
-  raw_csv: "Data/LO_dioxin_data_2025-10.csv"
+  raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
   ref_1: Lake Ontario
-  ref_2: St. Lawrence River 12 - Lower Thousand Island
+  ref_2: Lake Erie
   combine_ref: TRUE
   add_AOC: 
-  - Quinte
-  - Trenton
-  - Belleville
+  - "Lake Ontario 1a"
   exclude_site:
   - Hamilton Harbour
   - Trent River
   - Niagara River
+  - Toronto Waterfront
+  - Detroit River
+  - Bay of Quinte
   target_sr: 4326
   restrict_threshold: 8
   exclude_missing: FALSE
   save_artifacts: TRUE
-  out_dir_base: "Output/Full-BOQ-Report/Derived/BOQ/Tier3"
+  out_dir_base: "Output/Full-NPCA-Report/Derived/NR/Tier3"
 ---
 
 ```{r self-ref, eval = F}
@@ -102,7 +103,7 @@ ARTIFACTS <- list(
 
 
 # Restrict threshold override
-thr_path <- "Data/consumption_threshold_slr.csv"
+thr_path <- "Data/consumption_threshold_nr.csv"
 thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
 
 new_thr = thr_df %>%
@@ -267,8 +268,8 @@ filtered_data <- filtered_data %>%
     )
   ) %>%
   filter(
-    !str_detect(Locname.Fishbase, str_c(params$exclude_site, collapse = "|")),
-    !is.na(region)
+    !is.na(region),
+    region == "AOC" | !str_detect(Locname.Fishbase, str_c(params$exclude_site, collapse = "|"))
   ) %>%
   mutate(region = factor(region))
 

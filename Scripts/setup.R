@@ -53,11 +53,19 @@ lapply(packages_list, library, character.only = TRUE)
 
 # Input data --------------------------
 # Loading the MNR fish consumption advisory data csv 
-cons_data = read.csv(here::here("Data","mnr_fish_consumption_advisory_data_2024.csv")) %>%
+cons_data = read.csv(here::here("Data","Guide_to_Eating_Ontario_Fish_Advisory_Database_2025.csv")) %>%
   clean_names()
 
-length_levels <- c("15-20cm", "20-25cm", "25-30cm", "30-35cm", "35-40cm", "40-45cm",
-                   "45-50cm", "50-55cm", "55-60cm", "60-65cm", "65-70cm", "70-75cm", ">75cm")
+# Separating east lake into two labels
+cons_data = cons_data %>%
+  mutate(guide_locname_eng = ifelse(	
+    guide_locdesc == "Kenora Dist.|Distr. de Kenora", "East Lake (Kenora)", guide_locname_eng),
+    guide_locname_eng = ifelse(
+      guide_locdesc == "Studholme Twp., Cochrane Dist.|Canton de Studholme, distr. de Cochrane", "West Lake (Cochrane)", guide_locname_eng
+    ))
+
+length_levels <- c("15-20 cm", "20-25 cm", "25-30 cm", "30-35 cm", "35-40 cm", "40-45 cm",
+                   "45-50 cm", "50-55 cm", "55-60 cm", "60-65 cm", "65-70 cm", "70-75 cm", ">75 cm")
 
 
 

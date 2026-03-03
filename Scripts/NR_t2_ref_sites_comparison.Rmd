@@ -60,45 +60,134 @@ options(width = 1800)
 source("Scripts/setup.R")
 ```
 
-```{r, out.width="100%"}
+
+```{r}
 heatmap_df = cons_data %>%
   filter(specname %in% params$interest_species) 
+erie_sites = c("Lake Erie", "Wheatley Harbour (Lake Erie)", "Rondeau Bay (Lake Erie)")
+ontario_open = c("Lake Ontario (Eastern Basin)", "Lake Ontario (Western Basin)")
+open_sites = c("Lake Erie", ontario_open)
+
+ontario_sites = c("Lake Ontario (Western Basin)", "Lake Ontario (Eastern Basin)", "Jordan Harbour (Lake Ontario)", "Frenchman Bay (Lake Ontario)", "Whitby Harbour (Lake Ontario)", "McLaughlin Bay (Lake Ontario)", "Cataraqui Bay (Lake Ontario)", "East Lake", "West Lake")
+all_sites = c(erie_sites, ontario_sites)
+
+get_waterbody_ids(cons_data,all_sites)
+
+
+
+```
+
+
+```{r}
+library(mapview)
+
+library(sf)
+
+map_df = heatmap_df %>%
+  filter(guide_locname_eng %in% all_sites)
+
+map_df <- map_df %>%
+  mutate(
+    lat_dd = latitude / 10000,
+    lon_dd = longitude / 10000
+  ) %>%
+  mutate(lon_dd = ifelse(lon_dd > 0, -lon_dd, lon_dd)) %>%
+  distinct(guide_locname_eng, lat_dd, lon_dd)
+
+sites_sf <- map_df %>%
+  st_as_sf(coords = c("lon_dd", "lat_dd"), crs = 4326)
+
+sites_map = st_transform(sites_sf, 3857)
+xy = st_coordinates(sites_map)
+
+label_df = sites_map %>%
+  st_drop_geometry() %>%
+  bind_cols(as.data.frame(xy))
+
+bb = st_bbox(sites_map)
+
+pad = 120000
+
+xlim <- c(bb["xmin"] - pad, bb["xmax"] + pad)
+ylim <- c(bb["ymin"] - pad, bb["ymax"] + pad)
+
+library(ggspatial)
+library(ggrepel)
+
+ggplot() +
+  annotation_map_tile(type = "osm", zoomin = 0) +
+  geom_sf(data = sites_map, size = 3, color = "red") +
+  geom_text_repel(
+    data = label_df,
+    aes(x = X, y = Y, label = guide_locname_eng),
+    size = 3,
+    min.segment.length = 0,
+    max.overlaps = Inf
+  ) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  annotation_north_arrow(
+    location = "br",
+    which_north = "true",
+    style = north_arrow_fancy_orienteering
+  ) +
+  coord_sf(crs = 3857,
+           xlim = xlim,
+           ylim = ylim,expand = FALSE) +
+  theme_minimal() +
+  labs(x = NULL, y = NULL) +
+  theme(axis.text = element_blank())
+```
+
+#### Reference sites used:
+
+- Lake Erie
+
+```{r, out.width="100%"}
+
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Upper reach)", sites = "Lake Erie")
 
 ```
-Lake Erie
+
 
 
 ### Reference Sites - All Erie
+
+#### Reference sites used:
+`r knitr::asis_output(paste0("- ", erie_sites, collapse = "\n"))`
+
 ```{r}
-erie_sites = c("Lake Erie", "Wheatley Harbour (Lake Erie)", "Rondeau Bay (Lake Erie)")
 
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Upper reach)", sites = erie_sites)
 
 ```
 
-`r knitr::asis_output(paste0("- ", erie_sites, collapse = "\n"))`
+
 
 ### Reference Sites - Open Water Erie + Ontario
+
+#### Reference sites used:
+`r knitr::asis_output(paste0("- ", open_sites, collapse = "\n"))`
+
 ```{r}
-ontario_open = c("Lake Ontario (Eastern Basin)", "Lake Ontario (Western Basin)")
-open_sites = c("Lake Erie", ontario_open)
-
-
-
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Upper reach)", sites = open_sites)
 
 ```
 
-`r knitr::asis_output(paste0("- ", open_sites, collapse = "\n"))`
+
 
 ### Reference Sites - All Erie + Ontario
+
+
+#### Reference sites used:
+
+`r knitr::asis_output(paste0("- ", all_sites, collapse = "\n"))`
+
+
 ```{r}
-ontario_sites = c("Lake Ontario (Western Basin)", "Lake Ontario (Eastern Basin)", "Jordan Harbour (Lake Ontario)", "Port Dalhousie (Lake Ontario)", "Frenchman Bay (Lake Ontario)", "Whitby Harbour (Lake Ontario)", "McLaughlin Bay (Lake Ontario)", "Cataraqui Bay (Lake Ontario)")
-all_sites = c(erie_sites, ontario_sites)
+
  
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Upper reach)", sites = all_sites)
@@ -106,42 +195,66 @@ make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name
 
 ```
 
-`r knitr::asis_output(paste0("- ", all_sites, collapse = "\n"))`
+
 
 # Lower Niagara River
 
+
+
 ### Reference Sites - Open Water Ontario
+
+#### Reference sites used:
+
+`r knitr::asis_output(paste0("- ", ontario_open, collapse = "\n"))`
+
+
 ```{r}
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Lower reach)", sites = ontario_open)
 
 ```
 
-`r knitr::asis_output(paste0("- ", ontario_open, collapse = "\n"))`
+
 
 ### Reference Sites - All Ontario
+
+
+#### Reference sites used:
+
+`r knitr::asis_output(paste0("- ", ontario_sites, collapse = "\n"))`
+
+
 ```{r}
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Lower reach)", sites = ontario_sites)
 
 ```
 
-`r knitr::asis_output(paste0("- ", ontario_sites, collapse = "\n"))`
 
 ### Reference Sites - Open Water Ontario + Erie
+
+
+#### Reference sites used:
+
+`r knitr::asis_output(paste0("- ", open_sites, collapse = "\n"))`
+
+
 ```{r}
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Lower reach)", sites = open_sites)
 
 ```
 
-`r knitr::asis_output(paste0("- ", open_sites, collapse = "\n"))`
 
 ### Reference Sites - All Ontario + Erie
+
+#### Reference sites used:
+
+`r knitr::asis_output(paste0("- ", all_sites, collapse = "\n"))`
+
 ```{r}
 # Heatmaps
 make_heatmap_table(df = heatmap_df, length_levels = length_levels, aoc_site_name = "Niagara River (Lower reach)", sites = all_sites)
 
 ```
 
-`r knitr::asis_output(paste0("- ", all_sites, collapse = "\n"))`

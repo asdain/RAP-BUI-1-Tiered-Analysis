@@ -2,9 +2,16 @@ build_t2_flextable <- function(prep) {
   stopifnot(!is.null(prep$display_data), length(prep$size_cols) > 0)
   
   dfw       <- prep$display_data
+  dfw$Site_display <- dplyr::recode(
+    dfw$Site,
+    "Reference Median" = "Ref. Median",
+    .default = dfw$Site
+  )
   size_cols <- prep$size_cols
-  hdr_cols  <- c("Species_display", "Population", "Site")
+  hdr_cols  <- c("Species_display", "Population", "Site_display")
   show_cols <- c(hdr_cols, size_cols)
+  
+  
   
   # thresholds from prep (named by Species)
   thresholds <- if (!is.null(prep$threshold_map)) prep$threshold_map else list()
@@ -29,14 +36,14 @@ build_t2_flextable <- function(prep) {
     ft,
     Species_display = "Species",
     Population      = "Population",
-    Site            = "Site"
+    Site_display            = "Site"
   )
   
   # Header band + divider
   ft <- flextable::bg(ft, j = hdr_cols, bg = "#f5f5f5", part = "body")
   ft <- flextable::bold(ft, j = hdr_cols, bold = TRUE, part = "body")
   ft <- flextable::border(
-    ft, j = "Site",
+    ft, j = "Site_display",
     border.right = officer::fp_border(color = "#666666", width = 2),
     part = "all"
   )
@@ -51,7 +58,7 @@ build_t2_flextable <- function(prep) {
   idx_n <- which(dfw$Site == "n")
   if (length(idx_n)) {
     ft <- flextable::fontsize(ft, i = idx_n, size = 8, part = "body")
-    ft <- flextable::italic(ft,  i = idx_n, j = "Site", italic = TRUE, part = "body")
+    ft <- flextable::italic(ft,  i = idx_n, j = "Site_display", italic = TRUE, part = "body")
     ft <- flextable::color(ft,   i = idx_n, j = NULL, color = "#444444", part = "body")
   }
   

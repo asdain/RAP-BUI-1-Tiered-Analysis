@@ -18,9 +18,7 @@ make_restrict_table <- function(df,
   dat_aoc <- cons_data %>%
     dplyr::select(
       spec = specname,
-      pop_id = population_type_id,
       pop_name = population_type_desc,
-      length_id = length_category_id,
       length_name = length_category_label,
       adv_level = adv_level,
       adv_cause = adv_cause_multiple_name

@@ -8,6 +8,8 @@ The consumption advisories for each fish of interest that failed Tier 1 in the A
 
 ### Upper reach
 
+`r if (knitr::pandoc_to("docx")) word_sectpr("portrait", type = "continuous")`
+
 (ref:tier-2-table-ur) Results of Tier 2 assessment for Niagara River (Upper reach). Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC, alongside the median advisory level of suitable reference sites. n values indicate the number of reference sites with advisories for this species, size class, and population type. Red cells indicate an advisory in the AOC lower than the median of reference sites, and solid green cells indicate advisories levels equal to or above the reference median. Transparent green cells indicate size classes that passed Tier 1 (i.e., the advisory value meets the desired consumption rate). Grey cells are advisories in the AOC with an insufficient number (fewer than 3) of suitable reference sites. The drop-down menus display the advisory levels in each reference site for that species and population type.
 
 ```{r tier-2-cap-ur, echo=FALSE, results='asis'}
@@ -21,7 +23,20 @@ tbl_caption("tier-2-table-ur")
 prep_ur <- readr::read_rds(here::here("Derived", "NR_UR", "t2_prep.rds"))
 
 # Auto: HTML → reactable; Word/PDF → flextable
-render_t2_table_any(prep = prep_ur, force = "auto", threshold_df = thr_df, table_height = "800px")
+t2_table_ur = render_t2_table_any(prep = prep_ur, force = "auto", threshold_df = thr_df, table_height = "800px")
+
+
+if (knitr::pandoc_to("docx")) {
+  t2_table_ur <- flextable::set_table_properties(
+    t2_table_ur,
+    layout = "autofit",
+    width = 1
+  )
+}
+
+t2_table_ur
+
+if (knitr::pandoc_to("docx")) word_sectpr("landscape", type = "nextPage")
 
 ```
 
@@ -36,6 +51,8 @@ report_pass_fail_species(flags_ur, tier = "t2", output = "table", filter_t1_pass
 
 ### Lower reach
 
+`r if (knitr::pandoc_to("docx")) word_sectpr("portrait", type = "continuous")`
+
 (ref:tier-2-table-lr) Results of Tier 2 assessment for Niagara River (Lower reach). Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC, alongside the median advisory level of suitable reference sites. n values indicate the number of reference sites with advisories for this species, size class, and population type. Red cells indicate an advisory in the AOC lower than the median of reference sites, and solid green cells indicate advisories levels equal to or above the reference median. Transparent green cells indicate size classes that passed Tier 1 (i.e., the advisory value meets the desired consumption rate). Grey cells are advisories in the AOC with an insufficient number (fewer than 3) of suitable reference sites. The drop-down menus display the advisory levels in each reference site for that species and population type.
 
 ```{r tier-2-cap-lr, echo=FALSE, results='asis'}
@@ -49,7 +66,20 @@ tbl_caption("tier-2-table-lr")
 prep_lr <- readr::read_rds(here::here("Derived", "NR_LR", "t2_prep.rds"))
 
 # Auto: HTML → reactable; Word/PDF → flextable
-render_t2_table_any(prep = prep_lr, force = "auto", threshold_df = thr_df, table_height = "800px")
+t2_table_lr = render_t2_table_any(prep = prep_lr, force = "auto", threshold_df = thr_df, table_height = "800px")
+
+
+if (knitr::pandoc_to("docx")) {
+  t2_table_lr <- flextable::set_table_properties(
+    t2_table_lr,
+    layout = "autofit",
+    width = 1
+  )
+}
+
+t2_table_lr
+
+if (knitr::pandoc_to("docx")) word_sectpr("landscape", type = "nextPage")
 
 ```
 
