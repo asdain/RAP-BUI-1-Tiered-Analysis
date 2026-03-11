@@ -26,58 +26,123 @@ book_root <- here::here("Output", "Full-SLR-Report")
 knitr::opts_knit$set(root.dir = book_root)
 
 
-t3_base = "Derived/SLR/Tier3"
+t3_base_ur = "Derived/SLR/Tier3/UR"
+t3_base_lr = "Derived/SLR/Tier3/LR"
 
 
-# Load walleye files
-wal <- t3_load_index(
-  base_dir    = t3_base,
+# Load files
+wal_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
   species     = "Walleye",
-  contaminant = "MERCURY"
+  contaminant = "PCBs"
 )
 
-lmb <- t3_load_index(
-  base_dir    = t3_base,
+lmb_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
   species     = "Largemouth Bass",
-  contaminant = "MERCURY"
+  contaminant = "PCBs"
 )
 
-np <- t3_load_index(
-  base_dir    = t3_base,
-  species     = "Northern Pike",
-  contaminant = "MERCURY"
+rt_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Rainbow Trout",
+  contaminant = "PCBs"
 )
 
-smb <- t3_load_index(
-  base_dir    = t3_base,
+bt_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Brown Trout",
+  contaminant = "PCBs"
+)
+
+smb_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
   species     = "Smallmouth Bass",
-  contaminant = "MERCURY"
+  contaminant = "PCBs"
 )
 
-yp <- t3_load_index(
-  base_dir    = t3_base,
+yp_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
   species     = "Yellow Perch",
-  contaminant = "MERCURY"
+  contaminant = "PCBs"
 )
 
 
-bg <- t3_load_index(
-  base_dir    = t3_base,
-  species     = "Bluegill",
-  contaminant = "MERCURY"
-)
-
-cc <- t3_load_index(
-  base_dir    = t3_base,
-  species     = "Channel Catfish",
-  contaminant = "MERCURY"
-)
-
-rb <- t3_load_index(
-  base_dir    = t3_base,
+rb_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
   species     = "Rock Bass",
-  contaminant = "MERCURY"
+  contaminant = "PCBs"
 )
+
+wp_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "White Perch",
+  contaminant = "PCBs"
+)
+
+
+# Lower river
+wal_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Walleye",
+  contaminant = "PCBs"
+)
+
+lmb_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Largemouth Bass",
+  contaminant = "PCBs"
+)
+
+lt_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Lake Trout",
+  contaminant = "PCBs"
+)
+
+bt_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Brown Trout",
+  contaminant = "PCBs"
+)
+
+smb_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Smallmouth Bass",
+  contaminant = "PCBs"
+)
+
+yp_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Yellow Perch",
+  contaminant = "PCBs"
+)
+
+
+chs_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Chinook Salmon",
+  contaminant = "PCBs"
+)
+
+cos_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Coho Salmon",
+  contaminant = "PCBs"
+)
+
+wp_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "White Perch",
+  contaminant = "PCBs"
+)
+
+fd_ur <- t3_load_index(
+  base_dir    = t3_base_ur,
+  species     = "Freshwater Drum",
+  contaminant = "PCBs"
+)
+
 
 ```
 
@@ -190,7 +255,7 @@ The following AOC and reference sites were used in the tier 3 analysis of walley
 
 #### Tier 3A: Virtual Advisory
 
-(ref:t3a-walleye-fig) Virtual mercury advisories in walleye. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for mercury for the sensitive population (dashed lines).
+(ref:t3a-walleye-fig) Virtual PCBs advisories in walleye. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCBs for the sensitive population (dashed lines).
 
 ```{r t3a-walleye-fig, fig.cap='(ref:t3a-walleye-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
 wal_t3a_fig = t3_fig(wal, "t3a_virtual")
@@ -259,7 +324,7 @@ cat("exists(as-is)? ", file.exists(final_p), "\n")
 
 <br />
 
-(ref:t3b-wal-fig) Mercury concentration in `r wal$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity,), ribbons represent 95% confidence interval.
+(ref:t3b-wal-fig) PCBs concentration in `r wal$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity,), ribbons represent 95% confidence interval.
 
 ```{r t3b-wal-fig, fig.cap='(ref:t3b-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
 t3b_wal = t3_fig(wal, "t3b_gam_plot")
@@ -273,9 +338,9 @@ include_graphics(t3b_wal)
 t3_text(wal, "t3b_summary")
 ```
 
-Generalized Additive Models (GAMs) were used to model the relationship between fish length and mercury concentrations for walleye in the AOC and reference sites. The length–contaminant relationship differed significantly between sites (interaction test p = 0.0411). Model-predicted concentrations were calculated across the observed size range for which observations existed for both regions (every 5 cm from 20 to 70 cm) and are presented in Table \@ref(tab:t3b-wal-tab).
+Generalized Additive Models (GAMs) were used to model the relationship between fish length and PCBs concentrations for walleye in the AOC and reference sites. The length–contaminant relationship differed significantly between sites (interaction test p = 0.0411). Model-predicted concentrations were calculated across the observed size range for which observations existed for both regions (every 5 cm from 20 to 70 cm) and are presented in Table \@ref(tab:t3b-wal-tab).
 
-(ref:t3b-wal-tab) Predicted mercury concentrations (µg/g) in walleye, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (*) indicate size classes where the AOC differs significantly (p &lt; 0.05) from reference.
+(ref:t3b-wal-tab) Predicted PCBs concentrations (µg/g) in walleye, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (*) indicate size classes where the AOC differs significantly (p &lt; 0.05) from reference.
 
 ```{r t3b-wal-tab, tab.cap='(ref:t3b-wal-tab)'}
 t3b_tab = (t3_table(wal, "t3b_pred"))
@@ -379,7 +444,7 @@ t3c_sensitivity_ft
 
 <br/>
 
-(ref:t3c-wal-fig) Projected mercury concentration in median, upper-quartile, and lower-quartile-length walleye in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. Solid lines represent predicted values within the temporal range of observations, dashed lines represent projected future concentrations, ribbons show 95% CI, and horizontal dotted lines represent the unrestrictive mercury threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds, and median tier 2 threshold.
+(ref:t3c-wal-fig) Projected PCBs concentration in median, upper-quartile, and lower-quartile-length walleye in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. Solid lines represent predicted values within the temporal range of observations, dashed lines represent projected future concentrations, ribbons show 95% CI, and horizontal dotted lines represent the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds, and median tier 2 threshold.
 
 ```{r t3c-wal-fig, fig.cap='(ref:t3c-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
 include_graphics(t3_fig(wal, "t3c_projected_multi"))

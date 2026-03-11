@@ -210,8 +210,7 @@ params:
   ref_1: Lake Ontario
   ref_2: St. Lawrence River - Lower Thousand Islands
   combine_ref: TRUE
-  add_AOC: 
-  - St. Lawrence River
+  add_AOC: null
   exclude_site:
   - Hamilton Harbour
   - Trent River

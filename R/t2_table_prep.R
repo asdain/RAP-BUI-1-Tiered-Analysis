@@ -7,7 +7,7 @@ median_floor <- function(x) {
   if (n %% 2 == 1) {
     x[(n + 1) / 2]
   } else {
-    x[n / 2]  # lower of the two middles
+    x[n / 2 + 1]  # lower of the two middles
   }
 }
 

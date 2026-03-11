@@ -19,13 +19,13 @@ output:
   bookdown::pdf_document2:
     toc: true
 params:
-  AOC_name: Lake Ontario 1a - Upper Niagara River
-  species: Rainbow Trout
+  AOC_name: Lower Niagara River
+  species: Walleye
   contaminant: PCBs
-  aoc_shapefile: null
+  aoc_shapefile: "Data/Canadian_Niagara_River_AOC.shp"
   raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
   ref_1: Lake Ontario
-  ref_2: Lake Erie
+  ref_2: Lake Ontario
   combine_ref: TRUE
   add_AOC: 
   - "Lake Ontario 1a"
@@ -40,7 +40,8 @@ params:
   restrict_threshold: 8
   exclude_missing: FALSE
   save_artifacts: TRUE
-  out_dir_base: "Output/Full-NPCA-Report/Derived/NR/Tier3"
+  out_dir_base: "Output/Full-NPCA-Report/Derived/NR/Tier3/LR"
+  recent_year: 2006
 ---
 
 ```{r self-ref, eval = F}
@@ -61,6 +62,8 @@ params:
 ```{r Setup, include = FALSE}
 
 out_dir = here::here(params$out_dir_base)
+
+recent_year = params$recent_year
 
 
 # Loading setup script
@@ -184,7 +187,7 @@ get_unit_label <- function(contaminant) {
   contaminant_upper <- toupper(contaminant)
   if (contaminant_upper == "MERCURY") {
     return("µg/g")
-  } else if (contaminant_upper == "PCBs") {
+  } else if (contaminant_upper == "PCBS") {
     return("ng/g")
   } else if (contaminant_upper == "TEQWH4") {
     return("pg/g") 
@@ -282,17 +285,17 @@ full_data <- if (params$exclude_missing) {
 
 # Mapping data (recent + coordinates only)
 map_data <- filtered_data %>%
-  filter(Sample.Year >= 2014,
+  filter(Sample.Year >= recent_year,
          !is.na(Longitude.Decimal),
          !is.na(Latitude.Decimal))
 
 missing_coords <- filtered_data %>%
-  filter(Sample.Year >= 2014,
+  filter(Sample.Year >= recent_year,
          is.na(Longitude.Decimal) | is.na(Latitude.Decimal))
 missing_sites <- unique(missing_coords$Locname.Fishbase) %>% sort()
 
 recent_data <- filtered_data %>%
-  filter(Sample.Year >= 2014) %>%
+  filter(Sample.Year >= recent_year) %>%
   { if (params$exclude_missing) filter(., !is.na(Longitude.Decimal) & !is.na(Latitude.Decimal)) else . }
 
 

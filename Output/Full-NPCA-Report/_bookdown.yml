@@ -7,3 +7,8 @@ language:
   ui:
     chapter_name: "Chapter "
 before_chapter_script: "_common.R"
+rmd_files:
+ - "02-methods.Rmd"
+ - "03-fish-of-interest.Rmd"
+ - "04-tier1.Rmd"
+ - "05-tier2.Rmd"

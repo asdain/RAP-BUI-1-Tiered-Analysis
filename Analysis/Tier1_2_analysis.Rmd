@@ -1,5 +1,5 @@
 ---
-title: "NR BUI 1 - Tier 1/2 - Lake Ontario"
+title: "NR BUI 1 - Tier 1/2"
 always_allow_html: true
 output:
   html_document:
@@ -47,6 +47,8 @@ params:
   - Coho Salmon
   - Silver Bass
 ---
+
+
 
 ```{r Setup, echo=FALSE, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -124,6 +126,9 @@ readr::write_rds(flags, file = path(dir_derived, "flags.rds"))
 # As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
 
 get_waterbody_ids(cons_data, site_name = "Niagara River (Upper reach)")
+
+# LR: 43077903
+# UR: 42577857
 
 ```
 

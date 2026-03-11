@@ -1,8 +1,10 @@
 ## Tier 2 Assessment for the `r AOC_full` AOC
 
-Tier 2 assessment compares the intensity of fish consumption advisories in the AOC to suitable reference sites. Reference sites for Tier 2 assessment should reflect background levels of intensity of advisories, i.e., they should represent geographically similar locations that are not AOCs. For the `r AOC_full` AOC, reference sites were non-AOC fishing zones in the upper St. Lawrence River (upstream of the Moses-Saunders Dam) and Lake Ontario for which advisories for species located in the AOC were available. The following reference sites were used for the Tier 2 analysis of the SLR AOC:
+Tier 2 assessment compares the intensity of fish consumption advisories in the AOC to suitable reference sites. Reference sites for Tier 2 assessment should reflect background levels of intensity of advisories, i.e., they should represent geographically similar locations that are not AOCs. For the `r AOC_full` AOC, reference sites were non-AOC fishing zones in the Lake Erie and Lake Ontario for which advisories for species located in the AOC were available. The following reference sites were used for the Tier 2 analysis of the NR AOC:
 
-`r knitr::asis_output(paste0("- ", ref_names, collapse = "\n"))`
+`r knitr::asis_output(paste0("- ", ref_names_ur, collapse = "\n"))`
+
+## Can include map here.
 
 The consumption advisories for each fish of interest that failed Tier 1 in the AOC were compared to the median advisory (rounded to the nearest advisory level issued, see methods Section \@ref(methods-tier2)) level (in meals per month) of available reference sites for which advisories are issued for that species and size class. The results are summarized below in Table \@ref(tab:tier-2-table). Species where all size classes are equal to or above the median advisory level of the reference sites pass Tier 2 and are excluded from further analysis, otherwise the species fails Tier 2 and is carried forward to Tier 3 (Table \@ref(tab:tier-2-pass-fail)). Only size classes that failed the Tier 1 criteria were assessed at Tier 2. Species and size classes with fewer than three reference sites are considered data-deficient and automatically fail Tier 2. For the purposes of this assessment, data-deficient species fail Tier 2 automatically.
 
@@ -12,7 +14,7 @@ The consumption advisories for each fish of interest that failed Tier 1 in the A
 
 (ref:tier-2-table-ur) Results of Tier 2 assessment for Niagara River (Upper reach). Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC, alongside the median advisory level of suitable reference sites. n values indicate the number of reference sites with advisories for this species, size class, and population type. Red cells indicate an advisory in the AOC lower than the median of reference sites, and solid green cells indicate advisories levels equal to or above the reference median. Transparent green cells indicate size classes that passed Tier 1 (i.e., the advisory value meets the desired consumption rate). Grey cells are advisories in the AOC with an insufficient number (fewer than 3) of suitable reference sites. The drop-down menus display the advisory levels in each reference site for that species and population type.
 
-```{r tier-2-cap-ur, echo=FALSE, results='asis'}
+```{r tier-2-cap-ur, include=FALSE, results='asis'}
 is_html <- knitr::is_html_output()
   if (is_html){
 tbl_caption("tier-2-table-ur")
@@ -55,7 +57,7 @@ report_pass_fail_species(flags_ur, tier = "t2", output = "table", filter_t1_pass
 
 (ref:tier-2-table-lr) Results of Tier 2 assessment for Niagara River (Lower reach). Numbers in cells indicate advisory levels for a species, size class, and population type (General/Sensitive) in the AOC, alongside the median advisory level of suitable reference sites. n values indicate the number of reference sites with advisories for this species, size class, and population type. Red cells indicate an advisory in the AOC lower than the median of reference sites, and solid green cells indicate advisories levels equal to or above the reference median. Transparent green cells indicate size classes that passed Tier 1 (i.e., the advisory value meets the desired consumption rate). Grey cells are advisories in the AOC with an insufficient number (fewer than 3) of suitable reference sites. The drop-down menus display the advisory levels in each reference site for that species and population type.
 
-```{r tier-2-cap-lr, echo=FALSE, results='asis'}
+```{r tier-2-cap-lr, include=FALSE, results='asis'}
 is_html <- knitr::is_html_output()
   if (is_html){
 tbl_caption("tier-2-table-lr")

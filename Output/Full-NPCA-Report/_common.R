@@ -32,7 +32,17 @@ ref_names_lr <- readr::read_rds(here::here("Derived", "NR_LR", "t2_ref_sites.rds
 
 region_colours <- c(AOC = "red", Reference = "cyan") # or read from RDS too
 
-n_pass <- flags %>%
+n_pass_ur <- flags_ur %>%
+  summarise(
+    t1_pass_n  = sum(t1_pass, na.rm = TRUE),
+    t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
+    t1_total   = n(),
+    t2_pass_n  = sum(t2_pass, na.rm = TRUE),
+    t2_fail_n  = sum(!t2_pass, na.rm = TRUE),
+    t2_total   = n()
+  )
+
+n_pass_lr <- flags_lr %>%
   summarise(
     t1_pass_n  = sum(t1_pass, na.rm = TRUE),
     t1_fail_n  = sum(!t1_pass, na.rm = TRUE),
@@ -43,4 +53,5 @@ n_pass <- flags %>%
   )
 
 aoc_name = "Niagara River"
+
 
