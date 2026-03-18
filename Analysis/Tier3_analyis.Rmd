@@ -19,16 +19,15 @@ output:
   bookdown::pdf_document2:
     toc: true
 params:
-  AOC_name: Lower Niagara River
-  species: Walleye
+  AOC_name: Upper Niagara River
+  species: Brown Trout
   contaminant: PCBs
-  aoc_shapefile: "Data/Canadian_Niagara_River_AOC.shp"
+  aoc_shapefile: "Data/Canadian_Niagara_River_AOC/Upper_NR_Shapefile.shp"
   raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
-  ref_1: Lake Ontario
-  ref_2: Lake Ontario
+  ref_1: Lake Erie
+  ref_2: Lake Erie
   combine_ref: TRUE
-  add_AOC: 
-  - "Lake Ontario 1a"
+  add_AOC: Lake Ontario 1a
   exclude_site:
   - Hamilton Harbour
   - Trent River
@@ -40,8 +39,9 @@ params:
   restrict_threshold: 8
   exclude_missing: FALSE
   save_artifacts: TRUE
-  out_dir_base: "Output/Full-NPCA-Report/Derived/NR/Tier3/LR"
+  out_dir_base: "Output/Full-NPCA-Report/Derived/NR/Tier3/UR"
   recent_year: 2006
+  thr_path: "Data/consumption_threshold_nr.csv"
 ---
 
 ```{r self-ref, eval = F}
@@ -106,8 +106,8 @@ ARTIFACTS <- list(
 
 
 # Restrict threshold override
-thr_path <- "Data/consumption_threshold_nr.csv"
-thr_df <- if (file.exists(thr_path)) {readr::read_csv(thr_path, show_col_types = FALSE)} else {tibble::tibble()}
+
+thr_df <- if (file.exists(params$thr_path)) {readr::read_csv(params$thr_path, show_col_types = FALSE)} else {tibble::tibble()}
 
 new_thr = thr_df %>%
   filter(Species == params$species) %>%
@@ -313,26 +313,47 @@ region_colours <- setNames(
 ```{r data-sufficiency}
 # --- Tier 3 pre-check: sufficient AOC data for this species? ------------------
 
-
-# (1) Filter to this species (if a Species/species column exists) and AOC region
-
-
 fd_aoc <- filtered_data %>%
   filter(region == "AOC")
 
-# (2) Count unique years and total observations in AOC
+rd_aoc <- recent_data %>%
+  filter(region == "AOC")
+
+# Count unique years and total observations in AOC
 n_years <- fd_aoc %>% distinct(Sample.Year) %>% nrow()
 n_obs   <- nrow(fd_aoc)
 
-# (3) Define sufficiency rule
-sufficient <- (n_years >= 5) && (n_obs >= 30)
+n_years_rd <- rd_aoc %>% distinct(Sample.Year) %>% nrow()
+n_obs_rd   <- nrow(rd_aoc)
 
-if (!sufficient) {
-  # Build an "Insufficient Data" summary for Tiers 3A–3C
+# Get AOC concentration range, if available
+aoc_conc <- fd_aoc %>%
+  pull(Value)
+
+aoc_conc <- aoc_conc[!is.na(aoc_conc)]
+
+aoc_range_text <- if (length(aoc_conc) > 0) {
+  paste0(
+    format(round(min(aoc_conc), 2), trim = TRUE, scientific = FALSE),
+    "–",
+    format(round(max(aoc_conc), 2), trim = TRUE, scientific = FALSE),
+    " ",
+    unit_label
+  )
+} else {
+  "No AOC observations with concentration values"
+}
+
+# Define sufficiency rule
+sufficient <- ((n_years >= 5) && (n_obs >= 30)) && (n_obs_rd >= 30)
+insufficient_data <- !sufficient
+
+if (insufficient_data) {
   insuf_metric <- paste0(
     "Available years: ", n_years,
     "; observations: ", n_obs,
-    " (require ≥5 years and ≥30 observations in the AOC)"
+    "; recent observations: ", n_obs_rd,
+    " (require ≥5 years and ≥30 observations in the AOC, and ≥30 recent observations)"
   )
 
   insuf_summary <- tibble(
@@ -344,42 +365,204 @@ if (!sufficient) {
       "Temporal Trends"
     ),
     Metric  = insuf_metric,
+    AOC_Concentration_Range = aoc_range_text,
     Outcome = "Insufficient Data"
   )
 
-  # Ensure ARTIFACTS list & species slot exist, then write summary
   if (!exists("ARTIFACTS", inherits = TRUE) || is.null(ARTIFACTS)) ARTIFACTS <- list()
 
-  ARTIFACTS$tables$summary <- save_df(insuf_summary, "tier3_summary_table")
-
+  ARTIFACTS$tables$insufficient_summary <- save_df(
+    insuf_summary,
+    "tier3_insufficient_summary_table"
+  )
   ARTIFACTS$summary <- insuf_summary
+  ARTIFACTS$decisions$summary_type <- "simplified_insufficient"
 
-  # Write a compact index.rds pointing to everything you saved
-  idx_file <- file.path(out_dir, "index.rds")
-  # … after populating ARTIFACTS …
+  message(
+    sprintf(
+      "⚠️ Insufficient data for %s in AOC: %d years, %d observations, %d recent observations. ",
+      params$species, n_years, n_obs, n_obs_rd
+    ),
+    "Proceeding to simplified insufficient-data threshold summary."
+  )
+}
+
+
+
+```
+
+# Insufficient data summary
+
+```{r insufficient-threshold-summary}
+if (insufficient_data) {
+
+  # ---- Get threshold table for this contaminant ----
+  thresholds_df <- get_thresholds(params$contaminant, population = "Sensitive")
+
+  if (is.null(thresholds_df) || nrow(thresholds_df) == 0) {
+    stop("No advisory thresholds available for this contaminant.")
+  }
+
+  # ---- Pull the concentration corresponding to the restrictive threshold ----
+  threshold_row <- thresholds_df %>%
+    dplyr::filter(meals == ARTIFACTS$params$restrict_threshold)
+
+  if (nrow(threshold_row) == 0) {
+    stop(glue::glue(
+      "Restrictive threshold of {ARTIFACTS$params$restrict_threshold} meals/month ",
+      "was not found in thresholds table for {params$contaminant}."
+    ))
+  }
+
+  restrict_conc <- threshold_row %>%
+    dplyr::pull(conc) %>%
+    .[1]
+
+  # ---- Raw AOC observations with non-missing concentrations ----
+  aoc_raw <- rd_aoc %>%
+    dplyr::filter(!is.na(Value))
+
+  n_total_raw <- nrow(aoc_raw)
+
+  # ---- Explicit zero-observation handling ----
+  if (n_total_raw == 0) {
+
+    insufficient_thresh_summary <- tibble::tibble(
+  Species = params$species,
+  Outcome = "Insufficient Data",
+  Metric = "No recent AOC observations with usable concentration values were available for comparison to the restrictive threshold.",
+  AOC_Concentration_Range = aoc_range_text,
+  N_AOC_Recent = n_obs_rd,
+  N_AOC_With_Concentration = 0,
+  N_At_or_Below_Threshold = NA_integer_,
+  N_Above_Threshold = NA_integer_
+)
+
+    knitr::kable(
+      insufficient_thresh_summary,
+      caption = "Simplified Tier 3 summary for data-insufficient species: no usable AOC concentration observations were available"
+    )
+
+    ARTIFACTS$tables$insufficient_threshold_summary <- save_df(
+      insufficient_thresh_summary,
+      "tier3_insufficient_threshold_summary"
+    )
+
+    ARTIFACTS$text$insufficient_threshold_note <- save_text(
+      paste0(
+        params$species, " (", params$contaminant, "): ",
+        "no AOC observations with usable concentration values were available for comparison ",
+        "to the restrictive threshold of ",
+        ARTIFACTS$params$restrict_threshold, " meals/month (",
+        restrict_conc, " ", unit_label, ")."
+      ),
+      "tier3_insufficient_threshold_note"
+    )
+
+    ARTIFACTS$decisions$insufficient_data <- TRUE
+    ARTIFACTS$decisions$simplified_t3_used <- TRUE
+    ARTIFACTS$decisions$no_usable_aoc_concentrations <- TRUE
+
+    saveRDS(ARTIFACTS, file.path(out_dir_abs, "index.rds"))
+    writeLines(c(
+      glue::glue("species: {params$species}"),
+      glue::glue("contaminant: {params$contaminant}"),
+      glue::glue("output_dir_rel: {out_dir_rel}"),
+      glue::glue("index_rds_rel: index.rds")
+    ), file.path(out_dir_abs, "INDEX.txt"))
+
+    message(
+      sprintf(
+        "Simplified insufficient-data summary saved for %s: 0 usable AOC concentration observations.",
+        params$species
+      )
+    )
+
+    knitr::knit_exit()
+    stop()
+  }
+
+  # ---- Otherwise calculate above/below counts ----
+  n_below <- sum(aoc_raw$Value < restrict_conc, na.rm = TRUE)
+  n_above       <- sum(aoc_raw$Value >=  restrict_conc, na.rm = TRUE)
+
+  pct_below <- round(100 * n_below / n_total_raw, 1)
+  pct_above       <- round(100 * n_above / n_total_raw, 1)
+
+  pct_at_or_below <- round(100 * n_below / n_total_raw, 1)
+
+simplified_outcome <- dplyr::case_when(
+  pct_at_or_below >= 50 ~ "Supportive",
+  pct_at_or_below < 50  ~ "Unsupportive",
+  TRUE ~ "Insufficient Data"
+)
+
+metric_text <- paste0(
+  n_at_or_below, " of ", n_total_raw,
+  " recent AOC concentrations (",
+  pct_at_or_below, "%) were at or below the restrictive threshold concentration. ",
+  if (pct_at_or_below >= 50) {
+    "At least 50% of concentrations were at or below the threshold."
+  } else {
+    "Fewer than 50% of concentrations were at or below the threshold."
+  }
+)
+
+insufficient_thresh_summary <- tibble::tibble(
+  Species = params$species,
+  Outcome = simplified_outcome,
+  Metric = metric_text,
+  AOC_Concentration_Range = aoc_range_text,
+  N_AOC_Recent = n_obs_rd,
+  N_AOC_With_Concentration = n_total_raw,
+  N_At_or_Below_Threshold = n_below,
+  N_Above_Threshold = n_above
+)
+
+  knitr::kable(
+    insufficient_thresh_summary,
+    caption = "Simplified Tier 3 summary for data-insufficient species: raw AOC observations relative to the restrictive contaminant threshold"
+  )
+
+  ARTIFACTS$tables$insufficient_threshold_summary <- save_df(
+    insufficient_thresh_summary,
+    "tier3_insufficient_threshold_summary"
+  )
+
+  ARTIFACTS$text$insufficient_threshold_note <- save_text(
+    paste0(
+      params$species, " (", params$contaminant, "): ",
+      n_above, " of ", n_total_raw,
+      " AOC observations were above the concentration associated with the restrictive threshold of ",
+      ARTIFACTS$params$restrict_threshold, " meals/month (",
+      restrict_conc, " ", unit_label, "); ",
+      n_at_or_below, " were at or below."
+    ),
+    "tier3_insufficient_threshold_note"
+  )
+
+  ARTIFACTS$decisions$insufficient_data <- TRUE
+  ARTIFACTS$decisions$simplified_t3_used <- TRUE
+  ARTIFACTS$decisions$no_usable_aoc_concentrations <- FALSE
+
   saveRDS(ARTIFACTS, file.path(out_dir_abs, "index.rds"))
   writeLines(c(
-    glue("species: {params$species}"),
-    glue("contaminant: {params$contaminant}"),
-    glue("output_dir_rel: {out_dir_rel}"),       # useful for debugging
-    glue("index_rds_rel: index.rds")
+    glue::glue("species: {params$species}"),
+    glue::glue("contaminant: {params$contaminant}"),
+    glue::glue("output_dir_rel: {out_dir_rel}"),
+    glue::glue("index_rds_rel: index.rds")
   ), file.path(out_dir_abs, "INDEX.txt"))
 
   message(
     sprintf(
-      "⚠️ Insufficient data for %s in %s: %d years, %d observations. ",
-      params$species, "AOC", n_years, n_obs
-    ),
-    "Wrote Insufficient Data summary for Tiers 3A–3C and stopping Tier 3."
+      "Simplified insufficient-data summary saved for %s: %d above, %d at/below threshold.",
+      params$species, n_above, n_at_or_below
+    )
   )
 
-  # Stop further analysis/knitting for this run
   knitr::knit_exit()
   stop()
 }
-
-# If sufficient, continue with Tier 3...
-
 
 ```
 
@@ -2233,25 +2416,56 @@ ARTIFACTS$figs$t3c_projected_multi <- save_gg(p_t3c_multi, "t3c_projected_multi"
 # Final summary
 
 ```{r}
+# ---- Build AOC concentration range text ---------------------------------
+
+fd_aoc <- filtered_data %>%
+  dplyr::filter(region == "AOC")
+
+# Replace `Value` with your actual concentration column if needed
+aoc_conc <- fd_aoc %>%
+  dplyr::pull(Value)
+
+aoc_conc <- aoc_conc[!is.na(aoc_conc)]
+
+aoc_range_text <- if (nrow(fd_aoc) == 0) {
+  "No AOC observations"
+} else if (length(aoc_conc) == 0) {
+  "AOC observations present, but concentration values are missing"
+} else {
+  paste0(
+    format(round(min(aoc_conc), 2), trim = TRUE, scientific = FALSE),
+    "–",
+    format(round(max(aoc_conc), 2), trim = TRUE, scientific = FALSE),
+    " ",
+    unit_label
+  )
+}
+
+# ---- Final Tier 3 summary table -----------------------------------------
+
 tier3_summary_table <- bind_rows(
   tier3a_summary_tibble,
   tier3b_summary_tibble,
   aoc_out$tier3c_summary_tibble
-)
+) %>%
+  dplyr::mutate(
+    AOC_Concentration_Range = aoc_range_text
+  )
 
-knitr::kable(tier3_summary_table, caption = "Summary of Tier 3 Evidence Lines and Outcomes")
+knitr::kable(
+  tier3_summary_table,
+  caption = "Summary of Tier 3 Evidence Lines and Outcomes"
+)
 
 ARTIFACTS$tables$summary <- save_df(tier3_summary_table, "tier3_summary_table")
 ARTIFACTS$summary <- tier3_summary_table
+ARTIFACTS$decisions$summary_type <- "full_tier3"
 
-# Write a compact index.rds pointing to everything you saved
-idx_file <- file.path(out_dir, "index.rds")
-# … after populating ARTIFACTS …
 saveRDS(ARTIFACTS, file.path(out_dir_abs, "index.rds"))
 writeLines(c(
   glue("species: {params$species}"),
   glue("contaminant: {params$contaminant}"),
-  glue("output_dir_rel: {out_dir_rel}"),       # useful for debugging
+  glue("output_dir_rel: {out_dir_rel}"),
   glue("index_rds_rel: index.rds")
 ), file.path(out_dir_abs, "INDEX.txt"))
 

@@ -26,8 +26,8 @@ book_root <- here::here("Output", "Full-SLR-Report")
 knitr::opts_knit$set(root.dir = book_root)
 
 
-t3_base_ur = "Derived/SLR/Tier3/UR"
-t3_base_lr = "Derived/SLR/Tier3/LR"
+t3_base_ur = "Derived/NR/Tier3/UR"
+t3_base_lr = "Derived/NR/Tier3/LR"
 
 
 # Load files
@@ -55,11 +55,6 @@ bt_ur <- t3_load_index(
   contaminant = "PCBs"
 )
 
-smb_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Smallmouth Bass",
-  contaminant = "PCBs"
-)
 
 yp_ur <- t3_load_index(
   base_dir    = t3_base_ur,
@@ -74,69 +69,6 @@ rb_ur <- t3_load_index(
   contaminant = "PCBs"
 )
 
-wp_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "White Perch",
-  contaminant = "PCBs"
-)
-
-
-# Lower river
-wal_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Walleye",
-  contaminant = "PCBs"
-)
-
-lmb_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Largemouth Bass",
-  contaminant = "PCBs"
-)
-
-lt_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Lake Trout",
-  contaminant = "PCBs"
-)
-
-bt_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Brown Trout",
-  contaminant = "PCBs"
-)
-
-smb_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Smallmouth Bass",
-  contaminant = "PCBs"
-)
-
-yp_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Yellow Perch",
-  contaminant = "PCBs"
-)
-
-
-chs_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Chinook Salmon",
-  contaminant = "PCBs"
-)
-
-cos_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Coho Salmon",
-  contaminant = "PCBs"
-)
-
-wp_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "White Perch",
-  contaminant = "PCBs"
-)
-
 fd_ur <- t3_load_index(
   base_dir    = t3_base_ur,
   species     = "Freshwater Drum",
@@ -144,103 +76,262 @@ fd_ur <- t3_load_index(
 )
 
 
-```
-
-(ref:t3-full-summary) Summary of tier 3 results for each species of interest that failed Tiers 1 and 2 within the St. Lawrence River (Cornwall/Akwesasne) Area of Concern. For each species, the analytical metric is presented along with the outcome for each line of evidence, as described in the methods. The overall Tier 3 decision is based on whether or not the majority of evidence lines are supportive of redesignating.
-
-```{r t3-full-summary, tab.cap='(ref:t3-full-summary)'}
-# ---- Tier 3 Summary (Word/HTML/LaTeX-safe) ----
-# Assumes objects bg, cc, lmb, np, smb, rb, wal, yp exist with a $summary
-
-# ---- Tier 3 Summary (Word/HTML/LaTeX-safe) ----
-
-
-
-spec_names <- c("cc","lmb","np","smb","rb","wal","yp")
-
-sp_index <- mget(spec_names, ifnotfound = list(NULL), inherits = TRUE)
-sp_index <- Filter(Negate(is.null), sp_index)
-
-all_spp <- purrr::imap_dfr(sp_index, ~{
-  if (!is.list(.x) || !("summary" %in% names(.x))) return(NULL)
-  dplyr::mutate(.x$summary, Species = .y, .before = 1)
-})
-
-tier_levels <- c("Tier 3A","Tier 3B","Tier 3C")
-species_map <- c(
-  "cc"="Channel Catfish","lmb"="Largemouth Bass",
-  "np"="Northern Pike","wal"="Walleye","smb"="Smallmouth Bass",
-  "rb"="Rock Bass","yp"="Yellow Perch"
+# Lower river
+wal_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Walleye",
+  contaminant = "PCBs"
 )
 
-sp_clean <- all_spp |>
+lmb_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Largemouth Bass",
+  contaminant = "PCBs"
+)
+
+lt_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Lake Trout",
+  contaminant = "PCBs"
+)
+
+bt_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Brown Trout",
+  contaminant = "PCBs"
+)
+
+smb_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Smallmouth Bass",
+  contaminant = "PCBs"
+)
+
+yp_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Yellow Perch",
+  contaminant = "PCBs"
+)
+
+
+chs_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Chinook Salmon",
+  contaminant = "PCBs"
+)
+
+cos_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Coho Salmon",
+  contaminant = "PCBs"
+)
+
+wp_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "White Perch",
+  contaminant = "PCBs"
+)
+
+fd_lr <- t3_load_index(
+  base_dir    = t3_base_lr,
+  species     = "Freshwater Drum",
+  contaminant = "PCBs"
+)
+
+
+```
+
+(ref:t3-full-summary) Summary of tier 3 results for each species of interest that failed Tiers 1 and 2 within the Upper Niagara River Area of Concern. For each species, the analytical metric is presented along with the outcome for each line of evidence, as described in the methods. The overall Tier 3 decision is based on whether or not the majority of evidence lines are supportive of redesignating.
+
+```{r t3-full-summary, tab.cap='(ref:t3-full-summary)'}
+
+
+spec_names_ur <- c("wal_ur","lmb_ur","rt_ur", "bt_ur", "rb_ur", "fd_ur")
+
+sp_index_ur <- mget(spec_names_ur, ifnotfound = list(NULL), inherits = TRUE)
+keep_idx <- !vapply(sp_index_ur, is.null, logical(1))
+sp_index_ur <- sp_index_ur[keep_idx]
+
+is_simplified_t3 <- function(x) {
+  isTRUE(tryCatch(x$decisions$simplified_t3_used, error = function(e) FALSE))
+}
+
+sp_index_full_ur  <- sp_index_ur[!vapply(sp_index_ur, is_simplified_t3, logical(1))]
+sp_index_insuf_ur <- sp_index_ur[ vapply(sp_index_ur, is_simplified_t3, logical(1))]
+
+
+species_map_ur <- c(
+  "wal_ur" = "Walleye",
+  "lmb_ur" = "Largemouth Bass",
+  "rt_ur"  = "Rainbow Trout",
+  "bt_ur"  = "Brown Trout",
+  "rb_ur"  = "Rock Bass",
+  "fd_ur"  = "Freshwater Drum"
+)
+
+tier_levels <- c("Tier 3A", "Tier 3B", "Tier 3C")
+
+all_spp_full_ur <- purrr::imap_dfr(sp_index_full_ur, ~{
+  if (!is.list(.x) || is.null(.x$summary)) return(NULL)
+  if (!all(c("Tier", "Outcome", "Metric") %in% names(.x$summary))) return(NULL)
+
+  species_label <- species_map_ur[[.y]]
+  if (is.null(species_label)) species_label <- .y
+
+  dplyr::mutate(.x$summary, Species = species_label, .before = 1)
+})
+
+sp_clean_ur <- all_spp_full_ur |>
   dplyr::mutate(
-    Species = dplyr::recode(Species, !!!species_map),
     Tier = factor(Tier, levels = tier_levels)
   ) |>
   dplyr::filter(!is.na(Tier), !is.na(Outcome))
 
-overall_tbl <- sp_clean %>%
+overall_tbl_ur <- sp_clean_ur %>%
   dplyr::group_by(Species) %>%
   dplyr::summarize(
-    n_supp = sum(Outcome == "Supportive", na.rm = TRUE),
+    n_supp   = sum(Outcome == "Supportive", na.rm = TRUE),
     n_unsupp = sum(Outcome == "Unsupportive", na.rm = TRUE),
-    n_insuf = sum(Outcome == "Insufficient Data", na.rm = TRUE),
+    n_insuf  = sum(Outcome == "Insufficient Data", na.rm = TRUE),
     .groups = "drop"
   ) %>%
   dplyr::mutate(
     `Tier 3 Overall` = dplyr::case_when(
-      n_insuf >= 2 ~ "Insufficient Data",   
+      n_insuf >= 2 ~ "Insufficient Data",
       n_supp  >= 2 ~ "Supportive",
       TRUE         ~ "Unsupportive"
     )
   ) %>%
   dplyr::select(Species, `Tier 3 Overall`)
 
-
-
 tbl_long <- dplyr::bind_rows(
-  dplyr::transmute(sp_clean, Species, Type = "Outcome", Tier, value = Outcome),
-  dplyr::transmute(sp_clean, Species, Type = "Metric",  Tier, value = Metric)
+  dplyr::transmute(sp_clean_ur, Species, Type = "Outcome", Tier, value = Outcome),
+  dplyr::transmute(sp_clean_ur, Species, Type = "Metric",  Tier, value = Metric)
 )
 
 tbl_wide <- tbl_long |>
-  dplyr::arrange(Species, factor(Type, c("Outcome","Metric")), Tier) |>
+  dplyr::arrange(Species, factor(Type, c("Outcome", "Metric")), Tier) |>
   tidyr::pivot_wider(names_from = Tier, values_from = value) |>
-  dplyr::left_join(overall_tbl, by = "Species") |>
-  dplyr::select(Species, Type, `Tier 3A`, `Tier 3B`, `Tier 3C`, `Tier 3 Overall`)
+  dplyr::left_join(overall_tbl_ur, by = "Species") |>
+  dplyr::select(
+    Species,
+    Type,
+    `Tier 3A`,
+    `Tier 3B`,
+    `Tier 3C`,
+    `Tier 3 Overall`
+  )
 
-# Indices and display copy
 out_idx <- which(tbl_wide$Type == "Outcome")
 met_idx <- which(tbl_wide$Type == "Metric")
 tbl_disp <- dplyr::select(tbl_wide, -Type)
-overall_col_disp <- match("Tier 3 Overall", names(tbl_disp))
+
+word_tbl <- tbl_disp
+word_tbl[] <- lapply(word_tbl, sanitize_word_cell)
+word_tbl[["Tier 3 Overall"]] <- gsub("<span[^>]*>.*?</span>", "", word_tbl[["Tier 3 Overall"]])
+
+ft_full <- flextable::flextable(word_tbl) |>
+  flextable::merge_v(j = "Species") |>
+  flextable::merge_v(j = "Tier 3 Overall") |>
+  flextable::valign(j = c("Species", "Tier 3 Overall"), valign = "top") |>
+  flextable::bold(i = out_idx, bold = TRUE) |>
+  flextable::fontsize(i = met_idx, size = 9) |>
+  flextable::autofit() |>
+  flextable::theme_vanilla()
 
 
+all_spp_insuf_ur <- purrr::imap_dfr(sp_index_insuf_ur, ~{
+  if (!is.list(.x)) return(NULL)
 
-  # WORD: scrub any stray HTML tokens just in case a prior HTML knit polluted the env
-  word_tbl <- tbl_disp
-  word_tbl[] <- lapply(word_tbl, sanitize_word_cell)
-  word_tbl[["Tier 3 Overall"]] <- gsub("<span[^>]*>.*?</span>", "", word_tbl[["Tier 3 Overall"]])
+  rds_path <- tryCatch(.x$tables$insufficient_threshold_summary$rds, error = function(e) NULL)
+  if (is.null(rds_path) || is.na(rds_path) || !nzchar(rds_path)) return(NULL)
+  if (!file.exists(rds_path)) return(NULL)
 
-  # Render with flextable
-  library(flextable)
-  library(officer)
+  species_label <- species_map_ur[[.y]]
+  if (is.null(species_label)) species_label <- .y
 
-  ft <- flextable(word_tbl) |>
-    merge_v(j = "Species") |>
-    merge_v(j = "Tier 3 Overall") |>
-    valign(j = c("Species","Tier 3 Overall"), valign = "top") |>
-    bold(i = out_idx, bold = TRUE) |>
-    fontsize(i = met_idx, size = 9) |>
-    autofit() |>
-    theme_vanilla()
+  df <- readRDS(rds_path)
+  dplyr::mutate(df, Species = species_label, .before = 1)
+})
 
 
-  ft
+insuf_long <- dplyr::bind_rows(
+  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Outcome", value = Outcome),
+  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Metric",  value = Metric)
+)
 
+insuf_meta <- all_spp_insuf_ur %>%
+  dplyr::select(
+    Species,
+    AOC_Concentration_Range,
+    N_AOC_Recent
+  ) %>%
+  dplyr::rename(`N recent observations (AOC)` = N_AOC_Recent) %>%
+  dplyr::distinct()
 
+insuf_tbl <- insuf_long %>%
+  tidyr::pivot_wider(names_from = Type, values_from = value) %>%
+  dplyr::left_join(insuf_meta, by = "Species") %>%
+  dplyr::select(
+    Species,
+    Outcome,
+    Metric,
+    `N recent observations (AOC)`,
+    AOC_Concentration_Range
+  )
 
+insuf_tbl_long <- dplyr::bind_rows(
+  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Outcome", Summary = Outcome),
+  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Metric",  Summary = Metric)
+)
+
+insuf_meta <- all_spp_insuf_ur %>%
+  dplyr::select(
+    Species,
+    AOC_Concentration_Range,
+    N_AOC_Recent
+  ) %>%
+  dplyr::rename(`N recent observations (AOC)` = N_AOC_Recent) %>%
+  dplyr::distinct()
+
+insuf_tbl <- insuf_tbl_long %>%
+  dplyr::left_join(insuf_meta, by = "Species") %>%
+  dplyr::select(
+    Species,
+    Type,
+    Summary,
+    `N recent observations (AOC)`,
+    AOC_Concentration_Range
+  )
+
+insuf_out_idx <- which(insuf_tbl$Type == "Outcome")
+insuf_met_idx <- which(insuf_tbl$Type == "Metric")
+
+insuf_disp <- dplyr::select(insuf_tbl, -Type)
+
+insuf_word_tbl <- insuf_disp
+insuf_word_tbl[] <- lapply(insuf_word_tbl, sanitize_word_cell)
+
+ft_insuf <- flextable::flextable(insuf_word_tbl) |>
+  flextable::merge_v(j = "Species") |>
+  flextable::merge_v(j = "N recent observations (AOC)") |>
+  flextable::merge_v(j = "AOC_Concentration_Range") |>
+  flextable::valign(
+    j = c("Species", "N recent observations (AOC)", "AOC_Concentration_Range"),
+    valign = "top"
+  ) |>
+  flextable::bold(i = insuf_out_idx, bold = TRUE) |>
+  flextable::fontsize(i = insuf_met_idx, size = 9) |>
+  flextable::set_header_labels(
+    Summary = "Simplified Tier 3 Result",
+    AOC_Concentration_Range = "AOC Conc. Range"
+  ) |>
+  flextable::autofit() |>
+  flextable::theme_vanilla()
+
+ft_full
+
+ft_insuf
 ```
 
 <br />
@@ -267,7 +358,7 @@ include_graphics(wal_t3a_fig)
 
 <br />
 
-`r t3_text(wal, "t3a_model_summary")`
+`r t3_text(lmb_ur, "t3a_model_summary")`
 
 (ref:t3a-walleye-table) Virtual advisory levels for `r contaminant_label` in `r tolower(wal$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r wal$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
 
@@ -551,7 +642,7 @@ Virtual advisory values were generated using by modelling the relationship betwe
 
 `r t3_text(smb, "t3a_model_summary")`
 
-`r t3_text(smb, "t3a_decision_text")` Therefore, Tier 3A analysis of smallmouth bass is considered `r tolower(t3_decision(smb,"t3a_overall"))` for redesignation.
+`r t3_text(smb, "t3a_decision_text")` Therefore, Tier 3A analysis of smallmouth bass is considered `r tolower(t3_decision(smb,"t3a_overall"))` for redesignation.s
 
 #### Tier 3B
 

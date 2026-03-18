@@ -1,57 +1,108 @@
-# ---- Batch render Tier 3 (SLR) reports by Species ----
-library(rmarkdown)
-library(dplyr)
-library(stringr)
-library(fs)
 
-# 1) SET THIS: the Rmd you want to render for each species
-#    (use your actual path; keep the YAML output: bookdown::html_document2)
-report_rmd <- "Tier3/Tier3_walleye_SLR.Rmd"
+species_list_ur <- c("Brown Trout",
+                     "Freshwater Drum",
+                    "Largemouth Bass",
+                     "Rainbow Trout",
+                     "Rock Bass",
+                     "Walleye",
+)
 
-# 2) Output directory (will be created if missing)
-out_dir <- path_expand("~/R/RAP-BUI-1-Tiered-Analysis/Tier3/Output/SLR T3 Reports")
-dir_create(out_dir, recurse = TRUE)
 
-# 3) Species list from your current analysis data
-species_vec <- raw_data |>
-  dplyr::filter(Locname.Fishbase == "St. Lawrence River 15 - Lake St. Francis", Sample.Year >= 2014) |>
-  dplyr::distinct(Specname) |>
-  dplyr::filter(!is.na(Specname), Specname != "") |>
-  dplyr::arrange(Specname) |>
-  dplyr::pull(Specname) |>
-  as.character()
+run_log <- tibble::tibble(
+  species = character(),
+  status  = character(),
+  message = character()
+)
 
-# 4) Helper to make nice file stubs
-stubify <- function(x) {
-  x %>%
-    str_to_lower() %>%
-    str_replace_all("[^a-z0-9]+", "_") %>%
-    str_replace_all("^_|_$", "")
+for (sp in species_list_ur) {
+  
+  message("Running species: ", sp)
+  
+  res <- tryCatch(
+    {
+      rmarkdown::render(
+        input = here::here("Analysis","Tier3_analyis.Rmd"),
+        params = list(species = sp,
+                      AOC_name = 'Upper Niagara River',
+                      aoc_shapefile = "Data/Canadian_Niagara_River_AOC/Upper_NR_Shapefile.shp",
+                      ref_1= 'Lake Erie',
+                      ref_2= 'Lake Erie',
+                      add_AOC= 'Lake Ontario 1a',
+                      out_dir_base = "Output/Full-NPCA-Report/Derived/NR/Tier3/UR"),
+        envir = new.env(parent = globalenv()),
+        knit_root_dir = here::here(),
+        quiet = TRUE,
+        output_file = NULL
+      )
+      
+      list(status = "success", message = NA_character_)
+    },
+    error = function(e) {
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+  
+  run_log <- dplyr::add_row(
+    run_log,
+    species = sp,
+    status = res$status,
+    message = res$message
+  )
 }
 
-# 5) Render loop
-for (sp in species_vec) {
-  title_str <- paste0("SLR BUI 1 Tier 3 Report - ", sp)
-  out_file  <- paste0("tier3_", stubify(sp), "_slr.html")
+run_log
+
+
+
+species_list_lr = c(
+  "Brown Trout",
+  "Chinook Salmon",
+  "Coho Salmon",
+  "Freshwater Drum",
+  "Lake Trout",
+  "Largemouth Bass",
+  "Rainbow Smelt",
+  "Rainbow Trout",
+  "Smallmouth Bass",
+  "Walleye",
+  "White Perch",
+  "Yellow Perch"
+)
+
+for (sp in species_list_lr) {
   
-  message("Rendering: ", sp, " → ", out_file)
+  message("Running species: ", sp)
   
-  tryCatch({
-    render(
-      input          = report_rmd,
-      output_file    = file.path(out_dir, out_file),
-      # Use the format declared in YAML (bookdown::html_document2).
-      # We only override the document title at render-time:
-      output_options = list(
-        pandoc_args = c("--metadata", paste0("title=", title_str))
-      ),
-      params        = list(species = sp),
-      envir         = new.env()   # keep each run isolated/clean
-    )
-    message("✓ Done: ", sp)
-  }, error = function(e) {
-    message("⚠️ Skipped ", sp, " — ", conditionMessage(e))
-  })
+  res <- tryCatch(
+    {
+      rmarkdown::render(
+        input = here::here("Analysis","Tier3_analyis.Rmd"),
+        params = list(species = sp,
+                      AOC_name = "Lower Niagara River",
+                      aoc_shapefile = "Data/Canadian_Niagara_River_AOC/Lower_NR_Shapefile.shp",
+                      ref_1= "Lake Ontario",
+                      ref_2= 'Lake Ontario',
+                      add_AOC= "Lake Ontario 1b",
+                      out_dir_base = "Output/Full-NPCA-Report/Derived/NR/Tier3/LR"),
+        envir = new.env(parent = globalenv()),
+        knit_root_dir = here::here(),
+        quiet = TRUE,
+        output_file = NULL
+      )
+      
+      list(status = "success", message = NA_character_)
+    },
+    error = function(e) {
+      list(status = "error", message = conditionMessage(e))
+    }
+  )
+  
+  run_log <- dplyr::add_row(
+    run_log,
+    species = sp,
+    status = res$status,
+    message = res$message
+  )
 }
 
-message("All renders complete. Output in: ", out_dir)
+run_log
