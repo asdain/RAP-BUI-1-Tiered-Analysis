@@ -1,12 +1,16 @@
-## Tier 2 Assessment for the `r AOC_full` AOC
+# Tier 2 Assessment for the `r AOC_full` AOC
 
 Tier 2 assessment compares the intensity of fish consumption advisories in the AOC to suitable reference sites. Reference sites for Tier 2 assessment should reflect background levels of intensity of advisories, i.e., they should represent geographically similar locations that are not AOCs. For the `r AOC_full` AOC, reference sites were non-AOC fishing zones in the Lake Erie and Lake Ontario for which advisories for species located in the AOC were available. The following reference sites were used for the Tier 2 analysis of the NR AOC:
 
 `r knitr::asis_output(paste0("- ", ref_names_ur, collapse = "\n"))`
 
-## Can include map here.
+(ref:t2-map) Reference sites used in the Tier 2 assessment of the Fish and Wildlife Consumption BUI in the Niagara River AOC.
 
-The consumption advisories for each fish of interest that failed Tier 1 in the AOC were compared to the median advisory (rounded to the nearest advisory level issued, see methods Section \@ref(methods-tier2)) level (in meals per month) of available reference sites for which advisories are issued for that species and size class. The results are summarized below in Table \@ref(tab:tier-2-table). Species where all size classes are equal to or above the median advisory level of the reference sites pass Tier 2 and are excluded from further analysis, otherwise the species fails Tier 2 and is carried forward to Tier 3 (Table \@ref(tab:tier-2-pass-fail)). Only size classes that failed the Tier 1 criteria were assessed at Tier 2. Species and size classes with fewer than three reference sites are considered data-deficient and automatically fail Tier 2. For the purposes of this assessment, data-deficient species fail Tier 2 automatically.
+```{r t2-map, fig.cap='(ref:t2-map)'}
+include_graphics(here::here("Derived", "NR", "figs", "NR_Tier2_Ref_Sites.jpg"))
+```
+
+The consumption advisories for each fish of interest that failed Tier 1 in the AOC were compared to the median advisory (rounded to the nearest advisory level issued, see methods Section \@ref(methods-tier2)) level (in meals per month) of available reference sites for which advisories are issued for that species and size class. The results are summarized below in Tables \@ref(tab:tier-2-table-ur) and \@ref(tab:tier-2-table-lr). Species where all size classes are equal to or above the median advisory level of the reference sites pass Tier 2 and are excluded from further analysis, otherwise the species fails Tier 2 and is carried forward to Tier 3 (Tables \@ref(tab:tier-2-pass-fail-ur) and \@ref(tab:tier-2-pass-fail-lr)). Only size classes that failed the Tier 1 criteria were assessed at Tier 2. Species and size classes with fewer than three reference sites are considered data-deficient and automatically fail Tier 2. For the purposes of this assessment, data-deficient species fail Tier 2 automatically.
 
 ### Upper reach
 

@@ -1,6 +1,4 @@
----
-bibliography: "references.bib"
----
+
 
 # (PART\*) Tiered Assessment Approach for Criterion 1.1 {.unnumbered}
 

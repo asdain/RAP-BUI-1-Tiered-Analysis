@@ -1,707 +1,140 @@
-## Tier 3 Assessment for the `r AOC_full` AOC {#tier3-results}
+# Tier 3 Assessment for the `r AOC_full` AOC {#tier3-results}
 
-Tier 3 comprises multiple lines of evidence (virtual advisory, contaminant concentration comparisons, and temporal contaminant trends in fish of interest) to determine if redesignating the BUI is supported by contaminant trends in each species of interest. Table \@ref(tab:t3-full-summary) summarizes the results of tier 3 assessment for each species. Lines of evidence are evaluated independently, and the overall decision for each species is based on whether or not the majority of evidence lines are supportive of redesignating.
 
 ```{r t3-loading, include=FALSE}
 
-sanitize_word_cell <- function(x) {
-  x <- as.character(x)
-  x[is.na(x)] <- ""
+sanitize_word_cell <- function(x) { 
+x <- as.character(x) 
+x[is.na(x)] <- "" # Remove any HTML tags 
+x <- gsub("<[^>]+>", "", x) # Replace raw angle brackets which can break Word when HTML is allowed 
+x <- gsub("<", "\u2039", x) # ‹ 
+x <- gsub(">", "\u203A", x) # ›
 
-  # Remove any HTML tags
-  x <- gsub("<[^>]+>", "", x)
+# Remove control characters 
+x <- gsub("[[:cntrl:]]", "", x)
 
-  # Replace raw angle brackets which can break Word when HTML is allowed
-  x <- gsub("<", "\u2039", x)  # ‹
-  x <- gsub(">", "\u203A", x)  # ›
-
-  # Remove control characters
-  x <- gsub("[[:cntrl:]]", "", x)
-
-  x
+x 
 }
 
-
-book_root <- here::here("Output", "Full-SLR-Report")
+book_root <- here::here("Output", "Full-NPCA-Report") 
 knitr::opts_knit$set(root.dir = book_root)
 
-
-t3_base_ur = "Derived/NR/Tier3/UR"
+t3_base_ur = "Derived/NR/Tier3/UR" 
 t3_base_lr = "Derived/NR/Tier3/LR"
 
-
-# Load files
-wal_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Walleye",
-  contaminant = "PCBs"
-)
-
-lmb_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Largemouth Bass",
-  contaminant = "PCBs"
-)
-
-rt_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Rainbow Trout",
-  contaminant = "PCBs"
-)
-
-bt_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Brown Trout",
-  contaminant = "PCBs"
-)
-
-
-yp_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Yellow Perch",
-  contaminant = "PCBs"
-)
-
-
-rb_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Rock Bass",
-  contaminant = "PCBs"
-)
-
-fd_ur <- t3_load_index(
-  base_dir    = t3_base_ur,
-  species     = "Freshwater Drum",
-  contaminant = "PCBs"
-)
-
-
-# Lower river
-wal_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Walleye",
-  contaminant = "PCBs"
-)
-
-lmb_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Largemouth Bass",
-  contaminant = "PCBs"
-)
-
-lt_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Lake Trout",
-  contaminant = "PCBs"
-)
-
-bt_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Brown Trout",
-  contaminant = "PCBs"
-)
-
-smb_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Smallmouth Bass",
-  contaminant = "PCBs"
-)
-
-yp_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Yellow Perch",
-  contaminant = "PCBs"
-)
-
-
-chs_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Chinook Salmon",
-  contaminant = "PCBs"
-)
-
-cos_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Coho Salmon",
-  contaminant = "PCBs"
-)
-
-wp_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "White Perch",
-  contaminant = "PCBs"
-)
-
-fd_lr <- t3_load_index(
-  base_dir    = t3_base_lr,
-  species     = "Freshwater Drum",
-  contaminant = "PCBs"
-)
-
-
 ```
 
-(ref:t3-full-summary) Summary of tier 3 results for each species of interest that failed Tiers 1 and 2 within the Upper Niagara River Area of Concern. For each species, the analytical metric is presented along with the outcome for each line of evidence, as described in the methods. The overall Tier 3 decision is based on whether or not the majority of evidence lines are supportive of redesignating.
-
-```{r t3-full-summary, tab.cap='(ref:t3-full-summary)'}
-
-
-spec_names_ur <- c("wal_ur","lmb_ur","rt_ur", "bt_ur", "rb_ur", "fd_ur")
-
-sp_index_ur <- mget(spec_names_ur, ifnotfound = list(NULL), inherits = TRUE)
-keep_idx <- !vapply(sp_index_ur, is.null, logical(1))
-sp_index_ur <- sp_index_ur[keep_idx]
-
-is_simplified_t3 <- function(x) {
-  isTRUE(tryCatch(x$decisions$simplified_t3_used, error = function(e) FALSE))
-}
-
-sp_index_full_ur  <- sp_index_ur[!vapply(sp_index_ur, is_simplified_t3, logical(1))]
-sp_index_insuf_ur <- sp_index_ur[ vapply(sp_index_ur, is_simplified_t3, logical(1))]
-
-
-species_map_ur <- c(
-  "wal_ur" = "Walleye",
-  "lmb_ur" = "Largemouth Bass",
-  "rt_ur"  = "Rainbow Trout",
-  "bt_ur"  = "Brown Trout",
-  "rb_ur"  = "Rock Bass",
-  "fd_ur"  = "Freshwater Drum"
-)
-
-tier_levels <- c("Tier 3A", "Tier 3B", "Tier 3C")
-
-all_spp_full_ur <- purrr::imap_dfr(sp_index_full_ur, ~{
-  if (!is.list(.x) || is.null(.x$summary)) return(NULL)
-  if (!all(c("Tier", "Outcome", "Metric") %in% names(.x$summary))) return(NULL)
-
-  species_label <- species_map_ur[[.y]]
-  if (is.null(species_label)) species_label <- .y
-
-  dplyr::mutate(.x$summary, Species = species_label, .before = 1)
-})
-
-sp_clean_ur <- all_spp_full_ur |>
-  dplyr::mutate(
-    Tier = factor(Tier, levels = tier_levels)
-  ) |>
-  dplyr::filter(!is.na(Tier), !is.na(Outcome))
-
-overall_tbl_ur <- sp_clean_ur %>%
-  dplyr::group_by(Species) %>%
-  dplyr::summarize(
-    n_supp   = sum(Outcome == "Supportive", na.rm = TRUE),
-    n_unsupp = sum(Outcome == "Unsupportive", na.rm = TRUE),
-    n_insuf  = sum(Outcome == "Insufficient Data", na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  dplyr::mutate(
-    `Tier 3 Overall` = dplyr::case_when(
-      n_insuf >= 2 ~ "Insufficient Data",
-      n_supp  >= 2 ~ "Supportive",
-      TRUE         ~ "Unsupportive"
-    )
-  ) %>%
-  dplyr::select(Species, `Tier 3 Overall`)
-
-tbl_long <- dplyr::bind_rows(
-  dplyr::transmute(sp_clean_ur, Species, Type = "Outcome", Tier, value = Outcome),
-  dplyr::transmute(sp_clean_ur, Species, Type = "Metric",  Tier, value = Metric)
-)
-
-tbl_wide <- tbl_long |>
-  dplyr::arrange(Species, factor(Type, c("Outcome", "Metric")), Tier) |>
-  tidyr::pivot_wider(names_from = Tier, values_from = value) |>
-  dplyr::left_join(overall_tbl_ur, by = "Species") |>
-  dplyr::select(
-    Species,
-    Type,
-    `Tier 3A`,
-    `Tier 3B`,
-    `Tier 3C`,
-    `Tier 3 Overall`
-  )
-
-out_idx <- which(tbl_wide$Type == "Outcome")
-met_idx <- which(tbl_wide$Type == "Metric")
-tbl_disp <- dplyr::select(tbl_wide, -Type)
-
-word_tbl <- tbl_disp
-word_tbl[] <- lapply(word_tbl, sanitize_word_cell)
-word_tbl[["Tier 3 Overall"]] <- gsub("<span[^>]*>.*?</span>", "", word_tbl[["Tier 3 Overall"]])
-
-ft_full <- flextable::flextable(word_tbl) |>
-  flextable::merge_v(j = "Species") |>
-  flextable::merge_v(j = "Tier 3 Overall") |>
-  flextable::valign(j = c("Species", "Tier 3 Overall"), valign = "top") |>
-  flextable::bold(i = out_idx, bold = TRUE) |>
-  flextable::fontsize(i = met_idx, size = 9) |>
-  flextable::autofit() |>
-  flextable::theme_vanilla()
-
-
-all_spp_insuf_ur <- purrr::imap_dfr(sp_index_insuf_ur, ~{
-  if (!is.list(.x)) return(NULL)
-
-  rds_path <- tryCatch(.x$tables$insufficient_threshold_summary$rds, error = function(e) NULL)
-  if (is.null(rds_path) || is.na(rds_path) || !nzchar(rds_path)) return(NULL)
-  if (!file.exists(rds_path)) return(NULL)
-
-  species_label <- species_map_ur[[.y]]
-  if (is.null(species_label)) species_label <- .y
-
-  df <- readRDS(rds_path)
-  dplyr::mutate(df, Species = species_label, .before = 1)
-})
-
-
-insuf_long <- dplyr::bind_rows(
-  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Outcome", value = Outcome),
-  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Metric",  value = Metric)
-)
-
-insuf_meta <- all_spp_insuf_ur %>%
-  dplyr::select(
-    Species,
-    AOC_Concentration_Range,
-    N_AOC_Recent
-  ) %>%
-  dplyr::rename(`N recent observations (AOC)` = N_AOC_Recent) %>%
-  dplyr::distinct()
-
-insuf_tbl <- insuf_long %>%
-  tidyr::pivot_wider(names_from = Type, values_from = value) %>%
-  dplyr::left_join(insuf_meta, by = "Species") %>%
-  dplyr::select(
-    Species,
-    Outcome,
-    Metric,
-    `N recent observations (AOC)`,
-    AOC_Concentration_Range
-  )
-
-insuf_tbl_long <- dplyr::bind_rows(
-  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Outcome", Summary = Outcome),
-  dplyr::transmute(all_spp_insuf_ur, Species, Type = "Metric",  Summary = Metric)
-)
-
-insuf_meta <- all_spp_insuf_ur %>%
-  dplyr::select(
-    Species,
-    AOC_Concentration_Range,
-    N_AOC_Recent
-  ) %>%
-  dplyr::rename(`N recent observations (AOC)` = N_AOC_Recent) %>%
-  dplyr::distinct()
-
-insuf_tbl <- insuf_tbl_long %>%
-  dplyr::left_join(insuf_meta, by = "Species") %>%
-  dplyr::select(
-    Species,
-    Type,
-    Summary,
-    `N recent observations (AOC)`,
-    AOC_Concentration_Range
-  )
-
-insuf_out_idx <- which(insuf_tbl$Type == "Outcome")
-insuf_met_idx <- which(insuf_tbl$Type == "Metric")
-
-insuf_disp <- dplyr::select(insuf_tbl, -Type)
-
-insuf_word_tbl <- insuf_disp
-insuf_word_tbl[] <- lapply(insuf_word_tbl, sanitize_word_cell)
-
-ft_insuf <- flextable::flextable(insuf_word_tbl) |>
-  flextable::merge_v(j = "Species") |>
-  flextable::merge_v(j = "N recent observations (AOC)") |>
-  flextable::merge_v(j = "AOC_Concentration_Range") |>
-  flextable::valign(
-    j = c("Species", "N recent observations (AOC)", "AOC_Concentration_Range"),
-    valign = "top"
-  ) |>
-  flextable::bold(i = insuf_out_idx, bold = TRUE) |>
-  flextable::fontsize(i = insuf_met_idx, size = 9) |>
-  flextable::set_header_labels(
-    Summary = "Simplified Tier 3 Result",
-    AOC_Concentration_Range = "AOC Conc. Range"
-  ) |>
-  flextable::autofit() |>
-  flextable::theme_vanilla()
-
-ft_full
-
-ft_insuf
-```
+Tier 3 comprises multiple lines of evidence (virtual advisory, contaminant concentration comparisons, and temporal contaminant trends in fish of interest) to determine if redesignating the BUI is supported by contaminant trends in each species of interest. Table \@ref(tab:t3-full-summary) summarizes the results of tier 3 assessment for each species. Lines of evidence are evaluated independently, and the overall decision for each species is based on whether or not the majority of evidence lines are supportive of redesignating.
 
 <br />
 
-Below, the full Tier 3 analysis is demonstrated for walleye. All other species of interest that passed Tier 2 are evaluated independently, and the results for which are presented in-text (with further details in Appendices). A full summary of Tier 3 results are summarized in Table \@ref(tab:t3-full-summary).
+## Tier 3A: Comparison of PCB Threshold Exceedances in the AOC Fish vs Reference
 
-### Walleye {#tier3-results-walleye}
+Tier 3A looks to examine the degree to which PCBs are driving consumption restrictions in the AOC, compared to reference sites. To accomplish this, total PCB measurements in fish were compared to the contaminant threshold associated with restrictive consumption advisories (fewer than 8 meals/month) used by MECP (105 ng/g). To compare PCB exceedance between the AOC and reference sites, a size- and species-specific exceedance analysis was conducted using recent data (2006–2024). Fish were grouped into discrete length categories (0–30 cm, 30–50 cm, 50–70 cm, \>70 cm), and within each species–size class combination, the number and proportion of samples exceeding the consumption threshold (105 ng/g) were calculated separately for AOC and reference sites. Comparisons were restricted to matched species–size class combinations present in both regions; reference observations from size classes without corresponding AOC data were excluded to ensure consistent denominators. For each comparable species–size class, exceedance proportions were then directly contrasted between regions to determine which had the higher proportion of exceedances. In addition, an overall exceedance proportion was calculated for each species and region by aggregating counts across all retained size classes, providing a summary comparison based on the same set of comparable observations. For the Upper Reach of the AOC, exceedance comparisons were made to Lake Erie reference sites. For the Lower Reach, exceedance comparisons were made to Lake Ontario reference sites.
 
-The following AOC and reference sites were used in the tier 3 analysis of walleye in the St. Lawrence River (Cornwall/Akwesasne) AOC:
+(ref:ur-t3a-heatmap) Comparison of PCB restrictive consumption threshold exceedance between the Niagara River Area of Concern (AOC), Upper Reach and Lake Erie reference sites by species and fish size class (2006–2024). Tiles display the number and percentage of observations exceeding the 8 meal/month consumption threshold (105 ng/g) for each species, size class, and region. Cell colour indicates whether the proportion of exceedances is higher in the AOC (red) or in reference sites (blue) within each species–size class combination. Grey tiles indicate that a direct comparison was not possible due to missing reference data. Only species with observations in the AOC are shown, and reference size classes without corresponding AOC data are excluded. The right-hand panel (“Overall”) summarizes exceedance across all displayed size classes for each species and region.
 
-`r t3_text(wal,"reference_sites")`
-
-#### Tier 3A: Virtual Advisory
-
-(ref:t3a-walleye-fig) Virtual PCBs advisories in walleye. Predicted concentrations (curve) and observed values (points) by region using power regression model, compared to MECP advisory limits for PCBs for the sensitive population (dashed lines).
-
-```{r t3a-walleye-fig, fig.cap='(ref:t3a-walleye-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
-wal_t3a_fig = t3_fig(wal, "t3a_virtual")
-
-include_graphics(wal_t3a_fig)
-
-
+```{r ur-t3a-heatmap, fig.cap='(ref:ur-t3a-heatmap)'}
+include_graphics(file.path(t3_base_ur, "ur_t3_comparison.png"))
 ```
+
+(ref:lr-t3a-heatmap) Comparison of PCB restrictive consumption threshold exceedance between the Niagara River Area of Concern (AOC), Lower Reach and Lake Ontario reference sites by species and fish size class (2006–2024). Tiles display the number and percentage of observations exceeding the 8 meal/month consumption threshold (105 ng/g) for each species, size class, and region. Cell colour indicates whether the proportion of exceedances is higher in the AOC (red) or in reference sites (blue) within each species–size class combination. Grey tiles indicate that a direct comparison was not possible due to missing reference data. Only species with observations in the AOC are shown, and reference size classes without corresponding AOC data are excluded. The right-hand panel (“Overall”) summarizes exceedance across all displayed size classes for each species and region.
+
+```{r lr-t3a-heatmap, fig.cap='(ref:lr-t3a-heatmap)'}
+include_graphics(file.path(t3_base_lr, "lr_t3_comparison.png"))
+```
+
+Exceedance increases with fish length across species, particularly for larger individuals (\>50 cm). Overall, rates of PCB threshold exceedance are high across species in both AOC and reference regions, particularly among larger fish (Figures \@ref(fig:ur-t3a-heatmap) and \@ref(fig:lr-t3a-heatmap)). This indicates that PCB contamination at levels that restrict fish consumption is widespread in Lakes Erie and Ontario, and not necessarily limited to local AOC conditions [@bhavsar2011]. However, several fish species had higher rates of PCB exceedance in the AOC relative to reference sites. In the Upper Reach, walleye, white perch, and rainbow trout had higher proportions of PCB exceedences compared to Lake Erie reference sites (Figure \@ref(fig:ur-t3a-heatmap)). In the Lower Reach, lake trout, brown trout, smallmouth bass, rainbow smelt, largemouth bass, and freshwater drum had higher proportions of PCB exceedences compared to Lake Ontario reference sites (Figure \@ref(fig:lr-t3a-heatmap)).
+
+These elevated exceedance rates in the AOC do not necessarily indicate the presence of persistent, locally controllable sources of PCBs. Several of these species exhibiting higher exceedance rates, including lake trout, brown trout, rainbow trout, and rainbow trout, are highly mobile and can move across large portions of the Great Lakes [@scott1973; @gewurtz2011]. These species often undertake seasonal, long-distance movements, potentially integrating contaminant exposure over broad, basin-wide scales, rather than reflecting localized conditions [@scott1973; @nettles1987; @haynes1986; @alderstein2009]. Similarly, walleye and smallmouth bass exhibit moderate degrees of site fidelity but are capable of moving tens of kilometres and utilizing multiple habitats, further diluting the influence from local sources [@scott1973].
+
+Conversely, more resident species such as white perch and freshwater drum, which are typically associated with nearshore and riverine habitats, may provide stronger indication of local contaminant conditions [@scott1973; @gewurtz2011; @ion1997]. Elevated exceedance rates in these species within the AOC could suggest localized exposure. However, this pattern was not consistently observed across other resident species such as yellow perch and rock bass in either reach (Figures \@ref(fig:ur-t3a-heatmap) and \@ref(fig:lr-t3a-heatmap)). This inconsistency, combined with relatively small sample sizes in the AOC for some species, limits the ability to attribute observed exceedance patterns to local sources of contamination.
+
+Overall, evidence from Tier 3A does not provide strong support for the conclusion that fish consumption restrictions in the Niagara River AOC are driven by locally controllable sources of PCBs.
 
 <br />
 
-`r t3_text(lmb_ur, "t3a_model_summary")`
+## Tier 3B: Modeled PCB Concentrations in AOC Fish vs Reference
 
-(ref:t3a-walleye-table) Virtual advisory levels for `r contaminant_label` in `r tolower(wal$params$species)` across regions. Values represent meals/month recommendations. Red cells indicate restrictive virtual advisory below the desired consumption rate of `r wal$params$restrict_threshold` meals/month AND that of reference; green cells indicate unrestrictive virtual advisory equal to or above either the desired consumption rate or reference advisory.
+To evaluate whether polychlorinated biphenyls (PCBs) are contributing to restrictive fish consumption advisories in the Niagara River Area of Concern (AOC), a model-based analysis was conducted using generalized additive models (GAMs; Figures \@ref(fig:ur-t3b-pred) and \@ref(fig:ur-t3b-pred))). PCB concentrations were expressed relative to the advisory threshold corresponding to 8 meals/month (105 ng/g) as a log-transformed ratio, allowing results to be interpreted directly in terms of advisory relevance (i.e., whether concentrations exceed levels at which consumption advisories are restrictive). Separate models were developed for the Upper and Lower Niagara River, each compared to an ecologically appropriate reference system (Lake Erie and Lake Ontario, respectively).
 
-```{r tier-3a-cap, echo=FALSE, results='asis'}
-is_html <- knitr::is_html_output()
-  if (is_html){
-tbl_caption("t3a-walleye-table")
-  }
+Models accounted for key factors influencing PCB accumulation, including fish length (nonlinear smooth), species (parametric effect), temporal trends, and site-level variability (random effect), with an additional spatial smooth (latitude, longitude) included for the Lower Niagara River. Due to limited sample sizes for individual species within the AOC in recent years, data from multiple indicator species were combined within a single modelling framework to improve statistical power and enable a more robust assessment. Analyses were restricted to indicator species which were selected based on sufficiency of data across both AOC and reference sites, that failed Tier 2 assessment. For the Upper Reach, those were rock bass, rainbow trout, and freshwater drum. For the Lower Reach, those were freshwater drum, rock bass, smallmouth bass, rainbow trout, yellow perch, and lake trout.
+
+Model predictions were then generated for recent conditions (2006–2024) across the observed range of fish lengths and averaged across species, with site-level effects removed to represent general conditions rather than individual locations.
+
+(ref:ur-t3b-pred) Predicted PCB concentrations relative to the consumption threshold (105 ng/g) as a function of fish length in the Upper Niagara River and Lake Erie reference sites. Predictions are based on generalized additive models and represent recent conditions (2006–2024), averaged across indicator species and excluding site-level random effects. Shaded ribbons represent approximate 95% confidence intervals. The dashed horizontal line indicates the 8 meal/month consumption threshold.
+
+```{r ur-t3b-pred, fig.cap='(ref:ur-t3b-pred)'}
+include_graphics(file.path(t3_base_ur, "ur_pcb_pred_plot.png"))
 ```
 
-```{r t3a-walleye-table, tab.cap='(ref:t3a-walleye-table)'}
-wal_t3a = t3_table(wal, "t3a_virtual_advisory")
+(ref:lr-t3b-pred) Predicted PCB concentrations relative to the consumption threshold (105 ng/g) as a function of fish length in the Lower Niagara River and Lake Ontario reference sites. Predictions are based on generalized additive models and represent recent conditions (2006–2024), averaged across indicator species and excluding site-level random effects. Shaded ribbons represent approximate 95% confidence intervals. The dashed horizontal line indicates the 8 meal/month consumption threshold.
 
-
-wal_t3a_tab = render_t3_virtual_any(
-  wal_t3a,
-  restrict_threshold = wal$params$restrict_threshold,
-  force = "auto",
-  table_height = "auto"
-)
-
-
-wal_t3a_tab
-
+```{r lr-t3b-pred, fig.cap='(ref:lr-t3b-pred)'}
+include_graphics(file.path(t3_base_lr, "lr_pcb_pred_plot.png"))
 ```
 
-```{r t3a-walleye-text}
-wal_t3a_model = t3_text(wal, "t3a_decision_text")
-```
+Model results indicated that PCB concentrations increased significantly with fish length across species in both the Upper and Lower Niagara River, consistent with bioaccumulation (p \< 0.001 in both models; Figures \@ref(fig:ur-t3b-pred) and \@ref(fig:lr-t3b-pred); @gewurtz2011; @bhavsar2011). Temporal smooths were also highly significant (p \< 0.001), reflecting long-term declines followed by stabilization in recent years. Species effects were significant in both reaches, indicating substantial differences in PCB accumulation among taxa. Site-level variability was also important in the Upper Niagara River (p \< 0.001), while in the Lower Niagara River, spatial variation was better captured by the two-dimensional smooth of latitude and longitude (p \< 0.001), with little residual site-level variation.
 
-`r wal_t3a_model` Overall, Tier 3A assessment for walleye is `r tolower(wal$decisions$t3a_overall)`.
+In the Upper Niagara River model, the effect of region (AOC vs. Lake Erie reference) was positive but not statistically significant (estimate = 0.12 ± 0.32 SE, p = 0.69), indicating no clear difference between AOC and reference sites after accounting for fish length, species, and temporal effects. In the Lower Niagara River, the regional effect was negative (estimate = -0.94 ± 0.61 SE), indicating lower PCB concentrations in the AOC relative to Lake Ontario reference sites, although this difference was also not statistically significant (p = 0.12).
 
-```{r diagnostic, eval = F}
-cat("chunk getwd(): ", getwd(), "\n")
-cat("knitr root.dir: ", knitr::opts_knit$get("root.dir"), "\n")
-cat("here::here(): ", here::here(), "\n")
+Model predictions indicated that PCB concentrations increased with fish length across species in both reaches, with larger fish more likely to exceed the advisory threshold. In the Upper Niagara River, predicted PCB concentrations in the AOC were slightly higher than those in Lake Erie reference sites; however, this difference was small and not statistically significant (mean ratio = 1.13, 95% CI: 0.61–2.10, p = 0.69), with substantial overlap in uncertainty across the full range of fish sizes. In the Lower Niagara River, predicted PCB concentrations were consistently lower in the AOC than in Lake Ontario reference sites (mean ratio = 0.39, 95% CI: 0.12–1.29, p = 0.12), although this difference was also not statistically significant.
 
-p <- wal$figs$t3b_gam_plot
-cat("index value: ", p, "\n")
+Model predictions for recent years (2006–2024), averaged across indicator species, showed that in the Upper Niagara River, predicted PCB concentrations increased with fish length and crossed the advisory threshold at intermediate sizes (\~40–50 cm, Figure \@ref(fig:ur-t3b-pred)). Predicted values for the AOC were consistently slightly higher than reference sites, but differences were small and uncertainty overlapped across all sizes (Figure \@ref(fig:ur-t3b-pred)).
 
-# What path will you actually pass to include_graphics?
-# (If you build a path around p, do it here and print it.)
-final_p <- p
-cat("final path: ", final_p, "\n")
-cat("exists(as-is)? ", file.exists(final_p), "\n")
+Despite high rates of exceedance in larger fish, these patterns were similar between AOC and reference regions and were strongly driven by fish size. This is consistent with observed patterns of bioaccumulation of PCBs in fish in the Great Lakes ecosystem [@bhavsar2011; @gewurtz2011; @ion1997]. The absence of a statistically significant regional effect in the Upper Reach, combined with the consistent tendency toward lower concentrations in the AOC in the Lower Reach, indicates that PCB concentrations in Niagara River fish are not elevated relative to appropriate reference systems when controlling for key biological and spatial factors. Overall, these results support the conclusion that fish consumption restrictions in the Niagara River AOC are not driven by locally controllable PCB sources, but instead reflect broader regional contamination patterns within Lakes Erie and Ontario.
 
-```
+The observed association between PCB concentrations and size likely reflects the results from Tier 3A. Larger fish, particularly trout and salmonids, tend to be highly mobile or migratory and integrate contaminants from broad-basin scale environments [@scott1973; @nettles1987; @haynes1986; @alderstein2009]. As these species grow and age, they bioaccumulate PCBs, resulting in higher concentrations and greater likelihood of exceeding advisory thresholds. In contrast, smaller and more resident species such as white perch, rock bass, and freshwater drum occupy more localized habitats and therefore provide a stronger indication of local contaminant conditions [@scott1973; @gewurtz2011]. The absence of consistently elevated PCB concentrations among smaller size classes in the AOC suggests that these more resident taxa are not strongly influenced by localized PCB sources relative to reference sites.
 
-**Tier 3A Overall Decision:** `r t3_decision(wal,"t3a_overall")`
+The apparent discrepancy between the high proportion of fish exceeding the threshold in raw observations and lower model-predicted values reflects differences in interpretation. Raw exceedance rates are influenced by the distribution of sampled fish sizes, particularly the inclusion of larger individuals, whereas the GAM predictions represent adjusted expectations for a typical fish after accounting for biological and spatial factors. Together, these analyses provide complementary lines of evidence supporting the conclusion that PCB contamination patterns are primarily structured by size, species, and regional context rather than localized AOC effects.
 
-<br/>
-
-#### Tier 3B: Contaminant Comparison vs. Reference
+Overall, evidence from Tier 3B does not provide strong support for the conclusion that fish consumption restrictions in the Niagara River AOC are driven by locally controllable sources of PCBs.
 
 <br />
 
-(ref:t3b-wal-fig) PCBs concentration in `r wal$params$species` by length in the AOC compared to reference sites. Points are observed contaminant values, curves represent GAM model fit (with random effects dropped for simplicity,), ribbons represent 95% confidence interval.
+## Tier 3C: Temporal Projections of PCBs in the Niagara River AOC
 
-```{r t3b-wal-fig, fig.cap='(ref:t3b-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
-t3b_wal = t3_fig(wal, "t3b_gam_plot")
- 
-include_graphics(t3b_wal)
-```
+Temporal trends in PCB concentrations were assessed separately for the Upper and Lower Niagara River using generalized additive models (GAMs) applied to AOC-only data. PCB concentrations (ng/g) were log-transformed to meet model assumptions. Models included a parametric linear term for year to estimate long-term temporal trends, a smooth term for fish length to account for size-dependent bioaccumulation, species as a fixed effect, and site as a random effect.
 
-<br />
+The parametric year coefficient was used to estimate the rate of change in PCB concentrations over time. This rate was converted to a decay constant (k) and corresponding half-life (time required for concentrations to decline by 50%). Projections assume a constant log-linear rate of decline derived from the observed temporal trend.
 
-```{r t3b-wal-text-print, eval = F}
-t3_text(wal, "t3b_summary")
-```
+To evaluate future conditions, model predictions were generated at representative fish lengths (lower quartile, median, and upper quartile of observed lengths). Predictions were anchored to the most recent year of data and extrapolated forward assuming a constant rate of decline. The time required for predicted PCB concentrations to fall below the unrestricted consumption threshold of 105 ng/g was calculated for each representative length. Uncertainty was propagated using standard errors from both the model predictions and the temporal slope to generate 95% confidence intervals. An estimated timeline of 10 years or more is considered unsupportive of redesignating this BUI.
 
-Generalized Additive Models (GAMs) were used to model the relationship between fish length and PCBs concentrations for walleye in the AOC and reference sites. The length–contaminant relationship differed significantly between sites (interaction test p = 0.0411). Model-predicted concentrations were calculated across the observed size range for which observations existed for both regions (every 5 cm from 20 to 70 cm) and are presented in Table \@ref(tab:t3b-wal-tab).
+(ref:t3c-tab) Estimated time to unrestrictive PCB threshold for median, upper-quartile, and lower-quartile-sized fish in the AOC, using GAM-derived half-life decay model. 
+Projected PCBs concentration in median, upper-quartile, and lower-quartile-length fish in the Niagara River AOC. Predicted concentration is based on GAMM-derived half-life decay model. Thresholds representit an "unrestrictive" advisory of 8 meals per month, based on MECP advisory thresholds. 
 
-(ref:t3b-wal-tab) Predicted PCBs concentrations (µg/g) in walleye, estimated using generalized additive models (GAMs) across the observed range of fish lengths where data is available for both groups. Values represent model-predicted means with 95% confidence intervals. Asterisks (*) indicate size classes where the AOC differs significantly (p &lt; 0.05) from reference.
+```{r t3c-tab}
+t3c_summary_table <- readRDS("Derived/NR/Tier3/t3c_summary_table.rds")
 
-```{r t3b-wal-tab, tab.cap='(ref:t3b-wal-tab)'}
-t3b_tab = (t3_table(wal, "t3b_pred"))
-
-
-
-
-sig_cols <- setdiff(names(t3b_tab), "Region")
-
-# robust asterisk check
-has_star <- function(x) {
-  x <- trimws(as.character(x))
-  grepl("[\\*\\u2217]", x)
-}
-
-# row index for AOC
-i_aoc <- which(t3b_tab$Region == "AOC")
-stopifnot(length(i_aoc) == 1)
-
-# columns where AOC has an asterisk
-bold_cols <- sig_cols[vapply(sig_cols, \(col) has_star(t3b_tab[[col]][i_aoc]), logical(1))]
-j_bold    <- match(bold_cols, names(t3b_tab))
-
-t3b_ft <- flextable(t3b_tab) %>%
-  # bold header + first column
-  bold(part = "header", bold = TRUE) %>%
-  bold(j = 1, part = "body", bold = TRUE) %>%
-  # bold only AOC cells with asterisk
-  bold(i = i_aoc, j = j_bold, part = "body", bold = TRUE) %>%
-  autofit() %>%
-  set_table_properties(layout = "autofit")
-
-t3b_ft
-
-
-
-```
-
-`r t3_text(wal, "t3b_decision")`(Table \@ref(tab:t3b-wal-tab)). Therefore, Tier 3B analysis of walleye is considered `r tolower(t3_decision(wal,"t3b_overall"))` of redesignation.
-
-**Tier 3B Overall Decision:** `r t3_decision(wal,"t3b_overall")`
-
-<br />
-
-#### Tier 3C: Temporal Trends
-
-(ref:t3c-walleye-table) Estimated time to unrestrictive `r contaminant_label` threshold for median, upper-quartile, and lower-quartile-sized `r tolower(wal$params$species)` in the AOC, using GAMM-derived half-life decay model. The model-predicted concentration of representative-length fish is reported for the most recent year of observation, and the target concentration corresponding to the earliest of either Tier 1 or Tier 2 thresholds. Tier 1 thresholds representitive an "unrestrictive" advisory for the Sensitive population of `r wal$params$restrict_threshold`, based on survey results and MECP advisory thresholds. Tier 2 thresholds are size-matched Sensitive reference medians.
-
-```{r t3c-walleye-table, tab.cap='(ref:t3c-walleye-table)'}
-t3c_wal_tab = t3_table(wal, "t3c_sensitivity")
-
-
-t3c_sensitivity_ft_data <- t3c_wal_tab %>%
-  mutate(
-    # outcome from years_to_target (same logic as your kable)
-    outcome = case_when(
-      !is.na(years_to_target) & years_to_target == 0 ~ "Supportive",
-      is.na(years_to_target)                          ~ "Unsupportive",
-      years_to_target > 10                            ~ "Unsupportive",
-      TRUE                                            ~ "Supportive"
-    ),
-
-    # format display fields using ONLY columns present in the table
-    predicted_conc_f   = sprintf("%.2f", predicted_conc),
-    target_conc_t1_f   = if_else(is.na(target_conc_t1), "—", sprintf("%.2f", target_conc_t1)),
-    target_conc_t2_f   = if_else(is.na(target_conc_t2), "—", sprintf("%.2f", target_conc_t2)),
-    target_conc_f      = if_else(is.na(target_conc),    "—", sprintf("%.2f", target_conc)),
-    t2_meals_f         = if_else(is.na(t2_meals),       "—", sprintf("%.0f", t2_meals)),
-    years_to_target_f  = if_else(is.na(years_to_target),"—", sprintf("%.1f", years_to_target)),
-    ci_95              = case_when(
-      is.na(years_lwr) | is.na(years_upr) ~ "—",
-      TRUE ~ sprintf("%.1f–%.1f", years_lwr, years_upr)
-    )
-  ) %>%
-  select(
-    `Representative group`              = role,
-    `Length (cm)`                       = length_cm,
-    `Predicted Conc. (Current Year)`    = predicted_conc_f,
-    `Desired Consumption Rate` = t1_meals,
-    `Tier 1 threshold conc.`            = target_conc_t1_f,
-    `Tier 2 median (Sensitive) meals/mo`= t2_meals_f,
-    `Tier 2 Threshold conc.`            = target_conc_t2_f,
-    `Target Threshold (earliest)`           = target_conc_f,
-    `Years to Threshold`                = years_to_target_f,
-    `95% CI`                            = ci_95,
-    `Outcome`                           = outcome
-  )
-
-
-t3c_sensitivity_ft <- flextable(t3c_sensitivity_ft_data) %>%
+t3c_summary_table_ft <- flextable(t3c_summary_table) %>%
   bold(part = "header") %>%
   autofit() %>%
-  set_table_properties(layout = "autofit")
-
-# optional: subtle emphasis on Outcome
-t3c_sensitivity_ft <- t3c_sensitivity_ft %>%
+  set_table_properties(layout = "autofit") %>%
   bold(j = "Outcome", i = ~ Outcome == "Unsupportive", bold = TRUE)
 
-t3c_sensitivity_ft
+t3c_summary_table_ft
 ```
 
-<br/>
+(ref:ur-t3c-trend) Projected PCBs concentration in median, upper-quartile, and lower-quartile-length fish in the Upper Reach of the Niagara River AOC. Predicted concentration is based on GAMM-derived half-life decay model. Solid lines represent predicted values within the temporal range of observations, dashed lines represent projected future concentrations, ribbons show 95% CI, and horizontal dotted lines represent the PCB threshold corresponding to a consumption advisory of 8 meals per month (105 ng/g).
 
-(ref:t3c-wal-fig) Projected PCBs concentration in median, upper-quartile, and lower-quartile-length walleye in the AOC. Predicted concentration is based on GAMM-derived half-life decay model. Solid lines represent predicted values within the temporal range of observations, dashed lines represent projected future concentrations, ribbons show 95% CI, and horizontal dotted lines represent the unrestrictive PCBs threshold for the sensitive population, based on community desired consumption rate and MECP advisory thresholds, and median tier 2 threshold.
-
-```{r t3c-wal-fig, fig.cap='(ref:t3c-wal-fig)', fig.width= 10, fig.height = 10, out.width='80%', out.height='80%'}
-include_graphics(t3_fig(wal, "t3c_projected_multi"))
+```{r ur-t3c-trend, fig.cap='(ref:ur-t3c-trend)'}
+include_graphics(file.path(t3_base_ur, "ur_pcb_temp_plot.png"))
 ```
 
-`r t3_text(wal, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(wal,"t3c_overall"))`.
+(ref:lr-t3c-trend) Projected PCBs concentration in median, upper-quartile, and lower-quartile-length fish in the Lower Reach of the Niagara River AOC. Predicted concentration is based on GAMM-derived half-life decay model. Solid lines represent predicted values within the temporal range of observations, dashed lines represent projected future concentrations, ribbons show 95% CI, and horizontal dotted lines represent the PCB threshold corresponding to a consumption advisory of 8 meals per month (105 ng/g).
 
-**Tier 3C Overall Decision:** `r t3_decision(wal,"t3c_overall")`
-
-#### Summary
-
-A summary of Tier 3 assessment results can be found in table \@ref(tab:t3-wal-summary). Overall, results from this species are unsupportive of redesignation.
-
-(ref:t3-wal-summary) Summary of Tier 3 assessment results in the St. Lawrence River (Cornwall/Akwesasne) Area of Concern.
-
-```{r t3-wal-summary, tab.cap='(ref:t3-wal-summary)'}
-t3_wal = flextable(wal$summary)
-t3_wal = autofit(t3_wal)
-
-t3_wal
+```{r lr-t3c-trend, fig.cap='(ref:lr-t3c-trend)'}
+include_graphics(file.path(t3_base_lr, "lr_pcb_temp_plot.png"))
 ```
 
-<br />
+PCB concentrations in the Upper Niagara River appear to have declined to levels consistent with unrestricted consumption across all representative fish sizes. The consistency of results across size classes and the negative (pre-threshold) confidence intervals suggest that recovery has already occurred and is robust to model uncertainty. These results provide strong support that PCB contamination is no longer a limiting factor for fish consumption in the Upper River.
 
-### Largemouth Bass
+In contrast, PCB concentrations in the Lower Niagara River remain size-dependent and elevated in larger fish. While smaller individuals are already below the threshold, median and larger fish are expected to require approximately one to three decades to reach unrestricted levels. This indicates that although recovery is underway, it is incomplete and strongly influenced by bioaccumulation processes [@bhavsar2011; @gewurtz2011]. The persistence of elevated concentrations in larger fish suggests continued legacy contamination or slower recovery dynamics in the Lower River relative to the Upper River [@pelletier2003].
 
-The following reference sites were used in the tier 3 analysis of largemouth bass in the St. Lawrence River (Cornwall/Akwesasne) AOC:
+Together, the results of Tier 3C indicate spatial heterogeneity in recovery within the AOC. The Upper River shows evidence of completed recovery with respect to PCB contamination, whereas the Lower River continues to exhibit delayed recovery, particularly for larger, more bioaccumulative fish. However, given the results of Tiers 3A and 3B that demonstrated spatial similarities in PCB contamination in the Lower Niagara River and Lake Ontario reference sites, it is not likely that additional remedial actions in the AOC will meaningfully contribute to increased rates of decline of PCBs in AOC fish.
 
-`r t3_text(lmb,"reference_sites")`
+## Tier 3 Overall
 
-#### Tier 3A
+Overall, Tier 3 lines of evidence collectively indicate that PCB-related impairment in the Niagara River AOC is largely governed by fish size, species ecology, and spatial context, rather than a consistent AOC-wide effect. Tier 3A (recent concentrations and advisory exceedances) and Tier 3B (model-based comparisons to reference conditions) both showed that smaller-bodied and less bioaccumulative species generally align with or approach reference expectations, while larger, more mobile species continue to exhibit elevated PCB concentrations consistent with broader basin-scale exposure and bioaccumulation. Temporal analysis in Tier 3C further supports this pattern, demonstrating clear declines in PCB concentrations through time, with the Upper River now predicted to be below unrestricted consumption thresholds across representative fish sizes, indicating effective recovery. In contrast, the Lower River shows continued improvement but with delayed recovery in larger fish, where projected timelines to reach unrestricted thresholds extend one to three decades. Together, these findings suggest that PCB contamination in the Niagara River AOC is not uniformly elevated relative to reference conditions, but remains size- and location-dependent, with residual impairment primarily associated with larger-bodied fish in the Lower River.
 
-Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for largemouth bass and `r contaminant_label`.
-
-`r t3_text(lmb, "t3a_model_summary")`
-
-`r t3_text(lmb, "t3a_decision_text")` Therefore, Tier 3A analysis of largemouth bass is considered `r tolower(t3_decision(lmb,"t3a_overall"))` for redesignation.
-
-#### Tier 3B
-
-`r t3_text(lmb, "t3b_summary")`
-
-`r t3_text(lmb, "t3b_decision")` Therefore, Tier 3B analysis of largemouth bass is considered `r tolower(t3_decision(lmb,"t3b_overall"))` for redesignation.
-
-#### Tier 3C
-
-Temporal trends in largemouth bass for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(lmb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(lmb,"t3c_overall"))` for redesignation.
-
-#### Tier 3 Summary
-
-```{r t3-lmb-summary}
-t3_lmb = flextable(lmb$summary)
-t3_lmb = autofit(t3_lmb)
-
-t3_lmb
-```
-
-<br />
-
-### Northern Pike
-
-The following reference sites were used in the tier 3 analysis of northern pike in the St. Lawrence River (Cornwall/Akwesasne) AOC:
-
-`r t3_text(np,"reference_sites")`
-
-#### Tier 3A
-
-Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for northern pike and `r contaminant_label`.
-
-`r t3_text(np, "t3a_model_summary")`
-
-`r t3_text(np, "t3a_decision_text")` Therefore, Tier 3A analysis of northern pike is considered `r tolower(t3_decision(np,"t3a_overall"))` for redesignation.
-
-#### Tier 3B
-
-`r t3_text(np, "t3b_summary")`
-
-`r t3_text(np, "t3b_decision")` Therefore, Tier 3B analysis of northern pike is considered `r tolower(t3_decision(np,"t3b_overall"))` for redesignation.
-
-#### Tier 3C
-
-Temporal trends in northern pike for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(np, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(np,"t3c_overall"))` for redesignation.
-
-#### Tier 3 Summary
-
-```{r t3-np-summary}
-t3_np = flextable(np$summary)
-t3_np = autofit(t3_np)
-
-t3_np
-```
-
-<br />
-
-### Smallmouth Bass
-
-The following reference sites were used in the tier 3 analysis of smallmouth bass in the St. Lawrence River (Cornwall/Akwesasne) AOC:
-
-`r t3_text(smb,"reference_sites")`
-
-#### Tier 3A
-
-Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for smallmouth bass and `r contaminant_label`.
-
-`r t3_text(smb, "t3a_model_summary")`
-
-`r t3_text(smb, "t3a_decision_text")` Therefore, Tier 3A analysis of smallmouth bass is considered `r tolower(t3_decision(smb,"t3a_overall"))` for redesignation.s
-
-#### Tier 3B
-
-`r t3_text(smb, "t3b_summary")`
-
-`r t3_text(smb, "t3b_decision")` Therefore, Tier 3B analysis of smallmouth bass is considered `r tolower(t3_decision(smb,"t3b_overall"))` for redesignation.
-
-#### Tier 3C
-
-Temporal trends in smallmouth bass for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(smb, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(smb,"t3c_overall"))` for redesignation.
-
-#### Tier 3 Summary
-
-```{r t3-smb-summary}
-t3_smb = flextable(smb$summary)
-t3_smb = autofit(t3_smb)
-
-t3_smb
-```
-
-<br />
-
-### Yellow Perch
-
-The following reference sites were used in the tier 3 analysis of yellow perch in the St. Lawrence River (Cornwall/Akwesasne) AOC:
-
-`r t3_text(yp,"reference_sites")`
-
-#### Tier 3A
-
-Virtual advisory values were generated using by modelling the relationship between fish length and contaminant concentration for yellow perch and `r contaminant_label`.
-
-`r t3_text(yp, "t3a_model_summary")`
-
-`r t3_text(yp, "t3a_decision_text")` Therefore, Tier 3A analysis of yellow perch is considered `r tolower(t3_decision(yp,"t3a_overall"))` for redesignation.
-
-#### Tier 3B
-
-`r t3_text(yp, "t3b_summary")`
-
-`r t3_text(yp, "t3b_decision")` Therefore, Tier 3B analysis of yellow perch is considered `r tolower(t3_decision(yp,"t3b_overall"))` for redesignation.
-
-#### Tier 3C
-
-Temporal trends in yellow perch for `r contaminant_label` were assessed using generalized additive mixed models (GAMMs) across all years of data, and a model test was performed to estimate the time required to reach a nonrestrictive monthly meal allowance for the upper quantile fish length (rounded to the nearest 5 cm) for sensitive populations. `r t3_text(yp, "t3c_report")` Therefore, Tier 3C is considered `r tolower(t3_decision(yp,"t3c_overall"))` for redesignation.
-
-#### Tier 3 Summary
-
-```{r t3-yp-summary}
-t3_yp = flextable(yp$summary)
-t3_yp = autofit(t3_yp)
-
-t3_yp
-```
-
-<br />
-
-### Channel Catfish, Rock Bass, and White Perch
-
-There were an insufficient number of observed records of channel catfish (17 observations across 2 years of data), rock bass (24 observations across 3 years of data), and white perch (7 observations across 2 years of data) in the AOC from which to draw conclusions at the Tier 3 level. Thus, these species automatically fail Tier 3, and will be considered holistically as part of Tier 4 assessment.
-
-<br />
+Data availability remains a key limitation in interpreting these results, as contaminant monitoring within the Niagara River AOC (particularly in the Upper Reach) is sparse for most species and especially limited in recent years (2006 onward). As a result, analyses were conducted using aggregated, multi-species models rather than species-specific assessments, which may obscure important differences among taxa. These data gaps introduce additional uncertainty in both trend estimation and future projections, and highlight the need for more consistent, species-resolved fish contaminant monitoring within the AOC to improve the robustness of future assessments and better track recovery over time.

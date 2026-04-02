@@ -19,15 +19,15 @@ output:
   bookdown::pdf_document2:
     toc: true
 params:
-  AOC_name: Upper Niagara River
-  species: Brown Trout
+  AOC_name: Lower Niagara River
+  species: Yellow Perch
   contaminant: PCBs
-  aoc_shapefile: "Data/Canadian_Niagara_River_AOC/Upper_NR_Shapefile.shp"
+  aoc_shapefile: "Data/Canadian_Niagara_River_AOC/Lower_NR_Shapefile"
   raw_csv: "Data/Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv"
-  ref_1: Lake Erie
-  ref_2: Lake Erie
+  ref_1: Lake Ontario
+  ref_2: Lake Ontario
   combine_ref: TRUE
-  add_AOC: Lake Ontario 1a
+  add_AOC: Lake Ontario 1b
   exclude_site:
   - Hamilton Harbour
   - Trent River
@@ -39,7 +39,7 @@ params:
   restrict_threshold: 8
   exclude_missing: FALSE
   save_artifacts: TRUE
-  out_dir_base: "Output/Full-NPCA-Report/Derived/NR/Tier3/UR"
+  out_dir_base: "Output/Full-NPCA-Report/Derived/NR/Tier3/LR"
   recent_year: 2006
   thr_path: "Data/consumption_threshold_nr.csv"
 ---
@@ -306,10 +306,43 @@ region_colours <- setNames(
 )
 
 
+get_thresholds <- function(contaminant = "MERCURY", population = "Sensitive") {
+  if (contaminant == "MERCURY") {
+    if (population == "Sensitive") {
+      return(tibble(
+        meals = c(32,16, 12, 8, 4, 0),
+        conc = c(0.06,0.12, 0.16, 0.25, 0.5, 0.51)
+      ))
+    } else {
+      return(tibble(
+        meals = c(32, 16, 12, 8, 4, 2, 0),
+        conc = c(0.15, 0.3, 0.4, 0.6, 1.2, 1.8, 1.81)
+      ))
+    }
+  } else if (contaminant == "PCBs") {
+    return(tibble(
+      meals = c(32, 16, 12, 8, 4, 2, 1, 0),
+      conc = c(26,  53, 70, 105, 211, 422, 844, 845)
+    ))
+  
+} else if (contaminant == "TEQWH4") {
+    return(tibble(
+    meals = c(32, 16, 12, 8, 4, 2, 1, 0),
+    conc = c(0.7, 1.3, 1.8, 2.7, 5.4, 10.8, 21.6, 21.7)
+      ))
+  } else {
+    
+  return(NULL)
+}
+}
+
+thresholds_df <- get_thresholds(contaminant, population = "Sensitive")
+
+
 
 ```
 
-
+#### Data sufficiency
 ```{r data-sufficiency}
 # --- Tier 3 pre-check: sufficient AOC data for this species? ------------------
 
@@ -327,7 +360,7 @@ n_years_rd <- rd_aoc %>% distinct(Sample.Year) %>% nrow()
 n_obs_rd   <- nrow(rd_aoc)
 
 # Get AOC concentration range, if available
-aoc_conc <- fd_aoc %>%
+aoc_conc <- rd_aoc %>%
   pull(Value)
 
 aoc_conc <- aoc_conc[!is.na(aoc_conc)]
@@ -498,7 +531,7 @@ simplified_outcome <- dplyr::case_when(
 )
 
 metric_text <- paste0(
-  n_at_or_below, " of ", n_total_raw,
+  n_below, " of ", n_total_raw,
   " recent AOC concentrations (",
   pct_at_or_below, "%) were at or below the restrictive threshold concentration. ",
   if (pct_at_or_below >= 50) {
@@ -536,7 +569,7 @@ insufficient_thresh_summary <- tibble::tibble(
       " AOC observations were above the concentration associated with the restrictive threshold of ",
       ARTIFACTS$params$restrict_threshold, " meals/month (",
       restrict_conc, " ", unit_label, "); ",
-      n_at_or_below, " were at or below."
+      n_below, " were at or below."
     ),
     "tier3_insufficient_threshold_note"
   )
@@ -556,7 +589,7 @@ insufficient_thresh_summary <- tibble::tibble(
   message(
     sprintf(
       "Simplified insufficient-data summary saved for %s: %d above, %d at/below threshold.",
-      params$species, n_above, n_at_or_below
+      params$species, n_above, n_below
     )
   )
 
@@ -825,25 +858,25 @@ get_thresholds <- function(contaminant = "MERCURY", population = "Sensitive") {
   if (contaminant == "MERCURY") {
     if (population == "Sensitive") {
       return(tibble(
-        meals = c(16, 12, 8, 4, 0),
-        conc = c(0.06, 0.12, 0.16, 0.25, 0.50)
+        meals = c(32,16, 12, 8, 4, 0),
+        conc = c(0.06,0.12, 0.16, 0.25, 0.5, 0.51)
       ))
     } else {
       return(tibble(
         meals = c(32, 16, 12, 8, 4, 2, 0),
-        conc = c(0.15, 0.15, 0.3, 0.4, 0.6, 1.2, 1.8)
+        conc = c(0.15, 0.3, 0.4, 0.6, 1.2, 1.8, 1.81)
       ))
     }
   } else if (contaminant == "PCBs") {
     return(tibble(
       meals = c(32, 16, 12, 8, 4, 2, 1, 0),
-      conc = c(26,  26, 53, 70, 105, 211, 422, 844)
+      conc = c(26,  53, 70, 105, 211, 422, 844, 845)
     ))
   
 } else if (contaminant == "TEQWH4") {
     return(tibble(
     meals = c(32, 16, 12, 8, 4, 2, 1, 0),
-    conc = c(0.7, 0.7, 1.3, 1.8, 2.7, 5.4, 10.8, 21.6)
+    conc = c(0.7, 1.3, 1.8, 2.7, 5.4, 10.8, 21.6, 21.7)
       ))
   } else {
     
@@ -2038,6 +2071,7 @@ A model test was performed to estimate the time required to reach a nonrestricti
 `r aoc_out$report_text` Therefore, Tier 3C is considered `r aoc_out$outcome`.
 
 **Tier 3C Overall Decision:** `r aoc_out$outcome`
+
 ```{r new-t3c-method}
 # Round to nearest 5 cm (reuse your existing helper if already defined)
 round5 <- function(x) round(x / 5) * 5
@@ -2472,154 +2506,5 @@ writeLines(c(
 
 ```
 
-
-```{r t3c-smooth, eval = FALSE}
-library(mgcv)
-
-m_timevary <- gam(
-  log(Value) ~ 
-    s(Sample.Year, k = 8) +         # flexible, but modest k; increase if needed
-    s(Length, k = 6) + 
-    s(Waterbody.Code, bs = "re"),   # random intercept = GAMM-like
-  data = t3c_data,
-  method = "REML"
-)
-summary(m_timevary)
-
-# Instantaneous rate k(t) and half-life over time
-# Rate on log scale is negative derivative of time smooth
-library(gratia)
-
-der <- derivatives(m_timevary, select = "s(Sample.Year)", order = 1)
-# k(t) = - d/dt E[log(Value)]
-der$k_t <- -der$.derivative
-der$k_se <- der$.se
-der$half_life <- ifelse(der$k_t > 0, log(2) / der$k_t, NA_real_)
-
-round5 <- function(x) round(x/5)*5
-median_len <- round5(median(t3c_data$Length, na.rm = TRUE))
-
-target_conc <- thresholds_df$conc[match(params$restrict_threshold, thresholds_df$meals)]
-eta_minus_logtarget <- function(y) {
-  predict(m_timevary,
-          newdata = data.frame(Sample.Year = y, Length = median_len),
-          type = "link") - log(target_conc)
-}
-
-anchor <- max(t3c_data$Sample.Year, na.rm = TRUE)
-# extend far enough; adjust upper bound if needed
-root <- try(uniroot(eta_minus_logtarget, lower = anchor, upper = anchor + 150), silent = TRUE)
-
-years_to_target <- if (inherits(root, "try-error")) NA_real_ else (root$root - anchor)
-
-
-
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(scales)
-
-round5 <- function(x) round(x/5)*5
-
-plot_t3c_future_timevary <- function(
-  m_timevary, t3c_data, thresholds_df, restrict_threshold,
-  contaminant_label = "Contaminant",
-  horizon_years = 20, pad_years = 5,
-  aoc_out = NULL  # optional: to extend to threshold year
-) {
-  median_len <- round5(median(t3c_data$Length, na.rm = TRUE))
-  min_year   <- min(t3c_data$Sample.Year, na.rm = TRUE)
-  max_year   <- max(t3c_data$Sample.Year, na.rm = TRUE)
-  anchor     <- max_year
-
-  # Compute threshold year from aoc_out if available
-  vt_year <- NA_real_
-  if (!is.null(aoc_out) && is.data.frame(aoc_out$results_tbl)) {
-    ytt <- aoc_out$results_tbl$years_to_target[1]
-    if (is.finite(ytt) && !is.na(ytt)) vt_year <- anchor + ytt
-  }
-
-  end_year <- max(max_year + horizon_years, if (is.finite(vt_year)) vt_year + pad_years else -Inf)
-  proj_years <- seq(min_year, ceiling(end_year), by = 1)
-
-  newdata <- tibble(Sample.Year = proj_years, Length = median_len)
-  pr <- predict(m_timevary, newdata = newdata, type = "link", se.fit = TRUE)
-  pred_df <- newdata %>%
-    mutate(
-      fit_log = as.numeric(pr$fit),
-      se_log  = as.numeric(pr$se.fit),
-      conc    = exp(fit_log),
-      lwr     = exp(fit_log - 1.96 * se_log),
-      upr     = exp(fit_log + 1.96 * se_log),
-      period  = ifelse(Sample.Year <= max_year, "Observed", "Projected")
-    )
-
-  target_conc <- thresholds_df %>% filter(meals == restrict_threshold) %>% pull(conc)
-  stopifnot(length(target_conc) == 1)
-
-  vt_df <- if (is.finite(vt_year)) tibble(vline_x = vt_year) else NULL
-  thr_lab <- paste0("Unrestrictive threshold (", restrict_threshold, " meals/mo)")
-
-  ggplot(pred_df, aes(Sample.Year, conc)) +
-    geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.15, linewidth = 0) +
-    geom_line(data = filter(pred_df, period == "Observed"),  linewidth = 1) +
-    geom_line(data = filter(pred_df, period == "Projected"), linewidth = 1, linetype = "22") +
-    geom_hline(yintercept = target_conc, linetype = "dotted") +
-    { if (!is.null(vt_df)) geom_vline(data = vt_df, aes(xintercept = vline_x),
-                                      linetype = "dotdash", linewidth = 0.6, colour = "grey30") } +
-    annotate("text",
-             x = min_year + 0.02 * (max(proj_years) - min_year),
-             y = target_conc, label = thr_lab, vjust = -0.6, hjust = 0, size = 3.4) +
-    { if (!is.null(vt_df)) annotate("text",
-                                    x = vt_df$vline_x, y = max(pred_df$conc, na.rm = TRUE),
-                                    label = "Reach threshold (est.)",
-                                    vjust = 1.2, hjust = 0.5, size = 3.2, colour = "grey30") } +
-    scale_y_continuous(labels = label_number(accuracy = 0.1)) +
-    labs(
-      x = "Year",
-      y = paste0(contaminant_label, " concentration"),
-      title = paste0("Tier 3c: Projected ", contaminant_label, " (AOC, time-varying trend)"),
-      subtitle = paste0("Representative fish length = ", median_len, " cm; ribbons = 95% CI"),
-      caption = "Solid = observed; Dashed = projection; Dotted = unrestrictive threshold"
-    ) +
-    theme_minimal(base_size = 12) +
-    theme(plot.title = element_text(face = "bold"),
-          legend.position = "none")
-}
-
-# Example call
-p_t3c_tv <- plot_t3c_future_timevary(
-  m_timevary = m_timevary,
-  t3c_data   = t3c_data,
-  thresholds_df = thresholds_df,
-  restrict_threshold = new_thr,
-  contaminant_label = contaminant_label,
-  horizon_years = 20,
-  pad_years = 5,
-  aoc_out = aoc_out
-)
-p_t3c_tv
-
-
-
-library(gratia)
-
-# Smooth plot
-draw(m_timevary, select = "s(Sample.Year)")
-
-# Derivative = d/dt log(Value); rate k(t) = -derivative
-der <- derivatives(m_timevary, term = "s(Sample.Year)", order = 1)
-der$k_t <- -der$derivative
-
-ggplot(der, aes(data, k_t)) +
-  geom_hline(yintercept = 0, linetype = "dotted") +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.15) +
-  geom_line() +
-  labs(x = "Year", y = "Instantaneous decline rate k(t)",
-       title = "Time-varying rate of decline (k(t))") +
-  theme_minimal()
-
-```
 
 

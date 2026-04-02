@@ -1,16 +1,11 @@
----
-output:
-  word_document: default
-  html_document: default
----
-## Tier 1 Assessment for the `r AOC_full` AOC {#results-tier1}
+# Tier 1 Assessment for the `r AOC_full` AOC {#results-tier1}
 
 ```{r t1-setup, echo = F}
 # Document setup
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, messages = FALSE)
 ```
 
-The Tier 1 assessment compares the official MECP consumption advisory information for each fish of interest to the desired consumption rate (in meals per month) as indicated by the community survey. Table \@ref(tab:tier-1-table) summarizes the MECP advisory values for fish of interest in the `r AOC_full` AOC for both General and Sensitive populations, compared to each species'  consumption rate. Tier 1 analyses are conducted separately for the Upper and Lower reaches of the Niagara River respectively.
+The Tier 1 assessment compares the official MECP consumption advisory information for each fish of interest to the desired consumption rate (in meals per month) as indicated by the community survey. Tables \@ref(tab:tier-1-table-ur) and \@ref(tab:tier-1-table-lr) summarizes the MECP advisory values for fish of interest in the `r AOC_full` AOC for both General and Sensitive populations, compared to each species'  consumption rate. Tier 1 analyses are conducted separately for the Upper and Lower reaches of the Niagara River respectively.
 
 ### Upper Reach
 
