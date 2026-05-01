@@ -4,10 +4,9 @@
 # log(Concentration/threshold) / log_conc_minus_threshold = log(conc) - log(threshold)
 ## This way, directly linked to advisories; 0 = at threshold, < 0 = below threshold, > 0 above threshold
 
-# ============================================================
-# Niagara Tier 3 pooled PCB dataset builder
+
+# Niagara Tier 3 pooled PCB dataset builde--------------
 # For multi-species GAM using log_ratio = log(PCB / 105)
-# ============================================================
 
 library(here)
 library(dplyr)
@@ -21,9 +20,9 @@ library(mgcv)
 
 source(here::here("Scripts", "setup.R"))
 
-# -----------------------------
-# User settings
-# -----------------------------
+
+# User settings ----------------
+
 raw_csv <- here::here("Data", "Great Lakes Data to Ken 2024-12 PCB-Hg(Data).csv")
 
 upper_aoc_shp <- here::here("Data", "Canadian_Niagara_River_AOC", "Upper_NR_Shapefile")
@@ -115,14 +114,16 @@ lr_species = c(
   "Yellow Perch"
 )
 
-# -----------------------------
-# Read raw data
-# -----------------------------
+
+# Read raw data----------
 raw_data <- read.csv(raw_csv)
 
-# -----------------------------
-# Initial contaminant filter
-# -----------------------------
+
+
+# Tier 3B model -------------------------
+
+
+## Initial contaminant filter
 dat0 <- raw_data %>%
   filter(
     Contaminant == "PCBs",
@@ -148,9 +149,9 @@ dat0 <- dat0 %>%
     site_name = iconv(site_name, from = "", to = "UTF-8", sub = "")
   )
 
-# -----------------------------
-# Read AOC shapefiles
-# -----------------------------
+
+## Read AOC shapefiles--------
+
 upper_aoc <- st_read(upper_aoc_shp, quiet = TRUE) %>%
   st_make_valid() %>%
   st_transform(target_crs) %>%
@@ -166,9 +167,9 @@ aoc_polys <- bind_rows(
   lower_aoc %>% select(aoc_zone, geometry)
 )
 
-# -----------------------------
+
 # Spatial assignment for rows with coordinates
-# -----------------------------
+
 dat_has_coords <- dat0 %>%
   filter(!is.na(long), !is.na(lat)) %>%
   st_as_sf(coords = c("long", "lat"), crs = target_crs, remove = FALSE) %>%
@@ -192,9 +193,9 @@ dat1 <- bind_rows(joined_df, no_coords_df)
 dat1 <- dat1 %>%
   mutate(length_cm = ifelse(length_cm >= 900, NA, length_cm))
 
-# -----------------------------
+
 # Name-based fallback assignment
-# -----------------------------
+
 collapse_patterns <- function(x) {
   str_c(x, collapse = "|")
 }
@@ -226,9 +227,8 @@ dat2 <- dat1 %>%
     )
   )
 
-# -----------------------------
+
 # Exclusion filter
-# -----------------------------
 # safer than one big regex if any site names have punctuation
 if (length(exclude_sites) > 0) {
   
@@ -243,9 +243,9 @@ if (length(exclude_sites) > 0) {
     )
 }
 
-# -----------------------------
-# Final modeling variables
-# -----------------------------
+
+## Final modeling variables ----------
+
 niagara_t3_dat <- dat2 %>%
   filter(!is.na(region)) %>%
   mutate(
@@ -270,9 +270,8 @@ niagara_t3_dat <- dat2 %>%
     !is.na(conc_ng_g)
   )
 
-# -----------------------------
-# Optional: recent and full datasets
-# -----------------------------
+
+## recent and full datasets --------------
 niagara_t3_recent <- niagara_t3_dat %>%
   filter(recent_flag)
 
@@ -282,9 +281,8 @@ niagara_t3_model <- niagara_t3_dat %>%
     !is.na(lat)
   )
 
-# -----------------------------
-# Quick summaries
-# -----------------------------
+
+## Quick summaries
 summary_by_zone_species <- niagara_t3_recent %>%
   count(Zone, Species, sort = TRUE)
 
@@ -299,21 +297,21 @@ summary_by_zone <- niagara_t3_recent %>%
 print(summary_by_zone)
 print(summary_by_zone_species)
 
-# -----------------------------
-# Save
-# -----------------------------
-saveRDS(niagara_t3_dat,   here::here("Output", "niagara_t3_pooled_full.rds"))
-saveRDS(niagara_t3_recent, here::here("Output", "niagara_t3_pooled_recent.rds"))
-saveRDS(niagara_t3_model,  here::here("Output", "niagara_t3_pooled_model_coords.rds"))
 
-readr::write_csv(niagara_t3_dat,    here::here("Output", "niagara_t3_pooled_full.csv"))
-readr::write_csv(niagara_t3_recent, here::here("Output", "niagara_t3_pooled_recent.csv"))
-readr::write_csv(summary_by_zone,   here::here("Output", "niagara_t3_summary_by_zone.csv"))
+## Save datasets -----------
 
+saveRDS(niagara_t3_dat,   here::here("Derived", "NR", "Tier3", "niagara_t3_pooled_full.rds"))
+saveRDS(niagara_t3_recent, here::here("Derived", "NR", "Tier3", "niagara_t3_pooled_recent.rds"))
+saveRDS(niagara_t3_model,  here::here("Derived", "NR", "Tier3", "niagara_t3_pooled_model_coords.rds"))
 
+readr::write_csv(niagara_t3_dat,    here::here("Derived", "NR", "Tier3", "niagara_t3_pooled_full.csv"))
+readr::write_csv(niagara_t3_recent, here::here("Derived", "NR", "Tier3", "niagara_t3_pooled_recent.csv"))
+readr::write_csv(summary_by_zone,   here::here("Derived", "NR", "Tier3", "niagara_t3_summary_by_zone.csv"))
 
 
 
+
+## Initial models --------------
 
 niagara_t3_model$Zone <- relevel(niagara_t3_model$Zone, ref = "Reference")
 
@@ -379,7 +377,7 @@ plot(m1, select = 5)  # assuming te(long,lat) is term 5
 
 
 
-# Separating UR and LR ------------------
+## Separating UR and LR ------------------
 upper_ref_patterns <- c(
   "Lake Erie"
 )
@@ -427,7 +425,7 @@ dat_split <- dat_split %>%
     !str_detect(site_name, regex(exclude_pat, ignore_case = TRUE)) | !is.na(aoc_zone)
   )
 
-# Upper analysis: Upper NR + Lake Erie refs
+###  Upper analysis: Upper NR + Lake Erie refs---------------
 niagara_upper_dat <- dat_split %>%
   filter(
     aoc_zone == "Upper Niagara River" | ref_system == "Lake Erie",
@@ -466,7 +464,7 @@ niagara_upper_dat <- dat_split %>%
   ungroup() %>%
   filter(!is.na(region)) 
 
-# Lower analysis: Lower NR + Lake Ontario refs
+### Lower analysis: Lower NR + Lake Ontario refs--------------
 niagara_lower_dat <- dat_split %>%
   filter(
     aoc_zone == "Lower Niagara River" | ref_system == "Lake Ontario",
@@ -509,7 +507,7 @@ niagara_lower_dat <- dat_split %>%
 
 
 
-# Separate models --------
+## Separate models --------
 m_upper <- gam(
   log_ratio ~
     region +
@@ -545,7 +543,7 @@ summary(m_lower)
 
 
 
-# Limited indicator species approach -------------
+## Limited indicator species approach -------------
 
 indicator_spec <- c(
   "Yellow Perch",
@@ -604,7 +602,7 @@ summary(m_lower_ind)
 
 
 
-# Prediction grids for recent years -------------
+## Prediction grids for recent years -------------
 
 library(dplyr)
 library(tidyr)
@@ -616,6 +614,9 @@ med_length <- median(niagara_upper_ind$length_cm, na.rm = TRUE)
 
 # get species levels used in model
 species_levels <- levels(niagara_upper_ind$Species)
+
+
+## UR Prediction plot ---------
 
 pred_grid_upper <- expand.grid(
   region = c("Reference", "AOC"),
@@ -813,6 +814,10 @@ Xbar_diff <- matrix(colMeans(Xp_diff), nrow = 1)
 avg_diff <- as.numeric(Xbar_diff %*% beta)
 avg_se   <- sqrt(as.numeric(Xbar_diff %*% Vb %*% t(Xbar_diff)))
 
+
+
+
+
 avg_result_upper <- tibble::tibble(
   diff_log_ratio = avg_diff,
   se = avg_se,
@@ -851,6 +856,7 @@ ggsave("Derived/NR/Tier3/UR/ur_pcb_pred_plot.png", ur_pred_plot, dpi = 300, heig
 
 
 
+## LR Prediction plot ------------
 
 lower_lengths <- niagara_lower_ind %>%
   filter(region == "AOC") %>%
@@ -970,7 +976,7 @@ Xp_diff_lower <- Xp_AOC_lower - Xp_REF_lower
 beta_lower <- coef(m_lower_ind)
 Vb_lower   <- vcov(m_lower_ind)
 
-# pointwise contrasts if you want them later
+# pointwise contrasts 
 diff_fit_lower <- as.vector(Xp_diff_lower %*% beta_lower)
 diff_se_lower  <- sqrt(rowSums((Xp_diff_lower %*% Vb_lower) * Xp_diff_lower))
 
@@ -1008,59 +1014,241 @@ avg_result_lower
 # Although a large proportion of observed fish exceeded the PCB threshold, this pattern is strongly size-dependent. Model-based predictions indicate that, after accounting for fish length, species, and site effects, PCB concentrations in the AOC are not consistently elevated relative to appropriate reference systems.
 
 
-# Site effects
+##  Site effects-------------------
+library(dplyr)
+library(stringr)
 library(gratia)
-
-site_effects_lower <- smooth_estimates(m_lower_ind, select = "s(site_name)")
-
-site_effects_lower <- site_effects_lower %>%
-  mutate(
-    site_name = as.character(site_name),
-    multiplier = exp(.estimate),
-    lower = exp(.estimate - 2 * .se),
-    upper = exp(.estimate + 2 * .se)
-  ) %>%
-  select(site_name, multiplier, lower, upper) %>%
-  arrange(desc(multiplier))
-
-site_coords <- niagara_lower_ind %>%
-  group_by(site_name) %>%
-  summarise(
-    long = mean(long, na.rm = TRUE),
-    lat = mean(lat, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-site_map <- site_effects_lower %>%
-  left_join(site_coords, by = "site_name")
-
 library(ggplot2)
 
-ggplot(site_map, aes(x = long, y = lat, colour = multiplier)) +
-  geom_point(size = 3) +
-  scale_colour_viridis_c() +
-  coord_equal() +
+
+# Upper Niagara
+
+upper_site_effects <- smooth_estimates(m_upper_ind, select = "s(site_name)") %>%
+  mutate(
+    multiplier = exp(.estimate),
+    lower = exp(.estimate - 2 * .se),
+    upper = exp(.estimate + 2 * .se),
+    site_name = str_to_title(as.character(site_name))
+  ) %>%
+  select(site_name, .estimate, .se, multiplier, lower, upper) %>%
+  arrange(desc(multiplier))
+
+# add sample size per site
+upper_site_effects <- upper_site_effects %>%
+  left_join(
+    niagara_upper_ind %>% count(site_name, name = "n") %>%
+      mutate(site_name = str_to_title(as.character(site_name))),
+    by = "site_name"
+  )
+
+
+
+# Lower Niagara
+
+lower_site_effects <- smooth_estimates(m_lower_ind, select = "s(site_name)") %>%
+  mutate(
+    multiplier = exp(.estimate),
+    lower = exp(.estimate - 2 * .se),
+    upper = exp(.estimate + 2 * .se),
+    site_name = str_to_title(as.character(site_name))
+  ) %>%
+  select(site_name, .estimate, .se, multiplier, lower, upper) %>%
+  arrange(desc(multiplier))
+
+# add sample size per site
+lower_site_effects <- lower_site_effects %>%
+  left_join(
+    niagara_lower_ind %>% count(site_name, name = "n") %>%
+      mutate(site_name = str_to_title(as.character(site_name))),
+    by = "site_name"
+  )
+
+
+# Screen for elevated sites (lower > 1)
+upper_site_effects %>%
+  filter(lower > 1) %>%
+  arrange(desc(multiplier))
+
+lower_site_effects %>%
+  filter(lower > 1) %>%
+  arrange(desc(multiplier))
+
+
+# Adjusted site predictions
+
+# Upper
+
+upper_newdata <- niagara_upper_ind %>%
+  group_by(site_name) %>%
+  summarise(
+    region = first(region),
+    year = max(recent_years),
+    length_cm = median(length_cm, na.rm = TRUE),
+    Species = first(Species),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    site_name = factor(site_name, levels = levels(niagara_upper_ind$site_name)),
+    region = factor(region, levels = levels(niagara_upper_ind$region)),
+    Species = factor(Species, levels = levels(niagara_upper_ind$Species))
+  )
+
+upper_pred <- predict(m_upper_ind, upper_newdata, se.fit = TRUE)
+
+upper_site_pred <- upper_newdata %>%
+  mutate(
+    log_fit = upper_pred$fit,
+    log_se  = upper_pred$se.fit,
+    ratio_fit = exp(log_fit),
+    lower = exp(log_fit - 2 * log_se),
+    upper = exp(log_fit + 2 * log_se),
+    site_name = str_to_title(as.character(site_name))
+  ) %>%
+  left_join(
+    niagara_upper_ind %>% count(site_name, name = "n") %>%
+      mutate(site_name = str_to_title(as.character(site_name))),
+    by = "site_name"
+  ) %>%
+  arrange(desc(ratio_fit))
+
+# Lower
+
+lower_newdata <- niagara_lower_ind %>%
+  group_by(site_name) %>%
+  summarise(
+    region = first(region),
+    year = max(recent_years),
+    length_cm = median(length_cm, na.rm = TRUE),
+    Species = first(Species),
+    long = median(long, na.rm = TRUE),
+    lat  = median(lat, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    site_name = factor(site_name, levels = levels(niagara_lower_ind$site_name)),
+    region = factor(region, levels = levels(niagara_lower_ind$region)),
+    Species = factor(Species, levels = levels(niagara_lower_ind$Species))
+  )
+
+lower_pred <- predict(m_lower_ind, lower_newdata, se.fit = TRUE)
+
+lower_site_pred <- lower_newdata %>%
+  mutate(
+    log_fit = lower_pred$fit,
+    log_se  = lower_pred$se.fit,
+    ratio_fit = exp(log_fit),
+    lower = exp(log_fit - 2 * log_se),
+    upper = exp(log_fit + 2 * log_se),
+    site_name = str_to_title(as.character(site_name))
+  ) %>%
+  left_join(
+    niagara_lower_ind %>% count(site_name, name = "n") %>%
+      mutate(site_name = str_to_title(as.character(site_name))),
+    by = "site_name"
+  ) %>%
+  arrange(desc(ratio_fit))
+
+
+# Overall reference line (mean predicted log_ratio)
+
+overall_upper <- exp(mean(predict(m_upper_ind, type = "link")))
+overall_lower <- exp(mean(predict(m_lower_ind, type = "link")))
+
+
+# "Elevated" flag -> above consumption threshold (log_ratio = 1)
+upper_site_pred <- upper_site_pred %>%
+  mutate(elevated = lower > 1)
+
+lower_site_pred <- lower_site_pred %>%
+  mutate(elevated = lower > 1)
+
+
+### Forest plot-------------
+
+okabe_ito <- c(
+  "#000000", "#E69F00", "#56B4E9", "#009E73",
+  "#F0E442", "#0072B2", "#D55E00", "#CC79A7"
+)
+
+upper_site_pred2 <- upper_site_pred %>%
+  mutate(
+    region = as.factor(region),
+    elevated = as.logical(elevated)
+  ) %>%
+  arrange(ratio_fit)
+
+p_forest_upper <- ggplot(
+  upper_site_pred2,
+  aes(x = ratio_fit, y = reorder(site_name, ratio_fit))
+) +
+  geom_errorbar(
+    aes(xmin = lower, xmax = upper),
+    height = 0.2, linewidth = 0.4, alpha = 0.85
+  ) +
+  geom_point(
+    aes(colour = region, shape = region,
+        stroke = ifelse(elevated, 1.4, 0.4)),
+    size = 2.7
+  ) +
+  geom_vline(xintercept = overall_upper, linetype = "dashed", linewidth = 0.6) +
+  geom_vline(xintercept = 1, linetype = "dotted", linewidth = 0.6) +
+  scale_shape_manual(values = c(16, 17)) +
+  scale_colour_manual(values = c("Reference" = "royalblue", "AOC" = "red")) +
   labs(
-    title = "Spatial distribution of PCB hotspots",
-    colour = "Relative PCB"
+    x = "Adjusted PCB / threshold ratio",
+    y = "Site",
+    colour = "Region",
+    shape = "Region"
   ) +
   theme_classic()
 
-ggplot(site_effects_lower, aes(x = reorder(site_name, multiplier), y = multiplier)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  coord_flip() +
-  geom_hline(yintercept = 1, linetype = "dashed") +
+p_forest_upper
+
+ggsave("Derived/NR/Tier3/UR/ur_pcb_site_plot.png", p_forest_upper, dpi = 300, height = 8, width = 10)
+
+
+
+
+lower_site_pred2 <- lower_site_pred %>%
+  mutate(
+    region = as.factor(region),
+    elevated = as.logical(elevated)
+  ) %>%
+  arrange(ratio_fit)
+
+p_forest_lower <- ggplot(
+  lower_site_pred2,
+  aes(x = ratio_fit, y = reorder(site_name, ratio_fit))
+) +
+  geom_errorbarh(
+    aes(xmin = lower, xmax = upper),
+    height = 0.2, linewidth = 0.4, alpha = 0.85
+  ) +
+  geom_point(
+    aes(colour = region, shape = region,
+        stroke = ifelse(elevated, 1.4, 0.4)),
+    size = 2.7
+  ) +
+  geom_vline(xintercept = overall_lower, linetype = "dashed", linewidth = 0.6) +
+  geom_vline(xintercept = 1, linetype = "dotted", linewidth = 0.6) +
+  scale_shape_manual(values = c(16, 17)) +
+  scale_colour_manual(values = c("Reference" = "royalblue", "AOC" = "red")) +
   labs(
-    x = "Site",
-    y = "Relative PCB level (adjusted)",
-    title = "Site-level PCB effects (Lower Niagara model)"
+    x = "Adjusted PCB / threshold ratio",
+    y = "Site",
+    colour = "Region",
+    shape = "Region"
   ) +
   theme_classic()
 
+p_forest_lower
+
+ggsave("Derived/NR/Tier3/LR/lr_pcb_site_plot.png", p_forest_lower, dpi = 300, height = 8, width = 10)
 
 
-# Heatmap for size-exceedance summary -------------
+# Tier 3A ---------------
+
+## Heatmap for size-exceedance summary -------------
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -1178,24 +1366,21 @@ lr_heatmap
 ggsave("Derived/NR/Tier3/LR/lr_t3_heatmap.png", lr_heatmap, dpi = 300, height = 8, width = 10)
 
 ## Comparison tables ---------
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+library(tidyverse)
 library(scales)
 
+size_levels <- c("0–30 cm", "30–50 cm", "50–70 cm", ">70 cm")
+region_levels <- c("Reference", "AOC")
 
-## LOWER -----------
 
-# -------------------------
-# Size-specific rows
-# -------------------------
-size_df <- niagara_lower_dat %>%
+# Summarize observed data
+size_df_obs <- niagara_lower_dat %>%
   filter(year >= 2006) %>%
   mutate(
     size_bin = cut(
       length_cm,
       breaks = c(0, 30, 50, 70, Inf),
-      labels = c("0–30 cm", "30–50 cm", "50–70 cm", ">70 cm"),
+      labels = size_levels,
       include.lowest = TRUE,
       right = TRUE
     ),
@@ -1212,41 +1397,64 @@ size_df <- niagara_lower_dat %>%
   filter(any(region == "AOC")) %>%
   ungroup()
 
-# comparison flags for size-specific rows
+
+
+aoc_species <- size_df_obs %>%
+  filter(region == "AOC") %>%
+  distinct(Species)
+
+
+
+# Complete all AOC/reference x size-bin cells for species retained
+size_df <- size_df_obs %>%
+  semi_join(aoc_species, by = "Species") %>%
+  complete(
+    Species,
+    region = region_levels,
+    size_bin = factor(size_levels, levels = size_levels),
+    fill = list(n = NA_integer_, n_above = NA_integer_, pct_above = NA_real_)
+  )
+
+# Comparison flags by species-size bin
 size_compare <- size_df %>%
   select(Species, size_bin, region, pct_above) %>%
   pivot_wider(names_from = region, values_from = pct_above) %>%
   mutate(
+    matched_comparison = !is.na(AOC) & !is.na(Reference),
     compare_flag = case_when(
-      is.na(AOC) | is.na(Reference) ~ "Missing comparison",
+      !matched_comparison ~ "No comparison",
       AOC > Reference ~ "AOC higher",
       TRUE ~ "Reference equal or higher"
     )
   ) %>%
-  select(Species, size_bin, compare_flag)
+  select(Species, size_bin, compare_flag, matched_comparison)
 
 size_df <- size_df %>%
   left_join(size_compare, by = c("Species", "size_bin")) %>%
   mutate(
     panel_group = "Size-specific",
     x_group = as.character(size_bin),
-    label = paste0(
-      n_above, " of ", n,
-      "\n(", percent(pct_above, accuracy = 1), ")"
+    label = case_when(
+      is.na(n) ~ "No data",
+      !matched_comparison ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")",
+        "\nNo comp."
+      ),
+      TRUE ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")"
+      )
     )
   )
 
-# -------------------------
-# Drop Reference rows with missing AOC comparisons
-# BEFORE building overall totals
-# -------------------------
-size_df_filtered <- size_df %>%
-  filter(!(region == "Reference" & compare_flag == "Missing comparison"))
-
-# -------------------------
-# Build overall totals from filtered size-specific rows
-# -------------------------
-overall_df <- size_df_filtered %>%
+# Overall totals using ONLY matched size classes
+overall_df <- size_df %>%
+  filter(!is.na(n)) %>%
+  filter(
+    region == "AOC" |
+      (region == "Reference" & matched_comparison)
+  ) %>%
   group_by(region, Species) %>%
   summarise(
     n = sum(n),
@@ -1268,7 +1476,7 @@ overall_compare <- overall_df %>%
   pivot_wider(names_from = region, values_from = pct_above) %>%
   mutate(
     compare_flag = case_when(
-      is.na(AOC) | is.na(Reference) ~ "Missing comparison",
+      is.na(AOC) | is.na(Reference) ~ "No comparison",
       AOC > Reference ~ "AOC higher",
       TRUE ~ "Reference equal or higher"
     )
@@ -1276,35 +1484,58 @@ overall_compare <- overall_df %>%
   select(Species, compare_flag)
 
 overall_df <- overall_df %>%
-  left_join(overall_compare, by = "Species")
+  left_join(overall_compare, by = "Species") %>%
+  mutate(matched_comparison = TRUE)
 
-# -------------------------
-# Combine
-# -------------------------
 plot_df <- bind_rows(
-  size_df_filtered %>%
-    select(region, Species, panel_group, x_group, label, compare_flag),
+  size_df %>%
+    select(region, Species, panel_group, x_group, label, compare_flag,
+           matched_comparison, n, n_above, pct_above),
   overall_df %>%
-    select(region, Species, panel_group, x_group, label, compare_flag)
+    select(region, Species, panel_group, x_group, label, compare_flag,
+           matched_comparison, n, n_above, pct_above)
 ) %>%
   mutate(
     region = factor(region, levels = c("Reference", "AOC")),
     panel_group = factor(panel_group, levels = c("Size-specific", "Overall")),
-    x_group = factor(
-      x_group,
-      levels = c("0–30 cm", "30–50 cm", "50–70 cm", ">70 cm", "Overall")
+    x_group = factor(x_group, levels = c(size_levels, "Overall")),
+    
+    fill_group = case_when(
+      is.na(n) ~ "No data",
+      region == "Reference" ~ "Reference",
+      compare_flag == "AOC higher" ~ "AOC higher",
+      compare_flag == "Reference equal or higher" ~ "AOC equal/lower",
+      TRUE ~ "No comparison"
+    ),
+    
+    label_plot = case_when(
+      is.na(n) ~ "n.d.",
+      compare_flag == "No comparison" ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")",
+        "\nn.c."
+      ),
+      TRUE ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")"
+      )
     )
   )
 
-# -------------------------
-# Plot
-# -------------------------
+
 lr_compare_facet2 <- ggplot(
   plot_df,
-  aes(x = x_group, y = region, fill = compare_flag)
+  aes(x = x_group, y = region, fill = fill_group)
 ) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = label), size = 3, lineheight = 0.9) +
+  
+  geom_text(
+    aes(label = label_plot),
+    size = 3,
+    lineheight = 0.85,
+    na.rm = TRUE
+  ) +
+  
   facet_grid(
     Species ~ panel_group,
     switch = "y",
@@ -1314,8 +1545,10 @@ lr_compare_facet2 <- ggplot(
   scale_fill_manual(
     values = c(
       "AOC higher" = "indianred2",
-      "Reference equal or higher" = "lightblue3",
-      "Missing comparison" = "grey90"
+      "AOC equal/lower" = "lightblue3",
+      "Reference" = "white",
+      "No comparison" = "grey85",
+      "No data" = "grey95"
     ),
     drop = FALSE
   ) +
@@ -1324,7 +1557,7 @@ lr_compare_facet2 <- ggplot(
   labs(
     x = "Fish length",
     y = NULL,
-    fill = "Higher exceedance",
+    fill = NULL,
     title = "PCB threshold exceedance by species, size class, and region (2006–2024)"
   ) +
   theme_classic() +
@@ -1340,7 +1573,9 @@ lr_compare_facet2 <- ggplot(
     panel.grid = element_blank()
   )
 
+
 lr_compare_facet2
+
 
 ggsave("Derived/NR/Tier3/LR/lr_t3_comparison.png", lr_compare_facet2, dpi = 300, height = 10, width = 10)
 
@@ -1348,16 +1583,23 @@ ggsave("Derived/NR/Tier3/LR/lr_t3_comparison.png", lr_compare_facet2, dpi = 300,
 
 ## UPPER --------------------
 
-# -------------------------
-# Size-specific rows
-# -------------------------
-size_df <- niagara_upper_dat %>%
+library(tidyverse)
+library(scales)
+
+size_levels <- c("0–30 cm", "30–50 cm", "50–70 cm", ">70 cm")
+region_levels <- c("Reference", "AOC")
+
+
+# Summarize observed data
+size_df_obs <- niagara_upper_dat %>%
   filter(year >= 2006) %>%
   mutate(
+    Species = as.character(Species),
+    region = as.character(region),
     size_bin = cut(
       length_cm,
       breaks = c(0, 30, 50, 70, Inf),
-      labels = c("0–30 cm", "30–50 cm", "50–70 cm", ">70 cm"),
+      labels = size_levels,
       include.lowest = TRUE,
       right = TRUE
     ),
@@ -1374,41 +1616,65 @@ size_df <- niagara_upper_dat %>%
   filter(any(region == "AOC")) %>%
   ungroup()
 
-# comparison flags for size-specific rows
+
+
+aoc_species <- size_df_obs %>%
+  filter(region == "AOC") %>%
+  distinct(Species)
+
+
+
+# Complete all AOC/reference x size-bin cells for species retained
+size_df <- size_df_obs %>%
+  semi_join(aoc_species, by = "Species") %>%
+  complete(
+    Species,
+    region = region_levels,
+    size_bin = factor(size_levels, levels = size_levels),
+    fill = list(n = NA_integer_, n_above = NA_integer_, pct_above = NA_real_)
+  ) %>%
+  mutate(as.factor(Species))
+
+# Comparison flags by species-size bin
 size_compare <- size_df %>%
   select(Species, size_bin, region, pct_above) %>%
   pivot_wider(names_from = region, values_from = pct_above) %>%
   mutate(
+    matched_comparison = !is.na(AOC) & !is.na(Reference),
     compare_flag = case_when(
-      is.na(AOC) | is.na(Reference) ~ "Missing comparison",
+      !matched_comparison ~ "No comparison",
       AOC > Reference ~ "AOC higher",
       TRUE ~ "Reference equal or higher"
     )
   ) %>%
-  select(Species, size_bin, compare_flag)
+  select(Species, size_bin, compare_flag, matched_comparison)
 
 size_df <- size_df %>%
   left_join(size_compare, by = c("Species", "size_bin")) %>%
   mutate(
     panel_group = "Size-specific",
     x_group = as.character(size_bin),
-    label = paste0(
-      n_above, " of ", n,
-      "\n(", percent(pct_above, accuracy = 1), ")"
+    label = case_when(
+      is.na(n) ~ "No data",
+      !matched_comparison ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")",
+        "\nNo comp."
+      ),
+      TRUE ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")"
+      )
     )
   )
 
-# -------------------------
-# Drop Reference rows with missing AOC comparisons
-# BEFORE building overall totals
-# -------------------------
-size_df_filtered <- size_df %>%
-  filter(!(region == "Reference" & compare_flag == "Missing comparison"))
-
-# -------------------------
-# Build overall totals from filtered size-specific rows
-# -------------------------
-overall_df <- size_df_filtered %>%
+# Overall totals using ONLY matched size classes
+overall_df <- size_df %>%
+  filter(!is.na(n)) %>%
+  filter(
+    region == "AOC" |
+      (region == "Reference" & matched_comparison)
+  ) %>%
   group_by(region, Species) %>%
   summarise(
     n = sum(n),
@@ -1430,7 +1696,7 @@ overall_compare <- overall_df %>%
   pivot_wider(names_from = region, values_from = pct_above) %>%
   mutate(
     compare_flag = case_when(
-      is.na(AOC) | is.na(Reference) ~ "Missing comparison",
+      is.na(AOC) | is.na(Reference) ~ "No comparison",
       AOC > Reference ~ "AOC higher",
       TRUE ~ "Reference equal or higher"
     )
@@ -1438,35 +1704,58 @@ overall_compare <- overall_df %>%
   select(Species, compare_flag)
 
 overall_df <- overall_df %>%
-  left_join(overall_compare, by = "Species")
+  left_join(overall_compare, by = "Species") %>%
+  mutate(matched_comparison = TRUE)
 
-# -------------------------
-# Combine
-# -------------------------
 plot_df <- bind_rows(
-  size_df_filtered %>%
-    select(region, Species, panel_group, x_group, label, compare_flag),
+  size_df %>%
+    select(region, Species, panel_group, x_group, label, compare_flag,
+           matched_comparison, n, n_above, pct_above),
   overall_df %>%
-    select(region, Species, panel_group, x_group, label, compare_flag)
+    select(region, Species, panel_group, x_group, label, compare_flag,
+           matched_comparison, n, n_above, pct_above)
 ) %>%
   mutate(
     region = factor(region, levels = c("Reference", "AOC")),
     panel_group = factor(panel_group, levels = c("Size-specific", "Overall")),
-    x_group = factor(
-      x_group,
-      levels = c("0–30 cm", "30–50 cm", "50–70 cm", ">70 cm", "Overall")
+    x_group = factor(x_group, levels = c(size_levels, "Overall")),
+    
+    fill_group = case_when(
+      is.na(n) ~ "No data",
+      region == "Reference" ~ "Reference",
+      compare_flag == "AOC higher" ~ "AOC higher",
+      compare_flag == "Reference equal or higher" ~ "AOC equal/lower",
+      TRUE ~ "No comparison"
+    ),
+    
+    label_plot = case_when(
+      is.na(n) ~ "n.d.",
+      compare_flag == "No comparison" ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")",
+        "\nn.c."
+      ),
+      TRUE ~ paste0(
+        n_above, " of ", n,
+        "\n(", percent(pct_above, accuracy = 1), ")"
+      )
     )
   )
 
-# -------------------------
-# Plot
-# -------------------------
+
 ur_compare_facet2 <- ggplot(
   plot_df,
-  aes(x = x_group, y = region, fill = compare_flag)
+  aes(x = x_group, y = region, fill = fill_group)
 ) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = label), size = 3, lineheight = 0.9) +
+  
+  geom_text(
+    aes(label = label_plot),
+    size = 3,
+    lineheight = 0.85,
+    na.rm = TRUE
+  ) +
+  
   facet_grid(
     Species ~ panel_group,
     switch = "y",
@@ -1476,8 +1765,10 @@ ur_compare_facet2 <- ggplot(
   scale_fill_manual(
     values = c(
       "AOC higher" = "indianred2",
-      "Reference equal or higher" = "lightblue3",
-      "Missing comparison" = "grey90"
+      "AOC equal/lower" = "lightblue3",
+      "Reference" = "white",
+      "No comparison" = "grey85",
+      "No data" = "grey95"
     ),
     drop = FALSE
   ) +
@@ -1486,7 +1777,7 @@ ur_compare_facet2 <- ggplot(
   labs(
     x = "Fish length",
     y = NULL,
-    fill = "Higher exceedance",
+    fill = NULL,
     title = "PCB threshold exceedance by species, size class, and region (2006–2024)"
   ) +
   theme_classic() +
@@ -1501,6 +1792,7 @@ ur_compare_facet2 <- ggplot(
     axis.line = element_blank(),
     panel.grid = element_blank()
   )
+
 
 ur_compare_facet2
 

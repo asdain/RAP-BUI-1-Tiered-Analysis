@@ -6,7 +6,12 @@
 "Master Report.nb.html"
 
 **.html
+**.rds
+**.csv
 
-Derived/
-test/
-Data/
+Derived/*
+test/*
+Data/*
+
+.html
+rosm.cache/
