@@ -10,8 +10,8 @@ output:
   pdf_document:
     toc: true
 params:
-  AOC: '42577857'
-  AOC_shorthand: "NR_UR"
+  AOC: '43077903'
+  AOC_shorthand: "NR_LR"
   reference_sites:
     - '44127632'
     - '43557712' 
@@ -29,10 +29,13 @@ params:
   thr_path: "Data/consumption_threshold_nr.csv"
   interest_species:
   - Black Crappie
+  - Bluegill
+  - Brown Bullhead
   - Channel Catfish
   - Freshwater Drum
   - Largemouth Bass
   - Northern Pike
+  - Pumpkinseed
   - Rock Bass
   - Smallmouth Bass
   - Walleye
@@ -125,7 +128,7 @@ readr::write_rds(flags, file = path(dir_derived, "flags.rds"))
 ```{r, Waterbody Lookup, include=FALSE, echo=FALSE}
 # As an example, here is how to use the waterbody lookup function to find the ID of your AOC or reference site.
 
-get_waterbody_ids(cons_data, site_name = "Niagara River (Upper reach)")
+get_waterbody_ids(cons_data, site_name = "Niagara River (Lower reach)")
 
 # LR: 43077903
 # UR: 42577857
